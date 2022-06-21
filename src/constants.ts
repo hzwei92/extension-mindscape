@@ -74,5 +74,6 @@ export enum AlarmType {
 };
 
 export enum MessageName {
-  RELOAD_CLIENT = 'RELOAD_CLIENT'
+  RESTORE_CACHE = 'RESTORE_CACHE',
+  PURGE_CACHE = 'PURGE_CACHE',
 };

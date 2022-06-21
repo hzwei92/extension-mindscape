@@ -58,7 +58,8 @@
     "permissions": [
       "alarms",
       "cookies",
-      "tabs"
+      "tabs",
+      "tabGroups"
     ]
   }
 }

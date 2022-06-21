@@ -37,8 +37,7 @@ const REFRESH_TOKEN = gql`
 `;
 
 
-export const refreshToken = async () => {
-  const { client } = await getClient();
+export const refreshToken = async (client: ApolloClient<NormalizedCacheObject>) => {
   try {
     console.log('refreshToken')
     const { data } = await client.mutate({
@@ -60,7 +59,6 @@ export const refreshToken = async () => {
       console.log('token invalid (refreshToken)')
       store.dispatch(setTokenIsInit(true));
       store.dispatch(setTokenIsValid(false));
-      console.log('done')
     }
     else {
       console.error(err)
@@ -68,8 +66,8 @@ export const refreshToken = async () => {
   }
 }
 
-export const initUser = async () => {
-  const { client } = await getClient();
+export const initUser = async (client: ApolloClient<NormalizedCacheObject>) => {
+  await client.clearStore();
   try {
     const { data } = await client.mutate({
       mutation: INIT_USER,
@@ -93,8 +91,7 @@ export const initUser = async () => {
 
 }
 
-export const getCurrentUser = async () => {
-  const { client } = await getClient();
+export const getCurrentUser = async (client: ApolloClient<NormalizedCacheObject>) => {
   try {
     const { data } = await client.mutate({
       mutation: GET_CURRENT_USER,
@@ -110,15 +107,6 @@ export const getCurrentUser = async () => {
     chrome.alarms.create(AlarmType.REFRESH_TOKEN, {
       periodInMinutes: 5,
     });
-
-    const user = client.cache.readFragment({
-      id: client.cache.identify({
-        id: data.getCurrentUser.id,
-        __typename: 'User',
-      }),
-      fragment: USER_FIELDS,
-    })
-    console.log('hello', user);
   } catch (err) {
     if (err.message === 'Unauthorized') {
       console.log('token invalid (getCurrentUser)');

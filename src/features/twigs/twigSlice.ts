@@ -12,6 +12,7 @@ export interface TwigState {
     twigIdToTrue: IdToType<true>;
     twigIdToRequiresRerender: IdToType<Boolean>;
 
+    shouldReloadTwigTree: boolean;
     idToChildIdToTrue: IdToType<IdToType<true>>;
     idToDescIdToTrue: IdToType<IdToType<true>>;
 
@@ -26,6 +27,7 @@ export interface TwigState {
     twigIdToTrue: IdToType<true>;
     twigIdToRequiresRerender: IdToType<Boolean>;
 
+    shouldReloadTwigTree: boolean;
     idToChildIdToTrue: IdToType<IdToType<true>>;
     idToDescIdToTrue: IdToType<IdToType<true>>;
 
@@ -43,6 +45,7 @@ const initialState: TwigState = {
     twigIdToTrue: {},
     twigIdToRequiresRerender: {},
 
+    shouldReloadTwigTree: false,
     idToChildIdToTrue: {},
     idToDescIdToTrue: {},
 
@@ -57,6 +60,7 @@ const initialState: TwigState = {
     twigIdToTrue: {},
     twigIdToRequiresRerender: {},
 
+    shouldReloadTwigTree: false,
     idToChildIdToTrue: {},
     idToDescIdToTrue: {},
 
@@ -115,6 +119,7 @@ export const twigSlice: Slice<TwigState> = createSlice({
           windowIdToTwigIdToTrue,
           groupIdToTwigIdToTrue,
           tabIdToTwigIdToTrue,
+          shouldReloadTwigTree: true,
         }
       };
     },
@@ -153,6 +158,10 @@ export const twigSlice: Slice<TwigState> = createSlice({
         [action.payload.space]: {
           ...state[action.payload.space],
           twigIdToTrue,
+          windowIdToTwigIdToTrue,
+          groupIdToTwigIdToTrue,
+          tabIdToTwigIdToTrue,
+          shouldReloadTwigTree: true,
         }
       }
     },
@@ -216,12 +225,22 @@ export const twigSlice: Slice<TwigState> = createSlice({
           twigIdToTrue: {},
           twigIdToRequiresRerender: {},
 
+          shouldReloadTwigTree: false,
           idToDescIdToTrue: {},
           idToChildIdToTrue: {},
           
           windowIdToTwigIdToTrue: {},
           groupIdToTwigIdToTrue: {},
           tabIdToTwigIdToTrue: {},
+        },
+      };
+    },
+    setShouldReloadTwigTree: (state, action: PayloadAction<{space: SpaceType, shouldReloadTwigTree: boolean}>) => {
+      return {
+        ...state,
+        [action.payload.space]: {
+          ...state[action.payload.space],
+          shouldReloadTwigTree: action.payload.shouldReloadTwigTree,
         },
       };
     },
@@ -237,6 +256,7 @@ export const {
   setTwigTree,
   resetTwigs,
   setRequiresRerender,
+  setShouldReloadTwigTree,
 } = twigSlice.actions;
 
 export const selectTwigId = (space: SpaceType) => (state: RootState) => state.twig[space].twigId;
@@ -245,6 +265,7 @@ export const selectNewTwigId = (space: SpaceType) => (state: RootState) => state
 export const selectTwigIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].twigIdToTrue;
 export const selectTwigIdToRequiresRerender = (space: SpaceType) => (state: RootState) => state.twig[space].twigIdToRequiresRerender;
 
+export const selectShouldReloadTwigTree = (space: SpaceType) => (state: RootState) => state.twig[space].shouldReloadTwigTree;
 export const selectIdToChildIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].idToChildIdToTrue;
 export const selectIdToDescIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].idToDescIdToTrue;
 

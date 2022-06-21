@@ -1,4 +1,4 @@
-import { useApolloClient } from "@apollo/client";
+import { NormalizedCacheObject, useApolloClient } from "@apollo/client";
 import React, { Dispatch, MutableRefObject, SetStateAction, useEffect, useState } from "react";
 import { MAX_Z_INDEX } from "~constants";
 import type { User } from "~features/user/user";
@@ -11,17 +11,20 @@ import AppBar from "./AppBar";
 import MenuComponent from "~features/menu/MenuComponent";
 import FrameComponent from "~features/frame/FrameComponent";
 import { FULL_USER_FIELDS } from "~features/user/userFragments";
+import type { CachePersistor } from "apollo3-cache-persist";
 
 export const AppContext = React.createContext({} as {
-  frameSpaceEl: MutableRefObject<HTMLElement | undefined>
-  focusSpaceEl: MutableRefObject<HTMLElement | undefined>
-  setFrameSpaceEl: Dispatch<SetStateAction<MutableRefObject<HTMLElement | undefined>>>
-  setFocusSpaceEl: Dispatch<SetStateAction<MutableRefObject<HTMLElement | undefined>>>
-  port: chrome.runtime.Port | null
+  frameSpaceEl: MutableRefObject<HTMLElement | undefined>;
+  focusSpaceEl: MutableRefObject<HTMLElement | undefined>;
+  setFrameSpaceEl: Dispatch<SetStateAction<MutableRefObject<HTMLElement | undefined>>>;
+  setFocusSpaceEl: Dispatch<SetStateAction<MutableRefObject<HTMLElement | undefined>>>;
+  port: chrome.runtime.Port | null;
+  cachePersistor: CachePersistor<NormalizedCacheObject>;
 });
 
 interface AppProps {
-  port: chrome.runtime.Port
+  port: chrome.runtime.Port;
+  cachePersistor: CachePersistor<NormalizedCacheObject>;
 }
 export default function App(props: AppProps) {
   console.log('app')
@@ -108,6 +111,7 @@ export default function App(props: AppProps) {
       setFrameSpaceEl, 
       setFocusSpaceEl, 
       port: props.port,
+      cachePersistor: props.cachePersistor,
     }}>  
       <ThemeProvider theme={theme}>
         <SnackbarProvider

@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client"
+import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client"
 import type { Arrow } from "~features/arrow/arrow"
 import { SpaceType } from "~features/space/space"
 import type { User } from "~features/user/user"
@@ -52,31 +52,33 @@ const GET_TWIGS = gql`
   ${FULL_TWIG_FIELDS}
 `;
 
-export const getTwigs = async (userId: string) => {
-  const { client } = await getClient();
-  const user = client.cache.readFragment({
-    id: client.cache.identify({
-      id: userId,
-      __typename: 'User',
-    }),
-    fragment: USER_FIELDS
-  }) as User;
+export const getTwigs = (client: ApolloClient<NormalizedCacheObject>) => 
+  async (userId: string) => {
+    const user = client.readFragment({
+      id: client.cache.identify({
+        id: userId,
+        __typename: 'User',
+      }),
+      fragment: USER_FIELDS
+    }) as User;
 
-  if (!user) return;
+    if (!user) {
+      throw Error('Missing user with id ' + userId)
+    };
 
-  try {
-    const { data } = await client.mutate({
-      mutation: GET_TWIGS,
-      variables: {
-        abstractId: user.frameId,
-      }
-    });
-    console.log(data);
-    store.dispatch(addTwigs({
-      space: SpaceType.FRAME,
-      twigs: data.getTwigs
-    }));
-  } catch (err) {
-    console.error(err);
+    try {
+      const { data } = await client.mutate({
+        mutation: GET_TWIGS,
+        variables: {
+          abstractId: user.frameId,
+        }
+      });
+      console.log(data);
+      store.dispatch(addTwigs({
+        space: SpaceType.FRAME,
+        twigs: data.getTwigs
+      }));
+    } catch (err) {
+      console.error(err);
+    }
   }
-}

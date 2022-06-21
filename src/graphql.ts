@@ -4,7 +4,7 @@ import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { DEV_SERVER_URI, DEV_WS_SERVER_URI } from '~constants';
 import { ApolloClient, createHttpLink, InMemoryCache, split } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
-import { CachePersistor, persistCache } from 'apollo3-cache-persist';
+import { CachePersistor, LocalStorageWrapper, persistCache } from 'apollo3-cache-persist';
 import { localStorage } from 'redux-persist-webextension-storage';
 
 interface RestartableClient extends Client {
@@ -92,15 +92,24 @@ const splitLink = split(
   httpLink,
 );
 
-export const getClient = async () => {
-  const cache = new InMemoryCache()
 
+export const getClient = async () => {
+  const cache = new InMemoryCache({
+    typePolicies: {
+      User: {
+        merge: true,
+      },
+      Twig: {
+        merge: true,
+      }
+    }
+  })
+  
   const persistor = new CachePersistor({
     cache,
-    storage: localStorage,
-    debug: true,
+    storage: new LocalStorageWrapper(localStorage),
+    debug: false,
     key: 'apollo-cache-persist',
-    trigger: 'write',
     debounce: 0,
   });
   

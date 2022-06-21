@@ -79,6 +79,7 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 new Storage('local').watch({
   [`persist:${persistConfig.key}`]: (changes) => {
     //console.log('watch redux', changes)
+    //console.log(JSON.parse(changes.newValue.twig))
     persistor.resync()
   },
   ['apollo-cache-persist']: (changes) => {
@@ -88,7 +89,7 @@ new Storage('local').watch({
         name: PORT_NAME,
       });
       port.postMessage({
-        name: MessageName.RELOAD_CLIENT,
+        name: MessageName.RESTORE_CACHE,
       });
     } catch (err) {
       console.error(err);

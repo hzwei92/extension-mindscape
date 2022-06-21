@@ -21,6 +21,7 @@ export default function useCenterTwig(user: User | null, space: SpaceType) {
   const scale = useAppSelector(selectScale(space));
 
   const centerTwig = (twigId: string, isSmooth: boolean, delay: number, coords?: any) => {
+    //console.log('centerTwig', twigId);
     setTimeout(() => {
       if (!spaceEl?.current) return;
       if (!user) return;

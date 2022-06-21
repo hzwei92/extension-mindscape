@@ -18,7 +18,7 @@ import SheafComponent from '../arrow/SheafComponent';
 import { AppContext } from '~newtab/App';
 import { selectIdToDescIdToTrue, selectTwigIdToTrue } from '~features/twigs/twigSlice';
 import useTwigTree from '~features/twigs/useTwigTree';
-import { FULL_TWIG_FIELDS, TWIG_WITH_POS, TWIG_WITH_XY } from '~features/twigs/twigFragments';
+import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_POS, TWIG_WITH_XY } from '~features/twigs/twigFragments';
 import type { Twig } from '~features/twigs/twig';
 import TwigLinkComponent from '~features/twigs/TwigLinkComponent';
 import TwigPostComponent from '~features/twigs/TwigPostComponent';
@@ -388,6 +388,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       fragmentName: 'FullTwigFields'
     }) as Twig;
 
+    //console.log(twigId, twig);
+
     if (!twig || twig.deleteDate || twig.displayMode !== DisplayMode.SCATTERED) {
       return;
     }
@@ -398,14 +400,16 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           id: twig.sourceId,
           __typename: 'Twig',
         }),
-        fragment: TWIG_WITH_XY,
+        fragment: FULL_TWIG_FIELDS,
+        fragmentName: 'FullTwigFields'
       }) as Twig;
       const targetTwig = client.cache.readFragment({
         id: client.cache.identify({
           id: twig.targetId,
           __typename: 'Twig',
         }),
-        fragment: TWIG_WITH_XY,
+        fragment: FULL_TWIG_FIELDS,
+        fragmentName: 'FullTwigFields'
       }) as Twig;
 
       if (!sourceTwig || sourceTwig.deleteDate || !targetTwig || targetTwig.deleteDate) {
@@ -429,10 +433,10 @@ export default function SpaceComponent(props: SpaceComponentProps) {
               y: cachedVal => cachedVal + dy,
             }
           });
-          const desc = client.cache.readFragment({
-            id,
-            fragment: TWIG_WITH_XY,
-          }) as Twig;
+          // const desc = client.cache.readFragment({
+          //   id,
+          //   fragment: TWIG_WITH_XY,
+          // }) as Twig;
           // adjusted[descId] = {
           //   x: desc.x,
           //   y: desc.y,

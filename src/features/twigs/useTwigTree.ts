@@ -1,19 +1,18 @@
 import { useApolloClient } from '@apollo/client';
 import { FULL_TWIG_FIELDS, TWIG_WITH_PARENT } from './twigFragments';
 import type { Twig } from './twig';
-import type { IdToIdToTrueType } from '~utils';
 import { useAppDispatch, useAppSelector } from '~store';
 import type { SpaceType } from '../space/space';
-import { selectTwigIdToTrue, setTwigTree } from './twigSlice';
+import { selectShouldReloadTwigTree, selectTwigIdToTrue, setShouldReloadTwigTree, setTwigTree } from './twigSlice';
 import { Dispatch, SetStateAction, useContext, useEffect } from 'react';
 import { AppContext } from '~newtab/App';
+import type { IdToType } from '~types';
 
 export default function useTwigTree(space: SpaceType) {
   const dispatch = useAppDispatch();
   const client = useApolloClient();
-
-  const { refresh, setRefresh } = useContext(AppContext);
   
+  const shouldReloadTwigTree = useAppSelector(selectShouldReloadTwigTree(space));
   const twigIdToTrue = useAppSelector(selectTwigIdToTrue(space));
 
   const loadTwigTree = () => {
@@ -27,13 +26,14 @@ export default function useTwigTree(space: SpaceType) {
         fragment: FULL_TWIG_FIELDS,
         fragmentName: 'FullTwigFields',
       }) as Twig;
+      console.log(twigId, twig)
       if (twig && !twig.deleteDate) {
         twigs.push(twig);
       }
     });
 
-    const idToChildIdToTrue: IdToIdToTrueType = {};
-    const idToDescIdToTrue: IdToIdToTrueType = {};
+    const idToChildIdToTrue: IdToType<IdToType<true>> = {};
+    const idToDescIdToTrue: IdToType<IdToType<true>> = {};
 
     twigs.forEach(twig => {
       if (twig.parent) {
@@ -73,11 +73,11 @@ export default function useTwigTree(space: SpaceType) {
   }
 
   useEffect(() => {
-    if (!refresh) return;
+    if (!shouldReloadTwigTree) return;
     loadTwigTree();
-    setRefresh(false);
-    return () => {
-      setRefresh(false)
-    }
-  }, [refresh])
+    dispatch(setShouldReloadTwigTree({
+      space,
+      shouldReloadTwigTree: false,
+    }));
+  }, [shouldReloadTwigTree])
 }

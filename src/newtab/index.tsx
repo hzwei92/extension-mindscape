@@ -11,17 +11,20 @@ import { PersistGate } from '@plasmohq/redux-persist/integration/react';
 //import './index.css';
 import { useEffect, useState } from 'react';
 import { MessageName } from '~constants';
+import type { CachePersistor } from 'apollo3-cache-persist';
 
 function IndexNewtab() {
-  const [client, setClient] = useState(null as ApolloClient<NormalizedCacheObject> | null)
+  const [client, setClient] = useState(null as ApolloClient<NormalizedCacheObject> | null);
+  const [cachePersistor, setCachePersistor] = useState(null as CachePersistor<NormalizedCacheObject> | null)
   const [port, setPort] = useState(null as chrome.runtime.Port | null);
   
   useEffect(() => {
     const handleConnect = port => {
       setPort(port);
-      port.onMessage.addListener(message => {
-        if (message.name === MessageName.RELOAD_CLIENT) {
-          loadClient();
+      port.onMessage.addListener(async message => {
+        if (message.name === MessageName.RESTORE_CACHE) {
+          await cachePersistor.restore();
+          console.log('restored', cachePersistor)
         }
       })
     }
@@ -29,7 +32,7 @@ function IndexNewtab() {
     return () => {
       chrome.runtime.onConnect.removeListener(handleConnect)
     }
-  }, []);
+  }, [cachePersistor]);
   
 
   useEffect(() => {
@@ -38,8 +41,9 @@ function IndexNewtab() {
 
 
   const loadClient = async () => {
-    const { client } = await getClient();
+    const { client, persistor } = await getClient();
     setClient(client);
+    setCachePersistor(persistor);
   }
   
 
@@ -48,7 +52,7 @@ function IndexNewtab() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ApolloProvider client={client}>
-          <App port={port} />
+          <App port={port} cachePersistor={cachePersistor}/>
         </ApolloProvider>
       </PersistGate>
     </Provider>
