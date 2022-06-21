@@ -1,30 +1,64 @@
 {
-  "name": "extension-mindscape",
-  "displayName": "Extension mindscape",
+  "name": "minscape.pub",
+  "displayName": "Mindscape.pub",
   "version": "0.0.0",
   "description": "A basic Plasmo extension.",
-  "author": "peterwei",
+  "author": "coldsauce",
+  "packageManager": "pnpm@7.1.5",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build"
   },
   "dependencies": {
-    "plasmo": "latest",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "@apollo/client": "^3.6.8",
+    "@babel/core": "^7.18.5",
+    "@draft-js-plugins/editor": "^4.1.3",
+    "@emotion/react": "^11.9.3",
+    "@emotion/styled": "^11.9.3",
+    "@fontsource/roboto": "^4.5.7",
+    "@mui/icons-material": "^5.8.4",
+    "@mui/material": "^5.8.4",
+    "@plasmohq/redux-persist": "6.1.0",
+    "@plasmohq/storage": "0.5.1",
+    "@reduxjs/toolkit": "1.8.2",
+    "@types/draft-js": "^0.11.9",
+    "@types/md5": "^2.3.2",
+    "@types/uuid": "^8.3.4",
+    "apollo3-cache-persist": "^0.14.0",
+    "draft-js": "^0.11.7",
+    "graphql": "^16.5.0",
+    "graphql-ws": "^5.9.0",
+    "linkify-it": "^4.0.1",
+    "md5": "^2.3.0",
+    "notistack": "^2.0.5",
+    "react": "18.1.0",
+    "react-dom": "18.1.0",
+    "react-redux": "8.0.2",
+    "redux": "4.2.0",
+    "redux-persist-webextension-storage": "1.0.2",
+    "redux-thunk": "2.4.1",
+    "tlds": "^1.231.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "3.2.0",
     "@types/chrome": "0.0.190",
-    "@types/node": "17.0.43",
+    "@types/jest": "28.1.1",
+    "@types/node": "17.0.42",
     "@types/react": "18.0.12",
     "@types/react-dom": "18.0.5",
-    "prettier": "2.7.0",
-    "typescript": "4.7.4"
+    "plasmo": "latest",
+    "prettier": "2.6.2",
+    "typescript": "4.7.3"
   },
   "manifest": {
     "host_permissions": [
-      "https://*/*"
+      "<all_urls>"
+    ],
+    "permissions": [
+      "alarms",
+      "cookies",
+      "tabs"
     ]
   }
 }
