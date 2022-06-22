@@ -6,7 +6,6 @@ import type { Twig } from './twig';
 
 export interface TwigState {
   [SpaceType.FRAME]: {
-    twigId: string,
     newTwigId: string;
 
     twigIdToTrue: IdToType<true>;
@@ -21,7 +20,6 @@ export interface TwigState {
     tabIdToTwigIdToTrue: IdToType<IdToType<true>>;
   },
   [SpaceType.FOCUS]: {
-    twigId: string,
     newTwigId: string;
 
     twigIdToTrue: IdToType<true>;
@@ -39,7 +37,6 @@ export interface TwigState {
 
 const initialState: TwigState = {
   [SpaceType.FRAME]: {
-    twigId: '',
     newTwigId: '',
 
     twigIdToTrue: {},
@@ -54,7 +51,6 @@ const initialState: TwigState = {
     tabIdToTwigIdToTrue: {},
   },
   [SpaceType.FOCUS]: {
-    twigId: '',
     newTwigId: '',
 
     twigIdToTrue: {},
@@ -180,15 +176,6 @@ export const twigSlice: Slice<TwigState> = createSlice({
         }
       }
     },
-    setTwigId: (state, action: PayloadAction<{space: SpaceType, twigId: string}>) => {
-      return {
-        ...state,
-        [action.payload.space]: {
-          ...state[action.payload.space],
-          twigId: action.payload.twigId
-        }
-      }
-    },
     setTwigTree: (state, action: PayloadAction<{space: SpaceType, idToChildIdToTrue: IdToType<IdToType<true>>, idToDescIdToTrue: IdToType<IdToType<true>>}>) => {
       return {
         ...state,
@@ -251,7 +238,6 @@ export const twigSlice: Slice<TwigState> = createSlice({
 });
 
 export const {
-  setTwigId,
   startNewTwig,
   finishNewTwig,
   addTwigs,
@@ -262,7 +248,6 @@ export const {
   setShouldReloadTwigTree,
 } = twigSlice.actions;
 
-export const selectTwigId = (space: SpaceType) => (state: RootState) => state.twig[space].twigId;
 export const selectNewTwigId = (space: SpaceType) => (state: RootState) => state.twig[space].newTwigId;
 
 export const selectTwigIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].twigIdToTrue;

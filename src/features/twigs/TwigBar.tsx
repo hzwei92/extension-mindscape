@@ -142,6 +142,7 @@ function TwigBar(props: TwigBarProps) {
           <Typography component='span' sx={{
             marginLeft: '3px',
             fontSize: 12,
+            color,
           }}>
             {props.twig.id}
             <br/>
@@ -150,7 +151,8 @@ function TwigBar(props: TwigBarProps) {
             {props.twig.i}...
             {props.twig.degree}:{props.twig.rank}...
             {props.twig.index}...
-            {props.twig.tabId || props.twig.groupId || props.twig.windowId}
+            {props.twig.tabId || props.twig.groupId || props.twig.windowId}...
+            {props.twig.displayMode}
           </Typography>
         </Box>
         </Box>
@@ -163,6 +165,7 @@ function TwigBar(props: TwigBarProps) {
             onClick={handleRemoveClick}
             sx={{
               fontSize: 10,
+              color,
             }}
           >
             <CloseIcon fontSize='inherit'/>

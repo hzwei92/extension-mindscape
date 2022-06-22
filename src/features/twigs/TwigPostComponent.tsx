@@ -1,6 +1,6 @@
 import { useApolloClient } from '@apollo/client';
 import { Box, Card, IconButton } from '@mui/material';
-import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '~store';
 import { DisplayMode, TWIG_WIDTH } from '~constants';
 import type { Role } from '../role/role';
@@ -8,7 +8,7 @@ import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
-import { selectChildIdToTrue, selectRequiresRerender, selectTwigId, setRequiresRerender } from './twigSlice';
+import { selectChildIdToTrue, selectRequiresRerender, setRequiresRerender } from './twigSlice';
 import type { Arrow } from '../arrow/arrow';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { getColor, getTwigColor } from '~utils';
@@ -18,6 +18,9 @@ import ArrowComponent from '~features/arrow/ArrowComponent';
 import TwigControls from './TwigControls';
 import TwigBar from './TwigBar';
 import TwigVoter from './TwigVoter';
+import { SpaceContext } from '~features/space/SpaceComponent';
+import useSelectTwig from './useSelectTwig';
+import useMoveTwig from './useMoveTwig';
 //import useLinkTwigs from './useLinkTwigs';
 
 interface TwigPostComponentProps {
@@ -47,9 +50,9 @@ function TwigPostComponent(props: TwigPostComponentProps) {
 
   const palette = useAppSelector(selectPalette);
   const createLink = useAppSelector(selectCreateLink);
-  
-  const twigId = useAppSelector(selectTwigId(props.space));
-  const isSelected = twigId === props.twig.id;
+
+  const { selectedTwigId } = useContext(SpaceContext);
+  const isSelected = props.twig.id === selectedTwigId;
 
   const childIdToTrue = useAppSelector(state => selectChildIdToTrue(state, props.space, props.twig.id));
   const verticalChildren = [];
@@ -74,14 +77,14 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     }
   });
 
-  console.log(props.twig.id, verticalChildren, horizontalChildren)
+  //console.log(props.twig.id, verticalChildren, horizontalChildren)
 
   const [isLoading, setIsLoading] = useState(false);
   const twigEl = useRef<HTMLDivElement | undefined>();
 
   const [coordsReady, setCoordsReady] = useState(props.twig.displayMode === DisplayMode.SCATTERED);
 
-  //const { moveTwig } = useMoveTwig(props.space);
+  const { moveTwig } = useMoveTwig(props.space);
 
   useEffect(() => {
     if (props.twig.displayMode === DisplayMode.SCATTERED) return;
@@ -102,14 +105,14 @@ function TwigPostComponent(props: TwigPostComponentProps) {
         },
       });
   
-      //moveTwig(props.twig.id, props.twig.displayMode);
+      moveTwig(props.twig.id, props.twig.displayMode);
     }
 
-    setRequiresRerender({
+    dispatch(setRequiresRerender({
       space: props.space,
       twigId: props.twig.id,
       requiresRerender: true,
-    });
+    }));
 
     setCoordsReady(true)
   }, [props.twig.displayMode, props.coordsReady, props.twig.parent?.x, props.twig.parent?.y, twigEl.current?.offsetLeft, twigEl.current?.offsetTop])
@@ -126,7 +129,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   
   //const { openTwig } = useOpenTwig();
 
-  //const { selectTwig } = useSelectTwig(props.space, props.canEdit);
+  const { selectTwig } = useSelectTwig(props.space, props.canEdit);
   //const { linkTwigs } = useLinkTwigs(props.space, props.abstract);
 
   const handleClick = (event: React.MouseEvent) => {
@@ -149,7 +152,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!isSelected) {
-      //selectTwig(props.abstract, props.twig);
+      selectTwig(props.abstract, props.twig.id);
     }
   }
 
@@ -174,7 +177,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   const handleOpenClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!isSelected) {
-      //selectTwig(props.abstract, props.twig);
+      selectTwig(props.abstract, props.twig.id);
     }
     //openTwig(props.twig, !props.twig.isOpen);
   }

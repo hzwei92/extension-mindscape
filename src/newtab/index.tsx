@@ -10,7 +10,7 @@ import App from './App';
 import { PersistGate } from '@plasmohq/redux-persist/integration/react';
 //import './index.css';
 import { useEffect, useState } from 'react';
-import { MessageName } from '~constants';
+import { ErrMessage, MessageName } from '~constants';
 import type { CachePersistor } from 'apollo3-cache-persist';
 import { setShouldReloadTwigTree } from '~features/twigs/twigSlice';
 import { SpaceType } from '~features/space/space';
@@ -19,33 +19,46 @@ function IndexNewtab() {
   const [client, setClient] = useState(null as ApolloClient<NormalizedCacheObject> | null);
   const [cachePersistor, setCachePersistor] = useState(null as CachePersistor<NormalizedCacheObject> | null)
   const [port, setPort] = useState(null as chrome.runtime.Port | null);
-  
-  useEffect(() => {
-    const handleConnect = port => {
-      setPort(port);
-      port.onMessage.addListener(async message => {
-        if (message.name === MessageName.RESTORE_CACHE) {
-          await cachePersistor.restore();
-          console.log('restored', cachePersistor)
-        }
-      })
-    }
-    chrome.runtime.onConnect.addListener(handleConnect);
-    return () => {
-      chrome.runtime.onConnect.removeListener(handleConnect)
-    }
-  }, [cachePersistor]);
-  
+  const [tabId, setTabId] = useState(-1);
 
   useEffect(() => {
-    loadClient();
     persistor.resync();
+
+    loadClient();
+
     store.dispatch(setShouldReloadTwigTree({
       space: SpaceType.FRAME,
       shouldReloadTwigTree: true,
     }))
-    console.log('persistor', persistor)
+    try {
+      chrome.runtime.sendMessage({
+        name: MessageName.GET_TAB_ID
+      }, response => {
+        setTabId(response.tabId);
+      });
+    } catch (err) {
+      if (err === ErrMessage.NO_RECEIVER) {
+        console.log('no receiever')
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    if (!cachePersistor) return;
+    const handleConnect = port => {
+      setPort(port);
+      port.onMessage.addListener(message => {
+        if (message.name === MessageName.RESTORE_CACHE) {
+          cachePersistor.restore();
+        }
+      })
+    }
+    chrome.runtime.onConnect.addListener(handleConnect);
+
+    return () => {
+      chrome.runtime.onConnect.removeListener(handleConnect)
+    }
+  }, [cachePersistor]);
 
 
   const loadClient = async () => {
@@ -60,7 +73,7 @@ function IndexNewtab() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ApolloProvider client={client}>
-          <App port={port} cachePersistor={cachePersistor}/>
+          <App port={port} cachePersistor={cachePersistor} tabId={tabId} />
         </ApolloProvider>
       </PersistGate>
     </Provider>

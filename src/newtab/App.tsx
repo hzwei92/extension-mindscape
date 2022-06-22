@@ -14,6 +14,7 @@ import { FULL_USER_FIELDS } from "~features/user/userFragments";
 import type { CachePersistor } from "apollo3-cache-persist";
 
 export const AppContext = React.createContext({} as {
+  tabId: number,
   frameSpaceEl: MutableRefObject<HTMLElement | undefined>;
   focusSpaceEl: MutableRefObject<HTMLElement | undefined>;
   setFrameSpaceEl: Dispatch<SetStateAction<MutableRefObject<HTMLElement | undefined>>>;
@@ -27,6 +28,7 @@ export const AppContext = React.createContext({} as {
 interface AppProps {
   port: chrome.runtime.Port;
   cachePersistor: CachePersistor<NormalizedCacheObject>;
+  tabId: number;
 }
 export default function App(props: AppProps) {
   console.log('app')
@@ -109,6 +111,7 @@ export default function App(props: AppProps) {
   
   return (
     <AppContext.Provider value={{
+      tabId: props.tabId,
       frameSpaceEl, 
       focusSpaceEl, 
       setFrameSpaceEl, 

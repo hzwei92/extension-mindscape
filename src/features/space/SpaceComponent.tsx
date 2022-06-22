@@ -1,6 +1,6 @@
 import { useApolloClient } from "@apollo/client";
 import { Box } from "@mui/material";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "~store";
 import { VIEW_RADIUS, SPACE_BAR_HEIGHT, DisplayMode } from "~constants";
 import { checkPermit, getAppBarWidth } from "~utils";
@@ -14,14 +14,21 @@ import type { Arrow } from "../arrow/arrow";
 import type { Role } from "../role/role";
 import SheafComponent from "../arrow/SheafComponent";
 import { AppContext } from "~newtab/App";
-import { selectIdToDescIdToTrue, selectTwigIdToTrue } from "~features/twigs/twigSlice";
-import { FULL_TWIG_FIELDS, TWIG_WITH_POS } from "~features/twigs/twigFragments";
+import { selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, selectTwigIdToTrue } from "~features/twigs/twigSlice";
+import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_POS } from "~features/twigs/twigFragments";
 import type { Twig } from "~features/twigs/twig";
 import TwigLinkComponent from "~features/twigs/TwigLinkComponent";
 import TwigPostComponent from "~features/twigs/TwigPostComponent";
 import SpaceControls from "./SpaceControls";
 import SpaceNav from "./SpaceNav";
+import useCenterTwig from "~features/twigs/useCenterTwig";
 //import useAdjustTwigs from "../twig/useAdjustTwigs";
+
+
+export const SpaceContext = React.createContext({} as {
+  selectedTwigId: string;
+  setSelectedTwigId: Dispatch<SetStateAction<string>>;
+});
 
 interface SpaceComponentProps {
   user: User | null;
@@ -32,8 +39,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const { width } = useContext(AppContext);
-  console.log('width', width)
+  const { tabId, width } = useContext(AppContext);
   const palette = useAppSelector(selectPalette);
 
   const menuWidth = useAppSelector(selectActualMenuWidth);
@@ -50,7 +56,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const offsetTop = SPACE_BAR_HEIGHT;
 
-  const [scale, setScale] = useState(0.75);
+  const [scale, setScale] = useState(0.5);
   const [scroll, setScroll] = useState({
     left: 0,
     top: 0,
@@ -67,6 +73,23 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const twigIdToTrue = useAppSelector(selectTwigIdToTrue(props.space));
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
 
+  const tabIdToTwigIdToTrue = useAppSelector(selectTabIdToTwigIdToTrue(props.space));
+
+  const tabTwigs = [];
+  Object.keys(tabIdToTwigIdToTrue[tabId] || {}).forEach(twigId => {
+    const twig = client.cache.readFragment({
+      id: client.cache.identify({
+        id: twigId,
+        __typename: 'Twig',
+      }),
+      fragment: TWIG_FIELDS,
+    }) as Twig;
+    if (twig?.userId === props.user?.id) {
+      tabTwigs.push(twig);
+    }
+  })
+  const tabTwig = tabTwigs[0];
+
   const abstract = client.cache.readFragment({
     id: client.cache.identify({
       id: props.space === 'FRAME'
@@ -77,6 +100,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     fragment: ABSTRACT_ARROW_FIELDS,
     fragmentName: 'AbstractArrowFields',
   }) as Arrow;
+
+  const [selectedTwigId, setSelectedTwigId] = useState(abstract.rootTwigId);
 
   let role = null as Role | null;
   (abstract?.roles || []).some(role_i => {
@@ -117,6 +142,14 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   //const { moveTwig } = useMoveTwig(props.space);
   //const { adjustTwigs} = useAdjustTwigs(abstract)
 
+  const { centerTwig } = useCenterTwig(props.user, props.space, scale);
+
+  useEffect(() => {
+    if (!tabTwig) return;
+    setSelectedTwigId(tabTwigs[0].id);
+    centerTwig(tabTwigs[0].id, true, 0);
+  }, [tabTwig?.id]);
+  
   useEffect(() => {
     if (!spaceEl.current) return;
 
@@ -443,6 +476,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
             canView={canView}
             setTouches={setTouches}
             coordsReady={true}
+            drag={drag}
+            setDrag={setDrag}
           />
         </Box>
       )
@@ -497,6 +532,10 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const w = 2 * VIEW_RADIUS;
   const h = 2 * VIEW_RADIUS;
   return (
+    <SpaceContext.Provider value={{
+      selectedTwigId,
+      setSelectedTwigId,
+    }}>
     <Box 
       ref={spaceEl}
       onMouseDown={handleMouseDown}
@@ -643,5 +682,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         scale={scale}
       />
     </Box>
+    </SpaceContext.Provider>
   );
 }

@@ -1,12 +1,9 @@
 import type { NormalizedCacheObject } from "@apollo/client";
 import type { ApolloClient } from "@apollo/client";
 import { gql } from "@apollo/client";
-import { AlarmType, MessageName, PORT_NAME } from "~constants";
-import { SpaceType } from "~features/space/space";
-import { setTwigId } from "~features/twigs/twigSlice";
-import { FULL_USER_FIELDS, USER_FIELDS } from "~features/user/userFragments";
+import { AlarmType } from "~constants";
+import { FULL_USER_FIELDS } from "~features/user/userFragments";
 import { setUserId } from "~features/user/userSlice";
-import { getClient } from "~graphql";
 import { store } from "~store";
 import { setTokenIsInit, setTokenIsValid } from "./authSlice";
 
@@ -76,11 +73,7 @@ export const initUser = async (client: ApolloClient<NormalizedCacheObject>) => {
   
     store.dispatch(setUserId(data.initUser.id));
     store.dispatch(setTokenIsValid(true));
-    store.dispatch(setTwigId({
-      space: SpaceType.FRAME,
-      twigId: data.initUser.frame.selectTwigId
-    }));
-    
+
     chrome.alarms.create(AlarmType.REFRESH_TOKEN, {
       periodInMinutes: 5,
     });
@@ -99,10 +92,7 @@ export const getCurrentUser = async (client: ApolloClient<NormalizedCacheObject>
     console.log(data);
 
     store.dispatch(setUserId(data.getCurrentUser.id));
-    store.dispatch(setTwigId({
-      space: SpaceType.FRAME,
-      twigId: data.getCurrentUser.frame.selectTwigId
-    }))
+
     
     chrome.alarms.create(AlarmType.REFRESH_TOKEN, {
       periodInMinutes: 5,

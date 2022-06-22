@@ -1,6 +1,6 @@
 
 import { gql, useApolloClient, useMutation, useReactiveVar } from '@apollo/client';
-import { useCallback } from 'react';
+import { useCallback, useContext } from 'react';
 import { useAppDispatch, useAppSelector } from '~store';
 import { TWIG_WITH_Z } from './twigFragments';
 import type { SpaceType } from '../space/space';
@@ -8,9 +8,10 @@ import { setSpace } from '../space/spaceSlice';
 import type { Twig } from './twig';
 import { useSnackbar } from 'notistack';
 import { FULL_ROLE_FIELDS } from '../role/roleFragments';
-import { selectIdToDescIdToTrue, setTwigId } from './twigSlice';
+import { selectIdToDescIdToTrue } from './twigSlice';
 import type { Arrow } from '../arrow/arrow';
 import { selectSessionId } from '~features/auth/authSlice';
+import { SpaceContext } from '~features/space/SpaceComponent';
 
 const SELECT_TWIG = gql`
   mutation Select_Twig($sessionId: String!, $twigId: String!) {
@@ -37,10 +38,12 @@ export default function useSelectTwig(space: SpaceType, canEdit: boolean) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
+  const { setSelectedTwigId } = useContext(SpaceContext);
+
   const sessionId = useAppSelector(selectSessionId);
 
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(space));
-
+  
   const { enqueueSnackbar } = useSnackbar();
 
   const [select] = useMutation(SELECT_TWIG, {
@@ -71,10 +74,7 @@ export default function useSelectTwig(space: SpaceType, canEdit: boolean) {
       throw new Error('Cannot edit frame')
     }
 
-    dispatch(setTwigId({
-      space,
-      twigId,
-    }));
+    setSelectedTwigId(twigId);
 
     dispatch(setSpace(space));
 
@@ -118,7 +118,7 @@ export default function useSelectTwig(space: SpaceType, canEdit: boolean) {
         twigZ: cachedVal => cachedVal + Object.keys(idToDescIdToTrue[twigId] || {}).length + 1,
       },
     })
-  }, [space, canEdit, select])
+  }, [space, canEdit, select, setSelectedTwigId])
 
   return { selectTwig };
 }

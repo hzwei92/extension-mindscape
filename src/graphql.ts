@@ -96,12 +96,15 @@ const splitLink = split(
 export const getClient = async () => {
   const cache = new InMemoryCache({
     typePolicies: {
-      User: {
+      Arrow: {
         merge: true,
       },
       Twig: {
         merge: true,
-      }
+      },
+      User: {
+        merge: true,
+      },
     }
   })
   

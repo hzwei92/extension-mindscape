@@ -1,16 +1,27 @@
 import type { NormalizedCacheObject } from "@apollo/client"
 import type { ApolloClient } from "@apollo/client"
-import { Storage } from "@plasmohq/storage"
 import type { CachePersistor } from "apollo3-cache-persist"
 import { v4 } from "uuid"
-import { AlarmType, ALARM_DELIMITER, ErrMessage, MessageName, PORT_NAME } from "~constants"
+import { AlarmType, ALARM_DELIMITER, ErrMessage, MessageName } from "~constants"
 import type { Arrow } from "~features/arrow/arrow"
 import { ARROW_FIELDS } from "~features/arrow/arrowFragments"
 import { getCurrentUser, initUser, refreshToken } from "~features/auth/auth"
 import { selectAuthIsDone, selectTokenIsInit, selectTokenIsValid, setAuthIsDone, setSessionId, setTokenIsInit } from "~features/auth/authSlice"
-import { decrement, increment } from "~features/counter/counterSlice"
 import { SpaceType } from "~features/space/space"
-import { createGroup, createTab, GroupEntry, loadTabs, maintainSubtree, moveTab, removeGroup, removeTab, removeWindow, TabEntry, updateTab, WindowEntry } from "~features/tab/tab"
+import { 
+  createGroup, 
+  createTab, 
+  GroupEntry, 
+  loadTabs, 
+  maintainSubtree, 
+  moveTab, 
+  removeGroup, 
+  removeTab, 
+  removeWindow, 
+  TabEntry, 
+  updateTab, 
+  WindowEntry 
+} from "~features/tab/tab"
 import { getTwigs, loadTwigTree, Twig } from "~features/twigs/twig"
 import { TWIG_FIELDS } from "~features/twigs/twigFragments"
 import { selectGroupIdToTwigIdToTrue, selectShouldReloadTwigTree, selectTabIdToTwigIdToTrue, selectWindowIdToTwigIdToTrue } from "~features/twigs/twigSlice"
@@ -107,6 +118,21 @@ chrome.runtime.onInstalled.addListener(async details => {
       }
     }
   });
+
+  try {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.name === MessageName.GET_TAB_ID) {
+        sendResponse({
+          tabId: sender.tab.id
+        });
+      }
+    });
+  } catch (err) {
+    if (err.message === ErrMessage.NO_RECEIVER) {
+      console.log('Theres no receiver eyyy')
+    }
+  }
+
 
   chrome.tabs.onCreated.addListener(async tab => {
     console.log('tab created', tab);

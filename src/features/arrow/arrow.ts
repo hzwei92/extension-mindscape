@@ -31,7 +31,6 @@ export type Arrow = {
   twigN: number;
   twigZ: number;
   rootTwigId: string | null;
-  selectTwigId: string | null;
 
   canEdit: string;
   canPost: string;

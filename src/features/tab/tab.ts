@@ -2,10 +2,11 @@ import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import { SpaceType } from "~features/space/space";
 import type { Twig } from "~features/twigs/twig";
 import { FULL_TWIG_FIELDS, TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { addTwigs, selectIdToDescIdToTrue, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
+import { addTwigs, selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
 import { RootState, store } from "~store";
 import type { IdToType } from "~types";
-import { AlarmType, ALARM_DELIMITER, ErrMessage } from "~constants";
+import { AlarmType, ALARM_DELIMITER, ErrMessage, MessageName, PORT_NAME } from "~constants";
+import { selectUserId } from "~features/user/userSlice";
 
 export type WindowEntry = {
   twigId: string | null;

@@ -13,12 +13,13 @@ import { selectIsOpen, selectSpace, setSpace } from './spaceSlice';
 import { selectMenuMode } from '../menu/menuSlice';
 import type { Arrow } from '../arrow/arrow';
 import type { User } from '../user/user';
-import { selectTwigId, selectTwigIdToTrue } from '~features/twigs/twigSlice';
+import { selectTwigIdToTrue } from '~features/twigs/twigSlice';
 import { FULL_TWIG_FIELDS } from '~features/twigs/twigFragments';
 import type { Twig } from '~features/twigs/twig';
 import useCenterTwig from '~features/twigs/useCenterTwig';
 import useSelectTwig from '~features/twigs/useSelectTwig';
 import { AppContext } from '~newtab/App';
+import { SpaceContext } from './SpaceComponent';
 
 interface SpaceNavProps {
   user: User | null;
@@ -33,6 +34,8 @@ export default function SpaceNav(props: SpaceNavProps) {
   const dispatch = useAppDispatch();
 
   const { width } = useContext(AppContext);
+  const { selectedTwigId } = useContext(SpaceContext);
+
   const menuMode = useAppSelector(selectMenuMode);
 
   const space = useAppSelector(selectSpace);
@@ -40,7 +43,6 @@ export default function SpaceNav(props: SpaceNavProps) {
   const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
 
   const twigIdToTrue = useAppSelector(selectTwigIdToTrue(props.space))
-  const twigId = useAppSelector(selectTwigId(props.space));
 
   const [twigs, setTwigs] = useState([] as Twig[]);
   const [index, setIndex] = useState(0);
@@ -70,20 +72,20 @@ export default function SpaceNav(props: SpaceNavProps) {
   }, [twigIdToTrue]);
 
   useEffect(() => {
-    if (!twigId) return;
+    if (!selectedTwigId) return;
 
     twigs.some((twig, i) => {
-      if (twig.id === twigId) {
+      if (twig.id === selectedTwigId) {
         setIndex(i);
         return true;
       }
       return false;
     });
-  }, [twigId]);
+  }, [selectedTwigId]);
 
   useEffect(() => {
     if (isInit || !twigs.length) return;
-    centerTwig(twigId, false, 0)
+    centerTwig(selectedTwigId, false, 0)
     setIsInit(true);
   }, [isInit, twigs])
 
@@ -106,7 +108,7 @@ export default function SpaceNav(props: SpaceNavProps) {
 
 
   const select = (twig: Twig, isInstant?: boolean) => {
-    if (twigId !== twig.id) {
+    if (selectedTwigId !== twig.id) {
       selectTwig(props.abstract, twig.id);
     }
     centerTwig(twig.id, !isInstant, 0);
@@ -176,7 +178,7 @@ export default function SpaceNav(props: SpaceNavProps) {
       }}>
         <FastRewindIcon color='inherit' />
       </Fab>
-      <Fab title='Selected' size='small' disabled={!twigId} onClick={handleNavFocus} sx={{
+      <Fab title='Selected' size='small' disabled={!selectedTwigId} onClick={handleNavFocus} sx={{
         margin: 1,
         color:  twigs[index]?.user?.color || 'dimgrey',
         border: space === props.space

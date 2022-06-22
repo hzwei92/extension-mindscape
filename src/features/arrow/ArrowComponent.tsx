@@ -93,7 +93,7 @@ export default function ArrowComponent(props: ArrowProps) {
         }
       </Box>
       <Box sx={{
-        width: TWIG_WIDTH - 32,
+        width: TWIG_WIDTH - 60,
       }}>
         {
           props.arrow.draft
@@ -110,8 +110,12 @@ export default function ArrowComponent(props: ArrowProps) {
                     {props.arrow.title}
                   </Typography>
                   <Box>
-                    <Link sx={{
+                    <Link component='button' sx={{
                       cursor: 'pointer',
+                      whiteSpace: 'pre-wrap',
+                      width: '100%',
+                      wordWrap: 'break-word',
+                      textAlign: 'left',
                     }}>
                       {props.arrow.url}
                     </Link>

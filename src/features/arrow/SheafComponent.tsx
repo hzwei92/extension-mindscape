@@ -1,5 +1,5 @@
 import { useApolloClient } from '@apollo/client';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '~store';
 import { VIEW_RADIUS } from '~constants';
 import { getPolylineCoords } from '~utils';
@@ -7,8 +7,9 @@ import type { SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import type { Arrow } from './arrow';
 import type { Twig } from '~features/twigs/twig';
-import { selectRequiresRerender, selectTwigId } from '~features/twigs/twigSlice';
+import { selectRequiresRerender } from '~features/twigs/twigSlice';
 import { FULL_TWIG_FIELDS } from '~features/twigs/twigFragments';
+import { SpaceContext } from '~features/space/SpaceComponent';
 
 interface SheafComponentProps {
   user: User;
@@ -21,15 +22,14 @@ export default function SheafComponent(props: SheafComponentProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const twigId = useAppSelector(selectTwigId(props.space));
   const [linkI, setLinkI] = useState(0);
   const [clickTimeout, setClickTimeout] = useState(null as ReturnType<typeof setTimeout> | null);
 
   //const { selectTwig } = useSelectTwig(props.space, props.canEdit)
   //const { openTwig } = useOpenTwig();
 
-  const isSelected = props.twig.id === twigId
-  
+  const { selectedTwigId } = useContext(SpaceContext);
+  const isSelected = props.twig.id === selectedTwigId;
 
   const sourceTwig = client.cache.readFragment({
     id: client.cache.identify({

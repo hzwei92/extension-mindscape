@@ -1,16 +1,16 @@
 import { gql, useApolloClient } from '@apollo/client';
 import { Box, Card, IconButton } from '@mui/material';
-import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '~store';
 import { DisplayMode, TWIG_WIDTH } from '~constants';
 import type { Role } from '../role/role';
-import type { SpaceType } from '../space/space';
+import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
 import TwigBar from './TwigBar';
 import TwigControls from './TwigControls';
-import { selectChildIdToTrue, selectRequiresRerender, selectTwigId, setRequiresRerender } from './twigSlice';
+import { selectChildIdToTrue, selectRequiresRerender, setRequiresRerender } from './twigSlice';
 //import useSelectTwig from './useSelectTwig';
 import { selectCreateLink, setCreateLink } from '../arrow/arrowSlice';
 import type { Arrow } from '../arrow/arrow';
@@ -20,6 +20,8 @@ import TwigVoter from './TwigVoter';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { getColor, getTwigColor } from '~utils';
 import { FULL_TWIG_FIELDS, TWIG_WITH_XY } from './twigFragments';
+import TwigPostComponent from './TwigPostComponent';
+import { SpaceContext } from '~features/space/SpaceComponent';
 //import useMoveTwig from './useMoveTwig';
 //import useLinkTwigs from './useLinkTwigs';
 
@@ -34,14 +36,15 @@ interface TwigLinkComponentProps {
   canView: boolean;
   setTouches: Dispatch<SetStateAction<React.TouchList | null>>;
   coordsReady: boolean;
+  drag: DragState;
+  setDrag: Dispatch<SetStateAction<DragState>>;
 }
+
 function TwigLinkComponent(props: TwigLinkComponentProps) {
   //console.log('twig link', props.twig.id);
 
   const client = useApolloClient();
   const dispatch = useAppDispatch();
-
-  const isPost = props.twig.detail.sourceId === props.twig.detail.targetId;
 
   //useAppSelector(state => selectInstanceById(state, props.twigId)); // rerender on instance change
   const requiresRerender = useAppSelector(state => selectRequiresRerender(state, props.space, props.twig.id));
@@ -52,11 +55,8 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   const palette = useAppSelector(selectPalette);
   const createLink = useAppSelector(selectCreateLink);
   
-  const twigId = useAppSelector(selectTwigId(props.space));
-  const isSelected = twigId === props.twig.id;
-  if (isSelected) {
-    console.log('isSelected', twigId)
-  }
+  const { selectedTwigId } = useContext(SpaceContext);
+  const isSelected = props.twig.id === selectedTwigId;
   
   const childIdToTrue = useAppSelector(state => selectChildIdToTrue(state, props.space, props.twig.id));
   //console.log('children', childIdToTrue);
@@ -194,8 +194,8 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
     return (
       <Box>
         <Card elevation={5} onClick={handleOpenClick} sx={{
-          width: 50,
-          height: 50,
+          width: 35,
+          height: 35,
           outline: isSelected
             ? `5px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
             : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
@@ -205,6 +205,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
           justifyContent: 'center',
           cursor: 'pointer',
           pointerEvents: 'auto',
+          opacity: .8,
         }}>
           <Box sx={{
             display: 'flex',
@@ -241,16 +242,12 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
           sx={{
             display: 'flex',
             flexDirection: 'column',
-            width: isPost
-              ? TWIG_WIDTH
-              : TWIG_WIDTH - 50,
+            width: TWIG_WIDTH - 50,
             opacity: .9,
             outline: isSelected
               ? `10px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
               : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
-            borderRadius: isPost
-              ? 2
-              : 8,
+            borderRadius: 8,
             borderTopLeftRadius: 0,
             backgroundColor: isLinking
               ? palette === 'dark'
@@ -311,7 +308,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                 role={props.role}
                 canPost={props.canPost}
                 canView={props.canView}
-                isPost={isPost}
+                isPost={false}
                 isLoading={isLoading}
                 setIsLoading={setIsLoading}
                 canEdit={props.canEdit}
@@ -328,7 +325,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                   marginTop: 3,
                   marginLeft: 5,
                 }}>
-                  <TwigLinkComponent 
+                  <TwigPostComponent 
                     user={props.user}
                     space={props.space}
                     role={props.role}
@@ -339,6 +336,8 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                     canView={props.canView}
                     setTouches={props.setTouches}
                     coordsReady={coordsReady && !requiresRerender}
+                    drag={props.drag}
+                    setDrag={props.setDrag}
                   />
                 </Box>
               )
@@ -354,7 +353,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                 marginTop: 5,
                 marginLeft: 3,
               }}>
-                <TwigLinkComponent 
+                <TwigPostComponent
                   user={props.user}
                   space={props.space}
                   role={props.role}
@@ -365,6 +364,8 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                   canView={props.canView}
                   setTouches={props.setTouches}
                   coordsReady={coordsReady && !requiresRerender}
+                  drag={props.drag}
+                  setDrag={props.setDrag}
                 />
               </Box>
             )

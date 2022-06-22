@@ -79,6 +79,7 @@ export enum AlarmType {
 };
 
 export enum MessageName {
+  GET_TAB_ID = 'GET_TAB_ID',
   RESTORE_CACHE = 'RESTORE_CACHE',
   PURGE_CACHE = 'PURGE_CACHE',
 };
