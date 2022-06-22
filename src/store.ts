@@ -78,12 +78,12 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
 new Storage('local').watch({
   [`persist:${persistConfig.key}`]: (changes) => {
-    console.log('watch redux', changes)
+    //console.log('watch redux', changes)
     //console.log(JSON.parse(changes.newValue.twig))
     persistor.resync()
   },
   ['apollo-cache-persist']: (changes) => {
-    //console.log('watch apollo', changes)
+    console.log('watch apollo', changes)
     try {
       const port = chrome.runtime.connect({
         name: PORT_NAME,

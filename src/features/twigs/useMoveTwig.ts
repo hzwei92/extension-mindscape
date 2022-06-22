@@ -15,6 +15,7 @@ const MOVE_TWIG = gql`
         id
         x
         y
+        isPositionReady
       }
       role {
         ...RoleFields

@@ -21,6 +21,7 @@ import TwigVoter from './TwigVoter';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import useSelectTwig from './useSelectTwig';
 import useMoveTwig from './useMoveTwig';
+import { AppContext } from '~newtab/App';
 //import useLinkTwigs from './useLinkTwigs';
 
 interface TwigPostComponentProps {
@@ -43,7 +44,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const isPost = props.twig.detail.sourceId === props.twig.detail.targetId;
+  const { cachePersistor } = useContext(AppContext);
 
   //useAppSelector(state => selectInstanceById(state, props.twigId)); // rerender on instance change
   const requiresRerender = useAppSelector(state => selectRequiresRerender(state, props.space, props.twig.id));
@@ -82,12 +83,11 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   const [isLoading, setIsLoading] = useState(false);
   const twigEl = useRef<HTMLDivElement | undefined>();
 
-  const [coordsReady, setCoordsReady] = useState(props.twig.displayMode === DisplayMode.SCATTERED);
-
   const { moveTwig } = useMoveTwig(props.space);
 
   useEffect(() => {
     if (props.twig.displayMode === DisplayMode.SCATTERED) return;
+    if (props.twig.isPositionReady) return;
     if (!props.coordsReady) return;
     if (!twigEl.current) return;
 
@@ -96,26 +96,32 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     const x = props.twig.parent.x + offsetLeft;
     const y = props.twig.parent.y + offsetTop 
     if (x !== props.twig.x || y !== props.twig.y) {
-      console.log(props.twig, x, y, props.coordsReady)
       client.cache.modify({
         id: client.cache.identify(props.twig),
         fields: {
-          x: () => props.twig.parent.x + offsetLeft,
-          y: () => props.twig.parent.y + offsetTop,
+          x: () => x,
+          y: () => y,
         },
       });
-  
+      cachePersistor.persist()
       moveTwig(props.twig.id, props.twig.displayMode);
+
+      dispatch(setRequiresRerender({
+        space: props.space,
+        twigId: props.twig.id,
+        requiresRerender: true,
+      }));
     }
 
-    dispatch(setRequiresRerender({
-      space: props.space,
-      twigId: props.twig.id,
-      requiresRerender: true,
-    }));
-
-    setCoordsReady(true)
-  }, [props.twig.displayMode, props.coordsReady, props.twig.parent?.x, props.twig.parent?.y, twigEl.current?.offsetLeft, twigEl.current?.offsetTop])
+  }, [
+    props.coordsReady, 
+    props.twig.displayMode, 
+    props.twig.isPositionReady,
+    props.twig.parent?.x, 
+    props.twig.parent?.y, 
+    twigEl.current?.offsetLeft, 
+    twigEl.current?.offsetTop
+  ])
   
   useEffect(() => {
     if (requiresRerender) {
@@ -187,34 +193,6 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     createLink.targetId === props.twig.detailId
   );
 
-  if (!isPost && !props.twig.isOpen) {
-    return (
-      <Box>
-        <Card elevation={5} onClick={handleOpenClick} sx={{
-          width: 50,
-          height: 50,
-          outline: isSelected
-            ? `5px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
-            : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
-          borderRadius: 5,
-          borderTopLeftRadius: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          pointerEvents: 'auto',
-        }}>
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}>
-              {props.twig.detail.weight}
-          </Box>
-        </Card>
-      </Box>
-    );
-  }
-
   return (
     <Box ref={twigEl} sx={{
       display: 'flex',
@@ -238,16 +216,12 @@ function TwigPostComponent(props: TwigPostComponentProps) {
           sx={{
             display: 'flex',
             flexDirection: 'column',
-            width: isPost
-              ? TWIG_WIDTH
-              : TWIG_WIDTH - 50,
+            width: TWIG_WIDTH,
             opacity: .9,
             outline: isSelected
               ? `10px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
               : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
-            borderRadius: isPost
-              ? 2
-              : 8,
+            borderRadius: 2,
             borderTopLeftRadius: 0,
             backgroundColor: isLinking
               ? palette === 'dark'
@@ -260,20 +234,16 @@ function TwigPostComponent(props: TwigPostComponentProps) {
             pointerEvents: 'auto',
           }}
         >
-          {
-            isPost
-              ? <TwigBar
-                  space={props.space} 
-                  abstract={props.abstract} 
-                  twig={props.twig}
-                  canEdit={props.canEdit}
-                  setTouches={props.setTouches}
-                  isSelected={isSelected}
-                  drag={props.drag}
-                  setDrag={props.setDrag}
-                />
-              : null
-          }
+          <TwigBar
+            space={props.space} 
+            abstract={props.abstract} 
+            twig={props.twig}
+            canEdit={props.canEdit}
+            setTouches={props.setTouches}
+            isSelected={isSelected}
+            drag={props.drag}
+            setDrag={props.setDrag}
+          />
           <Box sx={{
             display: 'flex',
           }}>
@@ -301,21 +271,6 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                   isGroup={!props.twig.tabId && !!props.twig.groupId}
                   isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
                 />
-                <Box sx={{
-                  display: isPost
-                    ? 'none'
-                    : 'block',
-                  position: 'absolute',
-                  left: TWIG_WIDTH - 115,
-                  top: -6,
-                }}>
-                  <IconButton onClick={handleOpenClick}>
-                    <RemoveIcon sx={{
-                      color: getColor(palette),
-                      fontSize: 12,
-                    }}/>
-                  </IconButton>
-                </Box>
               </Box>
               <TwigControls
                 user={props.user}
@@ -325,7 +280,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                 role={props.role}
                 canPost={props.canPost}
                 canView={props.canView}
-                isPost={isPost}
+                isPost={true}
                 isLoading={isLoading}
                 setIsLoading={setIsLoading}
                 canEdit={props.canEdit}
@@ -352,7 +307,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                     canPost={props.canPost}
                     canView={props.canView}
                     setTouches={props.setTouches}
-                    coordsReady={coordsReady && !requiresRerender}
+                    coordsReady={props.twig.isPositionReady && !requiresRerender}
                     drag={props.drag}
                     setDrag={props.setDrag}
                   />
@@ -380,7 +335,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                   canPost={props.canPost}
                   canView={props.canView}
                   setTouches={props.setTouches}
-                  coordsReady={coordsReady && !requiresRerender}
+                  coordsReady={props.twig.isPositionReady && !requiresRerender}
                   drag={props.drag}
                   setDrag={props.setDrag}
                 />

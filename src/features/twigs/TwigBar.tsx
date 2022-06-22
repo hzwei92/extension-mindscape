@@ -1,6 +1,6 @@
 import { Box, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import React, { Dispatch, DragEventHandler, SetStateAction } from 'react';
+import React, { Dispatch, DragEventHandler, SetStateAction, useContext } from 'react';
 import type { Twig } from './twig';
 import type { DragState, SpaceType } from '../space/space';
 import { useAppDispatch, useAppSelector } from '~store';
@@ -12,8 +12,9 @@ import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArro
 import { getTwigColor } from '~utils';
 import { useApolloClient } from '@apollo/client';
 import { DisplayMode } from '~constants';
-import { FULL_TWIG_FIELDS } from './twigFragments';
-import { setRequiresRerender } from './twigSlice';
+import { FULL_TWIG_FIELDS, TWIG_FIELDS } from './twigFragments';
+import { selectIdToChildIdToTrue, selectIdToDescIdToTrue, setRequiresRerender } from './twigSlice';
+import { AppContext } from '~newtab/App';
 
 interface TwigBarProps {
   space: SpaceType;
@@ -30,11 +31,16 @@ function TwigBar(props: TwigBarProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
+  const { cachePersistor } = useContext(AppContext);
+
   const palette = useAppSelector(selectPalette);
   const color = palette === 'dark'
     ? 'black'
     : 'white';
   const createLink = useAppSelector(selectCreateLink);
+
+  const idToChildIdToTrue = useAppSelector(selectIdToChildIdToTrue(props.space));
+  const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
 
   const beginDrag = () => {
     if (!props.twig.parent) return;
@@ -45,6 +51,44 @@ function TwigBar(props: TwigBarProps) {
           displayMode: () => DisplayMode.SCATTERED
         }
       });
+
+      const queue = [];
+      Object.keys(idToChildIdToTrue[props.twig.parent.id] || {}).forEach(sibId => {
+        const sib = client.cache.readFragment({
+          id: client.cache.identify({
+            id: sibId,
+            __typename: 'Twig',
+          }),
+          fragment: TWIG_FIELDS,
+        }) as Twig;
+
+        if (sib.displayMode !== DisplayMode.SCATTERED && sib?.rank > props.twig.rank) {
+          queue.push(sib);
+        }
+      });
+
+      while (queue.length) {
+        const twig = queue.shift();
+        client.cache.modify({
+          id: client.cache.identify(twig),
+          fields: {
+            isPositionReady: () => false,
+          },
+        });
+
+        Object.keys(idToChildIdToTrue[twig.id] || {}).forEach(childId => {
+          const child = client.cache.readFragment({
+            id: client.cache.identify({
+              id: childId,
+              __typename: 'Twig',
+            }),
+            fragment: TWIG_FIELDS,
+          }) as Twig;
+          if (child.displayMode !== DisplayMode.SCATTERED) {
+            queue.push(child);
+          }
+        })
+      }
 
       let root = props.twig;
       while (root.displayMode !== DisplayMode.SCATTERED) {
@@ -67,6 +111,8 @@ function TwigBar(props: TwigBarProps) {
       dy: 0,
       targetTwigId: '',
     });
+
+    cachePersistor.pause();
   }
 
   const dontDrag = (event: React.MouseEvent) => {
@@ -152,7 +198,8 @@ function TwigBar(props: TwigBarProps) {
             {props.twig.degree}:{props.twig.rank}...
             {props.twig.index}...
             {props.twig.tabId || props.twig.groupId || props.twig.windowId}...
-            {props.twig.displayMode}
+            {props.twig.displayMode}...
+            {props.twig.isPositionReady ? 1 : 0}
           </Typography>
         </Box>
         </Box>

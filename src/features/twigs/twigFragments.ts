@@ -13,6 +13,7 @@ export const TWIG_FIELDS = gql`
     x
     y
     z
+    isPositionReady
     degree
     rank
     index
@@ -50,6 +51,7 @@ export const FULL_TWIG_FIELDS = gql`
       detailId
       x
       y
+      isPositionReady
     }
     children {
       id
@@ -85,6 +87,7 @@ export const TWIG_WITH_POS = gql`
     displayMode
     x
     y
+    isPositionReady
     deleteDate
     parent {
       id

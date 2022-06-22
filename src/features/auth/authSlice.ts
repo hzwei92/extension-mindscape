@@ -43,13 +43,13 @@ export const authSlice: Slice<AuthState> = createSlice({
       return {
         ...state,
         interval: action.payload,
-      }
+      };
     },
     setSessionId: (state, action: PayloadAction<string>) => {
       return {
         ...state,
         sessionId: action.payload,
-      }
+      };
     },
     setLogout: (state, action) => {
       console.log('omgomg')
@@ -57,7 +57,7 @@ export const authSlice: Slice<AuthState> = createSlice({
         ...state,
         isDone: false,
         isValid: false,
-      }
+      };
     }
   },
 });

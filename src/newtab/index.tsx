@@ -18,7 +18,6 @@ import { SpaceType } from '~features/space/space';
 function IndexNewtab() {
   const [client, setClient] = useState(null as ApolloClient<NormalizedCacheObject> | null);
   const [cachePersistor, setCachePersistor] = useState(null as CachePersistor<NormalizedCacheObject> | null)
-  const [port, setPort] = useState(null as chrome.runtime.Port | null);
   const [tabId, setTabId] = useState(-1);
 
   useEffect(() => {
@@ -46,14 +45,15 @@ function IndexNewtab() {
 
   useEffect(() => {
     if (!cachePersistor) return;
+
     const handleConnect = port => {
-      setPort(port);
       port.onMessage.addListener(message => {
         if (message.name === MessageName.RESTORE_CACHE) {
           cachePersistor.restore();
         }
       })
     }
+    
     chrome.runtime.onConnect.addListener(handleConnect);
 
     return () => {

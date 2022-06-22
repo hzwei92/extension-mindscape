@@ -22,6 +22,7 @@ import TwigPostComponent from "~features/twigs/TwigPostComponent";
 import SpaceControls from "./SpaceControls";
 import SpaceNav from "./SpaceNav";
 import useCenterTwig from "~features/twigs/useCenterTwig";
+import TwigLine from "~features/twigs/TwigLine";
 //import useAdjustTwigs from "../twig/useAdjustTwigs";
 
 
@@ -39,7 +40,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const { tabId, width } = useContext(AppContext);
+  const { tabId, width, cachePersistor } = useContext(AppContext);
   const palette = useAppSelector(selectPalette);
 
   const menuWidth = useAppSelector(selectActualMenuWidth);
@@ -123,7 +124,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const [touches, setTouches] = useState(null as React.TouchList | null);
 
-  const [scaleEvent, setScaleEvent] = useState(null as React.WheelEvent | null);
   const [isScaling, setIsScaling] = useState(false);
   const [scaleScroll, setScaleScroll] = useState(null as any);
   const [canScale, setCanScale] = useState(true);
@@ -145,10 +145,10 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const { centerTwig } = useCenterTwig(props.user, props.space, scale);
 
   useEffect(() => {
-    if (!tabTwig) return;
+    if (!tabTwig || !tabTwig.isPositionReady) return;
     setSelectedTwigId(tabTwigs[0].id);
     centerTwig(tabTwigs[0].id, true, 0);
-  }, [tabTwig?.id]);
+  }, [tabTwig?.id, tabTwig?.isPositionReady]);
   
   useEffect(() => {
     if (!spaceEl.current) return;
@@ -181,7 +181,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     });
     setScaleScroll(null);
   }, [scaleScroll, spaceEl.current])
-
 
   useEffect(() => {
     if (!moveEvent || !spaceEl.current) return;
@@ -268,6 +267,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
     const dx1 = dx / scale;
     const dy1 = dy / scale;
+    
+    console.log(dx1, dy1);
 
     setDrag({
       ...drag,
@@ -316,6 +317,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     else {
       //dispatch(setFocusIsSynced(false));
     }
+    cachePersistor.resume();
   };
 
   const handleMouseMove = (event: React.MouseEvent, targetId?: string) => {
@@ -332,7 +334,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     if (!moveEvent) {
       setMoveEvent(event);
     }
-
   }
 
   const handleMouseUp = (event: React.MouseEvent) => {
@@ -352,7 +353,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     if (isScaling) {
       setIsScaling(false);
     }
-    else if (!scaleEvent) {
+    else {
       const dx = left - scroll.left;
       const dy = top - scroll.top;
 
@@ -613,54 +614,14 @@ export default function SpaceComponent(props: SpaceComponentProps) {
                 }),
                 fragment: TWIG_WITH_POS,
               }) as Twig;
-              if (!twig || twig.deleteDate || !twig.parent || twig.id === abstract.rootTwigId) return null;
-              if (twig.displayMode === DisplayMode.SCATTERED) {
-                return (
-                  <line 
-                    key={`twig-line-${twigId}`}
-                    x1={twig.parent.x + VIEW_RADIUS}
-                    y1={twig.parent.y + VIEW_RADIUS}
-                    x2={twig.x + VIEW_RADIUS}
-                    y2={twig.y + VIEW_RADIUS}
-                    stroke={palette === 'dark' ? 'white' : 'black'}
-                    strokeLinecap={'round'}
-                    strokeWidth={4}
-                  />
-                )
-              }
-              else if (twig.displayMode === DisplayMode.HORIZONTAL) {
-                return (
-                  <polyline
-                    key={`twig-line-${twigId}`}
-                    points={`
-                      ${twig.parent.x + VIEW_RADIUS},${twig.parent.y + VIEW_RADIUS} 
-                      ${twig.x + VIEW_RADIUS},${twig.parent.y + VIEW_RADIUS} 
-                      ${twig.x + VIEW_RADIUS},${twig.y + VIEW_RADIUS}
-                    `}
-                    stroke={palette === 'dark' ? 'white' : 'black'}
-                    strokeWidth={2}
-                    strokeLinecap={'round'}
-                    fill={'none'}
-                  />
-                )
-              }
-              else if (twig.displayMode === DisplayMode.VERTICAL) {
-                return (
-                  <polyline
-                    key={`twig-line-${twigId}`}
-                    points={`
-                      ${twig.parent.x + VIEW_RADIUS},${twig.parent.y + VIEW_RADIUS} 
-                      ${twig.parent.x + VIEW_RADIUS},${twig.y + VIEW_RADIUS} 
-                      ${twig.x + VIEW_RADIUS},${twig.y + VIEW_RADIUS}
-                    `}
-                    stroke={palette === 'dark' ? 'white' : 'black'}
-                    strokeWidth={2}
-                    strokeLinecap={'round'}
-                    fill={'none'}
-                  />
-                )
-              }
-              return null;
+            
+              return (
+                <TwigLine 
+                  key={`twig-line-${twigId}`} 
+                  abstract={abstract} 
+                  twig={twig}
+                />
+              );
             })
           }
           { sheafs }

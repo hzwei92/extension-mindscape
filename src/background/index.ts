@@ -527,7 +527,8 @@ chrome.runtime.onInstalled.addListener(async details => {
     const authIsDone = selectAuthIsDone(state);
     if (authIsDone) {
       if (shouldLoadTabs) {
-        loadTabs(client);
+        await loadTabs(client);
+        await cachePersistor.persist();
         shouldLoadTabs = false;
       }
       const shouldReloadTwigTree = selectShouldReloadTwigTree(SpaceType.FRAME)(state);
@@ -538,7 +539,8 @@ chrome.runtime.onInstalled.addListener(async details => {
     else {
       const userId = selectUserId(state);
       if (userId) {
-        getTwigs(client)(userId);
+        await getTwigs(client)(userId);
+        await cachePersistor.persist();
         store.dispatch(setAuthIsDone(true));
       }
       else {
@@ -546,10 +548,12 @@ chrome.runtime.onInstalled.addListener(async details => {
         const tokenIsValid = selectTokenIsValid(state);
         if (tokenIsInit) {
           if (tokenIsValid) {
-            getCurrentUser(client);
+            await getCurrentUser(client);
+            await cachePersistor.persist();
           }
           else {
-            initUser(client);
+            await initUser(client);
+            await cachePersistor.persist();
             shouldLoadTabs = true;
           }
         }
