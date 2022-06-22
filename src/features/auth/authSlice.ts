@@ -51,6 +51,14 @@ export const authSlice: Slice<AuthState> = createSlice({
         sessionId: action.payload,
       }
     },
+    setLogout: (state, action) => {
+      console.log('omgomg')
+      return {
+        ...state,
+        isDone: false,
+        isValid: false,
+      }
+    }
   },
 });
 
@@ -60,6 +68,7 @@ export const {
   setTokenIsValid,
   setTokenInterval,
   setSessionId,
+  setLogout,
 } = authSlice.actions;
 
 export const selectAuthIsDone = (state: RootState) => state.auth.isDone;

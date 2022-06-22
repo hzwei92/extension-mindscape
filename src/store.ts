@@ -21,7 +21,7 @@ import arrowSlice from "~features/arrow/arrowSlice"
 import menuSlice from "~features/menu/menuSlice"
 import spaceSlice from "~features/space/spaceSlice"
 import twigSlice from "~features/twigs/twigSlice"
-import { MessageName, PORT_NAME } from "~constants"
+import { ErrMessage, MessageName, PORT_NAME } from "~constants"
 
 const rootReducer = combineReducers({
   arrow: arrowSlice,
@@ -78,7 +78,7 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
 new Storage('local').watch({
   [`persist:${persistConfig.key}`]: (changes) => {
-    //console.log('watch redux', changes)
+    console.log('watch redux', changes)
     //console.log(JSON.parse(changes.newValue.twig))
     persistor.resync()
   },
@@ -88,11 +88,19 @@ new Storage('local').watch({
       const port = chrome.runtime.connect({
         name: PORT_NAME,
       });
-      port.postMessage({
-        name: MessageName.RESTORE_CACHE,
-      });
+      if (port) {
+        port.postMessage({
+          name: MessageName.RESTORE_CACHE,
+        });
+        port.disconnect();
+      }
     } catch (err) {
-      console.error(err);
+      if (err.message === ErrMessage.NO_RECEIVER) {
+        console.log('newtab not open')
+      }
+      else {
+        console.log(err);
+      }
     }
 
   },

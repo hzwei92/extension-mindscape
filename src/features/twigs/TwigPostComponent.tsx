@@ -93,10 +93,10 @@ function TwigPostComponent(props: TwigPostComponentProps) {
 
     const { offsetLeft, offsetTop } = twigEl.current;
 
-    if (
-      props.twig.parent.x + offsetLeft !== props.twig.x || 
-      props.twig.parent.y + offsetTop !== props.twig.y
-    ) {
+    const x = props.twig.parent.x + offsetLeft;
+    const y = props.twig.parent.y + offsetTop 
+    if (x !== props.twig.x || y !== props.twig.y) {
+      console.log(props.twig, x, y, props.coordsReady)
       client.cache.modify({
         id: client.cache.identify(props.twig),
         fields: {

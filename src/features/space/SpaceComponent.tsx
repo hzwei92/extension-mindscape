@@ -101,7 +101,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     fragmentName: 'AbstractArrowFields',
   }) as Arrow;
 
-  const [selectedTwigId, setSelectedTwigId] = useState(abstract.rootTwigId);
+  const [selectedTwigId, setSelectedTwigId] = useState(abstract?.rootTwigId);
 
   let role = null as Role | null;
   (abstract?.roles || []).some(role_i => {
@@ -629,36 +629,36 @@ export default function SpaceComponent(props: SpaceComponentProps) {
                 )
               }
               else if (twig.displayMode === DisplayMode.HORIZONTAL) {
-                // return (
-                //   <polyline
-                //     key={`twig-line-${twigId}`}
-                //     points={`
-                //       ${twig.parent.x + VIEW_RADIUS},${twig.parent.y + VIEW_RADIUS} 
-                //       ${twig.x + VIEW_RADIUS},${twig.parent.y + VIEW_RADIUS} 
-                //       ${twig.x + VIEW_RADIUS},${twig.y + VIEW_RADIUS}
-                //     `}
-                //     stroke={palette === 'dark' ? 'white' : 'black'}
-                //     strokeWidth={2}
-                //     strokeLinecap={'round'}
-                //     fill={'none'}
-                //   />
-                // )
+                return (
+                  <polyline
+                    key={`twig-line-${twigId}`}
+                    points={`
+                      ${twig.parent.x + VIEW_RADIUS},${twig.parent.y + VIEW_RADIUS} 
+                      ${twig.x + VIEW_RADIUS},${twig.parent.y + VIEW_RADIUS} 
+                      ${twig.x + VIEW_RADIUS},${twig.y + VIEW_RADIUS}
+                    `}
+                    stroke={palette === 'dark' ? 'white' : 'black'}
+                    strokeWidth={2}
+                    strokeLinecap={'round'}
+                    fill={'none'}
+                  />
+                )
               }
               else if (twig.displayMode === DisplayMode.VERTICAL) {
-                // return (
-                //   <polyline
-                //     key={`twig-line-${twigId}`}
-                //     points={`
-                //       ${twig.parent.x + VIEW_RADIUS},${twig.parent.y + VIEW_RADIUS} 
-                //       ${twig.parent.x + VIEW_RADIUS},${twig.y + VIEW_RADIUS} 
-                //       ${twig.x + VIEW_RADIUS},${twig.y + VIEW_RADIUS}
-                //     `}
-                //     stroke={palette === 'dark' ? 'white' : 'black'}
-                //     strokeWidth={2}
-                //     strokeLinecap={'round'}
-                //     fill={'none'}
-                //   />
-                // )
+                return (
+                  <polyline
+                    key={`twig-line-${twigId}`}
+                    points={`
+                      ${twig.parent.x + VIEW_RADIUS},${twig.parent.y + VIEW_RADIUS} 
+                      ${twig.parent.x + VIEW_RADIUS},${twig.y + VIEW_RADIUS} 
+                      ${twig.x + VIEW_RADIUS},${twig.y + VIEW_RADIUS}
+                    `}
+                    stroke={palette === 'dark' ? 'white' : 'black'}
+                    strokeWidth={2}
+                    strokeLinecap={'round'}
+                    fill={'none'}
+                  />
+                )
               }
               return null;
             })

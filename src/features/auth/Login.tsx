@@ -40,8 +40,6 @@ export default function Login(props: LoginProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const { port } = useContext(AppContext);
-
   const [message, setMessage] = useState('');
 
   const [loginUser] = useMutation(LOGIN_USER, {

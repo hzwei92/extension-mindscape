@@ -3,7 +3,7 @@ import React, { Dispatch, MutableRefObject, SetStateAction, useEffect, useState 
 import { MAX_Z_INDEX } from "~constants";
 import type { User } from "~features/user/user";
 import { selectUserId } from "~features/user/userSlice";
-import { useAppDispatch, useAppSelector } from "~store";
+import { persistor, useAppDispatch, useAppSelector } from "~store";
 import { createTheme, Paper, ThemeProvider } from "@mui/material";
 import { selectPalette, setPalette } from "~features/window/windowSlice";
 import { SnackbarProvider } from 'notistack';
@@ -19,19 +19,17 @@ export const AppContext = React.createContext({} as {
   focusSpaceEl: MutableRefObject<HTMLElement | undefined>;
   setFrameSpaceEl: Dispatch<SetStateAction<MutableRefObject<HTMLElement | undefined>>>;
   setFocusSpaceEl: Dispatch<SetStateAction<MutableRefObject<HTMLElement | undefined>>>;
-  port: chrome.runtime.Port | null;
   cachePersistor: CachePersistor<NormalizedCacheObject>;
   width: number;
   height: number;
 });
 
 interface AppProps {
-  port: chrome.runtime.Port;
   cachePersistor: CachePersistor<NormalizedCacheObject>;
   tabId: number;
 }
 export default function App(props: AppProps) {
-  console.log('app')
+  //console.log('app')
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
@@ -45,7 +43,7 @@ export default function App(props: AppProps) {
     fragmentName: 'FullUserFields',
   }) as User;
 
-  console.log(userId, user);
+  console.log('app', userId, user);
 
   const palette = useAppSelector(selectPalette);
 
@@ -115,8 +113,7 @@ export default function App(props: AppProps) {
       frameSpaceEl, 
       focusSpaceEl, 
       setFrameSpaceEl, 
-      setFocusSpaceEl, 
-      port: props.port,
+      setFocusSpaceEl,
       cachePersistor: props.cachePersistor,
       width,
       height,

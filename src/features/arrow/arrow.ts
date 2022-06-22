@@ -110,7 +110,6 @@ export const createArrow = (
     twigN: 0,
     twigZ: 0,
     rootTwigId: null,
-    selectTwigId: null,
 
     canEdit: 'OTHER',
     canPost: 'OTHER',

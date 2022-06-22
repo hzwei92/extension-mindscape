@@ -60,11 +60,13 @@ chrome.runtime.onInstalled.addListener(async details => {
 
       const tab = await chrome.tabs.get(tabId);
 
+      if (!tab) return;
+
       const state = store.getState();
       const tabIdToTwigIdToTrue = selectTabIdToTwigIdToTrue(SpaceType.FRAME)(state);
       const tabTwigIds = Object.keys(tabIdToTwigIdToTrue[tabId] || {});
       if (tabTwigIds.length > 1) {
-        throw Error('Multiple twigs for tabId ' + tabId);
+        console.error('Multiple twigs for tabId ' + tabId);
       }
       const tabTwigId = tabTwigIds[0];
       if (tabTwigId) {
@@ -131,8 +133,10 @@ chrome.runtime.onInstalled.addListener(async details => {
     if (err.message === ErrMessage.NO_RECEIVER) {
       console.log('Theres no receiver eyyy')
     }
+    else {
+      console.error(err);
+    }
   }
-
 
   chrome.tabs.onCreated.addListener(async tab => {
     console.log('tab created', tab);
@@ -202,13 +206,13 @@ chrome.runtime.onInstalled.addListener(async details => {
         fragment: TWIG_FIELDS,
       }) as Twig;
 
-      if (twig.userId === userId) {
+      if (twig?.userId === userId) {
         tabTwigs.push(twig);
       }
     })
 
     if (tabTwigs.length > 1) {
-      throw Error('Duplicate twigs for tabId ' + tabId);
+      console.error('Duplicate twigs for tabId ' + tabId);
     } 
 
     const tabTwig = tabTwigs[0];
@@ -220,6 +224,7 @@ chrome.runtime.onInstalled.addListener(async details => {
         ALARM_DELIMITER +
         tabId;
       await chrome.alarms.clear(name);
+
       await chrome.alarms.create(name, {
         when: Date.now() + 100,
       });
@@ -261,13 +266,13 @@ chrome.runtime.onInstalled.addListener(async details => {
         fragment: TWIG_FIELDS,
       }) as Twig;
 
-      if (twig.userId === userId) {
+      if (twig?.userId === userId) {
         groupTwigs.push(twig);
       }
     });
 
     if (groupTwigs.length > 1) {
-      throw Error('Duplicate twigs for groupId ' + tab.groupId);
+      console.error('Duplicate twigs for groupId ' + tab.groupId);
     } 
 
     const groupTwig = groupTwigs[0];
@@ -296,18 +301,26 @@ chrome.runtime.onInstalled.addListener(async details => {
       else {
         let parentTwig: Twig;
         if (parentTab) {
-          const parentTwigIds = Object.keys(tabIdToTwigIdToTrue[parentTab.id] || {});
-          if (parentTwigIds.length > 1) {
-            throw Error('Multiple twigs for tabId ' + parentTab.id);
-          }
+          const parentTwigs = [];
+          Object.keys(tabIdToTwigIdToTrue[parentTab.id] || {}).forEach(twigId => {
+            const twig = client.cache.readFragment({
+              id: client.cache.identify({
+                id: twigId,
+                __typename: 'Twig',
+              }),
+              fragment: TWIG_FIELDS,
+            }) as Twig;
 
-          parentTwig = client.cache.readFragment({
-            id: client.cache.identify({
-              id: parentTwigIds[0],
-              __typename: 'Twig',
-            }),
-            fragment: TWIG_FIELDS,
+            if (twig?.userId === userId) {
+              parentTwigs.push(twig);
+            }
           });
+
+          if (parentTwigs.length > 1) {
+            console.error('Multiple twigs for tabId ' + parentTab.id, parentTwigs);
+          }
+          
+          parentTwig = parentTwigs[0];
         }
 
         // create just a tab
@@ -370,13 +383,13 @@ chrome.runtime.onInstalled.addListener(async details => {
           fragment: TWIG_FIELDS,
         }) as Twig;
 
-        if (twig.userId === userId) {
+        if (twig?.userId === userId) {
           windowTwigs.push(twig);
         }
       })
 
       if (windowTwigs.length > 1) {
-        throw Error('Duplicate twigs for windowId ' + tab.windowId);
+        console.error('Duplicate twigs for windowId ' + tab.windowId);
       }
 
       const windowTwig = windowTwigs[0];
@@ -447,13 +460,13 @@ chrome.runtime.onInstalled.addListener(async details => {
         fragment: TWIG_FIELDS,
       }) as Twig;
 
-      if (twig.userId === userId) {
+      if (twig?.userId === userId) {
         tabTwigs.push(twig);
       }
     })
 
     if (tabTwigs.length > 1) {
-      throw Error('Duplicate twigs for tabId ' + tabId);
+      console.error('Duplicate twigs for tabId ' + tabId);
     } 
 
     const tabTwig = tabTwigs[0];

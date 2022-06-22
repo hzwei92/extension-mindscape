@@ -22,6 +22,7 @@ function IndexNewtab() {
   const [tabId, setTabId] = useState(-1);
 
   useEffect(() => {
+    console.log('resync', persistor)
     persistor.resync();
 
     loadClient();
@@ -73,7 +74,7 @@ function IndexNewtab() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ApolloProvider client={client}>
-          <App port={port} cachePersistor={cachePersistor} tabId={tabId} />
+          <App cachePersistor={cachePersistor} tabId={tabId} />
         </ApolloProvider>
       </PersistGate>
     </Provider>

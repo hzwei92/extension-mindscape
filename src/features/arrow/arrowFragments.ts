@@ -21,7 +21,6 @@ export const ARROW_FIELDS = gql`
     twigN
     twigZ
     rootTwigId
-    selectTwigId
     canEdit
     canPost
     canTalk

@@ -1,7 +1,7 @@
 import { gql, useApolloClient, useMutation } from '@apollo/client';
 import { useContext } from 'react';
 import { MessageName } from '~constants';
-import { setAuthIsDone, setTokenIsValid } from '~features/auth/authSlice';
+import { setAuthIsDone, setLogout, setTokenIsValid } from '~features/auth/authSlice';
 import { resetSpace } from '~features/space/spaceSlice';
 import { getClient } from '~graphql';
 import { AppContext } from '~newtab/App';
@@ -33,14 +33,15 @@ export default function useLogout() {
   });
 
   const logoutUser = async () => {
+    console.log('hihi')
     logout();
     await client.clearStore();
     await cachePersistor.persist();
-    dispatch(setUserId(''));
     resetSpace(SpaceType.FRAME);
     resetSpace(SpaceType.FOCUS);
-    dispatch(setTokenIsValid(false));
-    dispatch(setAuthIsDone(false));
+    dispatch(setLogout(null));
+    dispatch(setUserId(''));
+    console.log('hello')
   }
 
   return { logoutUser };

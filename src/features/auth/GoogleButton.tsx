@@ -34,8 +34,6 @@ export default function GoogleButton(props: GoogleButtonProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const { port } = useContext(AppContext);
-
   const [message, setMessage] = useState('');
 
   const [registerGoogleUser] = useMutation(REGISTER_USER, {
