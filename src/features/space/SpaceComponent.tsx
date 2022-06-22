@@ -6,23 +6,21 @@ import { VIEW_RADIUS, SPACE_BAR_HEIGHT, DisplayMode } from "~constants";
 import { checkPermit, getAppBarWidth } from "~utils";
 import { selectActualMenuWidth } from "../menu/menuSlice";
 import type { User } from "../user/user";
-import { selectPalette, selectWidth } from "../window/windowSlice";
-import { SpaceType } from "./space";
-import { selectDrag, selectFrameWidth, selectIsOpen, selectScale, selectScroll, setDrag, setScale, setScroll } from "./spaceSlice";
-import { selectSourceIdToTargetIdToLinkIdToTrue } from "../arrow/arrowSlice";
+import { selectPalette } from "../window/windowSlice";
+import { DragState, ScrollState, SpaceType } from "./space";
+import { selectIsOpen } from "./spaceSlice";
 import { ABSTRACT_ARROW_FIELDS } from "../arrow/arrowFragments";
 import type { Arrow } from "../arrow/arrow";
 import type { Role } from "../role/role";
 import SheafComponent from "../arrow/SheafComponent";
 import { AppContext } from "~newtab/App";
 import { selectIdToDescIdToTrue, selectTwigIdToTrue } from "~features/twigs/twigSlice";
-import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_POS, TWIG_WITH_XY } from "~features/twigs/twigFragments";
+import { FULL_TWIG_FIELDS, TWIG_WITH_POS } from "~features/twigs/twigFragments";
 import type { Twig } from "~features/twigs/twig";
 import TwigLinkComponent from "~features/twigs/TwigLinkComponent";
 import TwigPostComponent from "~features/twigs/TwigPostComponent";
 import SpaceControls from "./SpaceControls";
 import SpaceNav from "./SpaceNav";
-import useCenterTwig from "~features/twigs/useCenterTwig";
 //import useAdjustTwigs from "../twig/useAdjustTwigs";
 
 interface SpaceComponentProps {
@@ -33,15 +31,15 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   //console.log('space');
   const client = useApolloClient();
   const dispatch = useAppDispatch();
-  const { port } = useContext(AppContext);
 
-  const width = useAppSelector(selectWidth);
+  const { width } = useContext(AppContext);
+  console.log('width', width)
   const palette = useAppSelector(selectPalette);
 
   const menuWidth = useAppSelector(selectActualMenuWidth);
 
   const frameIsOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
-  const frameWidth = useAppSelector(selectFrameWidth);
+  const frameWidth = width;
   const frameWidth1 = frameIsOpen
     ? frameWidth
     : 0;
@@ -52,15 +50,22 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const offsetTop = SPACE_BAR_HEIGHT;
 
-  const scale = useAppSelector(selectScale(props.space));
-  const scroll = useAppSelector(selectScroll(props.space));
-  const drag = useAppSelector(selectDrag(props.space));
-
+  const [scale, setScale] = useState(0.75);
+  const [scroll, setScroll] = useState({
+    left: 0,
+    top: 0,
+  } as ScrollState)
+  const [drag, setDrag] = useState({
+    isScreen: false,
+    twigId: '',
+    dx: 0,
+    dy: 0,
+    targetTwigId: '',
+  } as DragState);
+  
 
   const twigIdToTrue = useAppSelector(selectTwigIdToTrue(props.space));
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
-
-  const sourceIdToTargetIdToLinkIdToTrue = useAppSelector(selectSourceIdToTargetIdToLinkIdToTrue(props.space));
 
   const abstract = client.cache.readFragment({
     id: client.cache.identify({
@@ -209,10 +214,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         top,
       }); 
   
-      dispatch(setScale({
-        space: props.space,
-        scale: scale1
-      }));
+      setScale(scale1);
   
       setIsScaling(true);
       setCanScale(false);
@@ -234,15 +236,12 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     const dx1 = dx / scale;
     const dy1 = dy / scale;
 
-    dispatch(setDrag({
-      space: props.space,
-      drag: {
-        ...drag,
-        targetTwigId: targetTwigId || drag.targetTwigId,
-        dx: drag.dx + dx1,
-        dy: drag.dy + dy1,
-      }
-    }));
+    setDrag({
+      ...drag,
+      targetTwigId: targetTwigId || drag.targetTwigId,
+      dx: drag.dx + dx1,
+      dy: drag.dy + dy1,
+    });
 
     [drag.twigId, ...Object.keys(idToDescIdToTrue[drag.twigId] || {})].forEach(twigId => {
       client.cache.modify({
@@ -263,16 +262,13 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   };
 
   const endDrag = () => {
-    dispatch(setDrag({
-      space: props.space,
-      drag: {
-        isScreen: false,
-        twigId: '',
-        dx: 0,
-        dy: 0,
-        targetTwigId: '',
-      }
-    }));
+    setDrag({
+      isScreen: false,
+      twigId: '',
+      dx: 0,
+      dy: 0,
+      targetTwigId: '',
+    });
 
     if (!drag.twigId || (drag.dx === 0 && drag.dy === 0)) return;
 
@@ -294,13 +290,10 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       event.preventDefault();
     }
     if (!targetId && drag.targetTwigId && !drag.isScreen) {
-      dispatch(setDrag({
-        space: props.space,
-        drag: {
-          ...drag,
-          targetTwigId: '',
-        },
-      }));
+      setDrag({
+        ...drag,
+        targetTwigId: '',
+      });
     }
 
     if (!moveEvent) {
@@ -318,13 +311,10 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   }
 
   const updateScroll = (left: number, top: number) => {
-    dispatch(setScroll({
-      space: props.space,
-      scroll: {
-        left,
-        top,
-      },
-    }));
+    setScroll({
+      left,
+      top,
+    });
 
     if (isScaling) {
       setIsScaling(false);
@@ -346,28 +336,22 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   }
 
   const handleMouseDown = (event: React.MouseEvent) => {
-    dispatch(setDrag({
-      space: props.space,
-      drag: {
-        isScreen: true,
-        twigId: '',
-        dx: 0,
-        dy: 0,
-        targetTwigId: '',
-      }
-    }));
+    setDrag({
+      isScreen: true,
+      twigId: '',
+      dx: 0,
+      dy: 0,
+      targetTwigId: '',
+    });
   }
 
   const handleTargetMouseMove = (targetId: string) => (event: React.MouseEvent) => {
     event.stopPropagation();
     if (drag.targetTwigId !== targetId) {
-      dispatch(setDrag({
-        space: props.space,
-        drag: {
-          ...drag,
-          targetTwigId: targetId,
-        },
-      }));
+      setDrag({
+        ...drag,
+        targetTwigId: targetId,
+      });
     }
     handleMouseMove(event, targetId);
   }
@@ -493,6 +477,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
             canView={canView}
             setTouches={setTouches}
             coordsReady={true}
+            drag={drag}
+            setDrag={setDrag}
           />
         </Box>
       )
@@ -646,12 +632,15 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         space={props.space}
         setShowSettings={setShowSettings}
         setShowRoles={setShowRoles}
+        scale={scale}
+        setScale={setScale}
       />
       <SpaceNav
         user={props.user}
         space={props.space}
         abstract={abstract}
         canEdit={canEdit}
+        scale={scale}
       />
     </Box>
   );

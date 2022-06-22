@@ -1,37 +1,38 @@
-import { useApolloClient, useReactiveVar } from '@apollo/client';
-import React, { useEffect, useState } from 'react';
+import { useApolloClient } from '@apollo/client';
+import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react';
 import { Box, Fab } from '@mui/material';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import FastRewindIcon from '@mui/icons-material/FastRewind';
 import FastForwardIcon from '@mui/icons-material/FastForward';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import CenterFocusStrongIcon from '@mui/icons-material/CenterFocusStrong';
-import { SpaceType } from './space';
+import { DragState, SpaceType } from './space';
 import { useAppDispatch, useAppSelector } from '~store';
 import { MAX_Z_INDEX, MOBILE_WIDTH, NOT_FOUND } from '~constants';
 import { selectIsOpen, selectSpace, setSpace } from './spaceSlice';
-import { selectWidth } from '../window/windowSlice';
 import { selectMenuMode } from '../menu/menuSlice';
 import type { Arrow } from '../arrow/arrow';
 import type { User } from '../user/user';
 import { selectTwigId, selectTwigIdToTrue } from '~features/twigs/twigSlice';
-import { FULL_TWIG_FIELDS, TWIG_FIELDS } from '~features/twigs/twigFragments';
+import { FULL_TWIG_FIELDS } from '~features/twigs/twigFragments';
 import type { Twig } from '~features/twigs/twig';
 import useCenterTwig from '~features/twigs/useCenterTwig';
 import useSelectTwig from '~features/twigs/useSelectTwig';
+import { AppContext } from '~newtab/App';
 
 interface SpaceNavProps {
   user: User | null;
   space: SpaceType;
   abstract: Arrow;
   canEdit: boolean;
+  scale: number;
 }
 
 export default function SpaceNav(props: SpaceNavProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const width = useAppSelector(selectWidth);
+  const { width } = useContext(AppContext);
   const menuMode = useAppSelector(selectMenuMode);
 
   const space = useAppSelector(selectSpace);
@@ -47,7 +48,7 @@ export default function SpaceNav(props: SpaceNavProps) {
   const hasEarlier = index > 0;
   const hasLater = index < twigs.length - 1;
 
-  const { centerTwig } = useCenterTwig(props.user, props.space);
+  const { centerTwig } = useCenterTwig(props.user, props.space, props.scale);
   const { selectTwig } = useSelectTwig(props.space, props.canEdit)
 
   useEffect(() => {

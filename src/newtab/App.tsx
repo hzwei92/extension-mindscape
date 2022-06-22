@@ -5,7 +5,7 @@ import type { User } from "~features/user/user";
 import { selectUserId } from "~features/user/userSlice";
 import { useAppDispatch, useAppSelector } from "~store";
 import { createTheme, Paper, ThemeProvider } from "@mui/material";
-import { selectPalette, setPalette, setSize } from "~features/window/windowSlice";
+import { selectPalette, setPalette } from "~features/window/windowSlice";
 import { SnackbarProvider } from 'notistack';
 import AppBar from "./AppBar";
 import MenuComponent from "~features/menu/MenuComponent";
@@ -20,6 +20,8 @@ export const AppContext = React.createContext({} as {
   setFocusSpaceEl: Dispatch<SetStateAction<MutableRefObject<HTMLElement | undefined>>>;
   port: chrome.runtime.Port | null;
   cachePersistor: CachePersistor<NormalizedCacheObject>;
+  width: number;
+  height: number;
 });
 
 interface AppProps {
@@ -61,12 +63,13 @@ export default function App(props: AppProps) {
   const [frameSpaceEl, setFrameSpaceEl] = useState(null as MutableRefObject<HTMLElement | undefined>);
   const [focusSpaceEl, setFocusSpaceEl] = useState(null as MutableRefObject<HTMLElement | undefined>);
 
+  const [width, setWidth] = useState(window.innerWidth);
+  const [height, setHeight] = useState(window.innerHeight);
+
   useEffect(() => {
     const handleResize = () => {
-      dispatch(setSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      }));
+      setWidth(window.innerWidth);
+      setHeight(window.innerHeight);
     };
 
     handleResize();
@@ -112,6 +115,8 @@ export default function App(props: AppProps) {
       setFocusSpaceEl, 
       port: props.port,
       cachePersistor: props.cachePersistor,
+      width,
+      height,
     }}>  
       <ThemeProvider theme={theme}>
         <SnackbarProvider

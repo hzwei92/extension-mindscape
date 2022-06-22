@@ -1,29 +1,34 @@
-import { Box, Card, IconButton, Icon, Divider } from '@mui/material'
-import { MAX_Z_INDEX, MOBILE_WIDTH } from '../constants'
-import MapIcon from '@mui/icons-material/Map'
-import SearchIcon from '@mui/icons-material/Search'
-import AccountCircle from '@mui/icons-material/AccountCircle'
-import DynamicFeedIcon from '@mui/icons-material/DynamicFeed'
-import HubIcon from '@mui/icons-material/Hub'
-import PodcastsIcon from '@mui/icons-material/Podcasts'
-import CropDinIcon from '@mui/icons-material/CropDin'
-import CropFreeIcon from '@mui/icons-material/CropFree'
-import Brightness4Icon from '@mui/icons-material/Brightness4'
-import {useAppSelector, useAppDispatch } from '../store'
-import type { User } from '~features/user/user'
-import { selectAppBarWidth, selectColor, selectWidth, togglePalette } from '~features/window/windowSlice'
-import { selectMenuMode, setMenuMode } from '~features/menu/menuSlice'
-import { MenuMode } from '~features/menu/menu'
-interface AppBarProps {
-  user: User | null
-}
-export default function AppBar(props: AppBarProps) {
-  const dispatch = useAppDispatch()
+import { Box, Card, IconButton, Icon, Divider } from "@mui/material"
+import { MAX_Z_INDEX, MOBILE_WIDTH } from "../constants"
+import MapIcon from "@mui/icons-material/Map"
+import SearchIcon from "@mui/icons-material/Search"
+import AccountCircle from "@mui/icons-material/AccountCircle"
+import DynamicFeedIcon from "@mui/icons-material/DynamicFeed"
+import HubIcon from "@mui/icons-material/Hub"
+import PodcastsIcon from "@mui/icons-material/Podcasts"
+import CropDinIcon from "@mui/icons-material/CropDin"
+import CropFreeIcon from "@mui/icons-material/CropFree"
+import Brightness4Icon from "@mui/icons-material/Brightness4"
+import {useAppSelector, useAppDispatch } from "../store"
+import type { User } from "~features/user/user"
+import { selectColor, togglePalette } from "~features/window/windowSlice"
+import { selectMenuMode, setMenuMode } from "~features/menu/menuSlice"
+import { MenuMode } from "~features/menu/menu"
+import { useContext } from "react"
+import { AppContext } from "./App"
+import { getAppBarWidth } from "~utils";
 
-  const width = useAppSelector(selectWidth)
-  const appBarWidth = useAppSelector(selectAppBarWidth)
-  const color = useAppSelector(selectColor(false))
-  const menuMode = useAppSelector(selectMenuMode)
+interface AppBarProps {
+  user: User | null;
+}
+
+export default function AppBar(props: AppBarProps) {
+  const dispatch = useAppDispatch();
+
+  const { width } = useContext(AppContext);
+  const appBarWidth = getAppBarWidth(width);
+  const color = useAppSelector(selectColor(false));
+  const menuMode = useAppSelector(selectMenuMode);
 
   const handleAboutClick = () => {
 

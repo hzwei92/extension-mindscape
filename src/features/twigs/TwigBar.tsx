@@ -1,12 +1,11 @@
 import { Box, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { Dispatch, DragEventHandler, SetStateAction } from 'react';
 import type { Twig } from './twig';
-import type { SpaceType } from '../space/space';
+import type { DragState, SpaceType } from '../space/space';
 import { useAppDispatch, useAppSelector } from '~store';
 import type { Arrow } from '../arrow/arrow';
 import { selectPalette } from '../window/windowSlice';
-import { selectDrag, setDrag } from '../space/spaceSlice';
 import { selectCreateLink } from '../arrow/arrowSlice';
 import AdjustIcon from '@mui/icons-material/Adjust';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
@@ -22,8 +21,9 @@ interface TwigBarProps {
   twig: Twig;
   canEdit: boolean;
   isSelected: boolean;
-  isPost: boolean;
   setTouches: Dispatch<SetStateAction<React.TouchList | null>>;
+  drag: DragState;
+  setDrag: Dispatch<SetStateAction<DragState>>;
 }
 
 function TwigBar(props: TwigBarProps) {
@@ -35,7 +35,6 @@ function TwigBar(props: TwigBarProps) {
     ? 'black'
     : 'white';
   const createLink = useAppSelector(selectCreateLink);
-  const drag = useAppSelector(selectDrag(props.space));
 
   const beginDrag = () => {
     if (!props.twig.parent) return;
@@ -61,16 +60,13 @@ function TwigBar(props: TwigBarProps) {
         requiresRerender: true,
       }))
     }
-    dispatch(setDrag({
-      space: props.space,
-      drag: {
-        isScreen: false,
-        twigId: props.twig.id,
-        dx: 0,
-        dy: 0,
-        targetTwigId: '',
-      }
-    }));
+    props.setDrag({
+      isScreen: false,
+      twigId: props.twig.id,
+      dx: 0,
+      dy: 0,
+      targetTwigId: '',
+    });
   }
 
   const dontDrag = (event: React.MouseEvent) => {
@@ -111,7 +107,7 @@ function TwigBar(props: TwigBarProps) {
             : 'default'
           : createLink.sourceId
             ? 'crosshair'
-            : drag.twigId
+            : props.drag.twigId
               ? 'grabbing'
               : 'grab',
         touchAction: 'none',

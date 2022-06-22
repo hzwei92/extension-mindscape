@@ -4,7 +4,7 @@ import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 're
 import { useAppDispatch, useAppSelector } from '~store';
 import { DisplayMode, TWIG_WIDTH } from '~constants';
 import type { Role } from '../role/role';
-import type { SpaceType } from '../space/space';
+import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
@@ -31,6 +31,8 @@ interface TwigPostComponentProps {
   canView: boolean;
   setTouches: Dispatch<SetStateAction<React.TouchList | null>>;
   coordsReady: boolean;
+  drag: DragState;
+  setDrag: Dispatch<SetStateAction<DragState>>;
 }
 function TwigPostComponent(props: TwigPostComponentProps) {
   //console.log('twig post', props.twig.id);
@@ -264,7 +266,8 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                   canEdit={props.canEdit}
                   setTouches={props.setTouches}
                   isSelected={isSelected}
-                  isPost={isPost}
+                  drag={props.drag}
+                  setDrag={props.setDrag}
                 />
               : null
           }
@@ -347,6 +350,8 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                     canView={props.canView}
                     setTouches={props.setTouches}
                     coordsReady={coordsReady && !requiresRerender}
+                    drag={props.drag}
+                    setDrag={props.setDrag}
                   />
                 </Box>
               )
@@ -373,6 +378,8 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                   canView={props.canView}
                   setTouches={props.setTouches}
                   coordsReady={coordsReady && !requiresRerender}
+                  drag={props.drag}
+                  setDrag={props.setDrag}
                 />
               </Box>
             )

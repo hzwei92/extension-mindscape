@@ -7,7 +7,7 @@ import { getTimeString } from '~utils';
 import { useAppDispatch, useAppSelector } from '~store';
 import { selectSpace } from '../space/spaceSlice';
 import UserTag from '../user/UserTag';
-import { selectColor, selectWidth } from '../window/windowSlice';
+import { selectColor } from '../window/windowSlice';
 import type { User } from '../user/user';
 import ArrowEditor from './ArrowEditor';
 import { TWIG_WIDTH } from '~constants';
@@ -26,7 +26,6 @@ interface ArrowProps {
 export default function ArrowComponent(props: ArrowProps) {
   const client = useApolloClient();
 
-  const width = useAppSelector(selectWidth);
   const color = useAppSelector(selectColor(true));
   const space = useAppSelector(selectSpace);
   
