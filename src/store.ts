@@ -83,7 +83,7 @@ new Storage('local').watch({
     persistor.resync()
   },
   ['apollo-cache-persist']: (changes) => {
-    console.log('watch apollo', changes)
+    //console.log('watch apollo', changes)
     try {
       const port = chrome.runtime.connect({
         name: PORT_NAME,

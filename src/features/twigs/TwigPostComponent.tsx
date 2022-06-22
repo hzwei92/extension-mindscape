@@ -22,7 +22,7 @@ import { SpaceContext } from '~features/space/SpaceComponent';
 import useSelectTwig from './useSelectTwig';
 import useMoveTwig from './useMoveTwig';
 import { AppContext } from '~newtab/App';
-//import useLinkTwigs from './useLinkTwigs';
+import useLinkTwigs from './useLinkTwig';
 
 interface TwigPostComponentProps {
   user: User | null;
@@ -133,10 +133,8 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     }
   }, [requiresRerender])
   
-  //const { openTwig } = useOpenTwig();
-
   const { selectTwig } = useSelectTwig(props.space, props.canEdit);
-  //const { linkTwigs } = useLinkTwigs(props.space, props.abstract);
+  const { linkTwigs } = useLinkTwigs(props.space, props.abstract);
 
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -148,7 +146,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
       }));
     }
     if (createLink.sourceId && createLink.targetId === props.twig.detailId) {
-      //linkTwigs();
+      linkTwigs();
     }
   }
 
@@ -180,14 +178,6 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     }
   }
 
-  const handleOpenClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (!isSelected) {
-      selectTwig(props.abstract, props.twig.id);
-    }
-    //openTwig(props.twig, !props.twig.isOpen);
-  }
-
   const isLinking = (
     createLink.sourceId === props.twig.detailId || 
     createLink.targetId === props.twig.detailId
@@ -217,7 +207,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
             display: 'flex',
             flexDirection: 'column',
             width: TWIG_WIDTH,
-            opacity: .9,
+            opacity: .8,
             outline: isSelected
               ? `10px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
               : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,

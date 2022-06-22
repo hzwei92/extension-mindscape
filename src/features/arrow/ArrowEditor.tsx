@@ -151,6 +151,7 @@ export default function EditorComponent(props: EditorComponentProps) {
   const isReadonly = props.isReadonly || !!props.arrow.commitDate || props.arrow.userId !== props.user?.id;
   return (
     <Box sx={{
+      marginTop: 1,
       fontSize: 14,
       position: 'relative',
       cursor: createLink.sourceId

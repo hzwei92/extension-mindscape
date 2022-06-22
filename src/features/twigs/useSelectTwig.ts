@@ -22,7 +22,6 @@ const SELECT_TWIG = gql`
       }
       abstract {
         id
-        selectTwigId
         twigZ
         updateDate
       }

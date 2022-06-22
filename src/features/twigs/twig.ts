@@ -3,6 +3,7 @@ import type { Arrow } from "~features/arrow/arrow"
 import { SpaceType } from "~features/space/space"
 import type { User } from "~features/user/user"
 import { USER_FIELDS } from "~features/user/userFragments"
+import { addTwigUsers } from "~features/user/userSlice"
 import { getClient } from "~graphql"
 import { store } from "~store"
 import type { IdToType } from "~types"
@@ -76,9 +77,15 @@ export const getTwigs = (client: ApolloClient<NormalizedCacheObject>) =>
         }
       });
       console.log(data);
+
       store.dispatch(addTwigs({
         space: SpaceType.FRAME,
         twigs: data.getTwigs
+      }));
+      
+      store.dispatch(addTwigUsers({
+        space: SpaceType.FRAME,
+        twigs: data.getTwigs,
       }));
     } catch (err) {
       console.error(err);

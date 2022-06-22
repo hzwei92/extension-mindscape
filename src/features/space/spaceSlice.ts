@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction, Slice } from '@reduxjs/toolkit';
 import { resetTwigs } from '~features/twigs/twigSlice';
+import { resetUsers } from '~features/user/userSlice';
 import { RootState, store } from '~store';
 import { DragState, ScrollState, SpaceType } from './space';
 
@@ -56,9 +57,9 @@ export const {
 
 export const resetSpace = (space: SpaceType) => {
   console.log('resetSpace', space);
-  //store.dispatch(resetUsers(space));
-  //store.dispatch(resetArrows(space));
+  store.dispatch(resetUsers(space));
   store.dispatch(resetTwigs(space));
+  //store.dispatch(resetArrows(space));
 }
 
 

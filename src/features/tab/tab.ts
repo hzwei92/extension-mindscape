@@ -2,11 +2,11 @@ import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import { SpaceType } from "~features/space/space";
 import type { Twig } from "~features/twigs/twig";
 import { FULL_TWIG_FIELDS, TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { addTwigs, selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
+import { addTwigs, selectIdToDescIdToTrue, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
 import { RootState, store } from "~store";
 import type { IdToType } from "~types";
-import { AlarmType, ALARM_DELIMITER, ErrMessage, MessageName, PORT_NAME } from "~constants";
-import { selectUserId } from "~features/user/userSlice";
+import { AlarmType, ALARM_DELIMITER, ErrMessage } from "~constants";
+import { addTwigUsers } from "~features/user/userSlice";
 
 export type WindowEntry = {
   twigId: string | null;
@@ -366,10 +366,17 @@ export const loadTabs = async (client: ApolloClient<NormalizedCacheObject>) => {
       }
     });
     console.log(data);
+
     store.dispatch(addTwigs({
       space: SpaceType.FRAME,
       twigs: data.loadTabs,
     }));
+
+    store.dispatch(addTwigUsers({
+      space: SpaceType.FRAME,
+      twigs: data.loadTabs,
+    }));
+
   } catch (err) {
     console.log(err);
   }
@@ -471,10 +478,17 @@ export const createTab = (client: ApolloClient<NormalizedCacheObject>) =>
         }
       });
       console.log(data);
+
       store.dispatch(addTwigs({
         space: SpaceType.FRAME,
         twigs: data.createTab,
       }));
+
+      store.dispatch(addTwigUsers({
+        space: SpaceType.FRAME,
+        twigs: data.createTab,
+      }));
+
       delete tabIdToCreateBlocked[tabEntry.tabId];
     } catch (err) {
       console.error(err);
@@ -498,11 +512,17 @@ export const createGroup = (client: ApolloClient<NormalizedCacheObject>) =>
           tabTwigId,
         }
       });
+      console.log(data);
+
       store.dispatch(addTwigs({
         space: SpaceType.FRAME,
         twigs: data.createGroup,
       }));
-      console.log(data);
+
+      store.dispatch(addTwigUsers({
+        space: SpaceType.FRAME,
+        twigs: data.createGroup,
+      }));
     } catch (err) {
       console.error(err);
     }

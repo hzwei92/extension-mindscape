@@ -10,6 +10,7 @@ import type { Twig } from '~features/twigs/twig';
 import { selectRequiresRerender } from '~features/twigs/twigSlice';
 import { FULL_TWIG_FIELDS } from '~features/twigs/twigFragments';
 import { SpaceContext } from '~features/space/SpaceComponent';
+import useSelectTwig from '~features/twigs/useSelectTwig';
 
 interface SheafComponentProps {
   user: User;
@@ -25,8 +26,7 @@ export default function SheafComponent(props: SheafComponentProps) {
   const [linkI, setLinkI] = useState(0);
   const [clickTimeout, setClickTimeout] = useState(null as ReturnType<typeof setTimeout> | null);
 
-  //const { selectTwig } = useSelectTwig(props.space, props.canEdit)
-  //const { openTwig } = useOpenTwig();
+  const { selectTwig } = useSelectTwig(props.space, props.canEdit);
 
   const { selectedTwigId } = useContext(SpaceContext);
   const isSelected = props.twig.id === selectedTwigId;
@@ -74,10 +74,7 @@ export default function SheafComponent(props: SheafComponentProps) {
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     if  (!isSelected) {
-      //selectTwig(props.abstract, props.twig);
-    }
-    if (!props.twig.isOpen) {
-      //openTwig(props.twig, true);
+      selectTwig(props.abstract, props.twig.id);
     }
   }
 
@@ -102,8 +99,8 @@ export default function SheafComponent(props: SheafComponentProps) {
         style={{
           cursor: 'pointer',
           opacity: isSelected 
-            ? .2 
-            : .05,
+            ? .4 
+            : .2,
         }}
         x1={sourceTwig.x + VIEW_RADIUS}
         y1={sourceTwig.y + VIEW_RADIUS}

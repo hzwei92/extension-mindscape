@@ -1,4 +1,4 @@
-import { useApolloClient } from "@apollo/client";
+import { gql, useApolloClient } from "@apollo/client";
 import { Box } from "@mui/material";
 import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "~store";
@@ -23,6 +23,7 @@ import SpaceControls from "./SpaceControls";
 import SpaceNav from "./SpaceNav";
 import useCenterTwig from "~features/twigs/useCenterTwig";
 import TwigLine from "~features/twigs/TwigLine";
+import { selectUserIdToTrue } from "~features/user/userSlice";
 //import useAdjustTwigs from "../twig/useAdjustTwigs";
 
 
@@ -70,6 +71,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     targetTwigId: '',
   } as DragState);
   
+
+  const userIdToTrue = useAppSelector(selectUserIdToTrue(props.space));
 
   const twigIdToTrue = useAppSelector(selectTwigIdToTrue(props.space));
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
@@ -572,37 +575,37 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         }}>
           <defs>
             {
-              // Object.keys(userIdToTrue).map(userId => {
-              //   const user = client.cache.readFragment({
-              //     id: client.cache.identify({
-              //       id: userId,
-              //       __typename: 'User',
-              //     }),
-              //     fragment: gql`
-              //       fragment UserWithColor on User {
-              //         id
-              //         color
-              //       }
-              //     `,
-              //   }) as User;
-              //   return (
-              //     <marker 
-              //       key={`marker-${userId}`}
-              //       id={`marker-${userId}`} 
-              //       markerWidth='6'
-              //       markerHeight='10'
-              //       refX='7'
-              //       refY='5'
-              //       orient='auto'
-              //     >
-              //       <polyline 
-              //         points='0,0 5,5 0,10'
-              //         fill='none'
-              //         stroke={user?.color}
-              //       />
-              //     </marker>
-              //   )
-              // })
+              Object.keys(userIdToTrue).map(userId => {
+                const user = client.cache.readFragment({
+                  id: client.cache.identify({
+                    id: userId,
+                    __typename: 'User',
+                  }),
+                  fragment: gql`
+                    fragment UserWithColor on User {
+                      id
+                      color
+                    }
+                  `,
+                }) as User;
+                return (
+                  <marker 
+                    key={`marker-${userId}`}
+                    id={`marker-${userId}`} 
+                    markerWidth='6'
+                    markerHeight='10'
+                    refX='7'
+                    refY='5'
+                    orient='auto'
+                  >
+                    <polyline 
+                      points='0,0 5,5 0,10'
+                      fill='none'
+                      stroke={user?.color}
+                    />
+                  </marker>
+                )
+              })
             }
           </defs>
           {

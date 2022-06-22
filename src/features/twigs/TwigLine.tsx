@@ -1,4 +1,3 @@
-import { useApolloClient } from "@apollo/client";
 import { DisplayMode, VIEW_RADIUS } from "~constants";
 import type { Arrow } from "~features/arrow/arrow";
 import { selectPalette } from "~features/window/windowSlice";

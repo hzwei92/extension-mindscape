@@ -8,22 +8,21 @@ import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
-import TwigBar from './TwigBar';
 import TwigControls from './TwigControls';
 import { selectChildIdToTrue, selectRequiresRerender, setRequiresRerender } from './twigSlice';
-//import useSelectTwig from './useSelectTwig';
 import { selectCreateLink, setCreateLink } from '../arrow/arrowSlice';
 import type { Arrow } from '../arrow/arrow';
 import ArrowComponent from '../arrow/ArrowComponent';
 import TwigVoter from './TwigVoter';
-//import useOpenTwig from './useOpenTwig';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { getColor, getTwigColor } from '~utils';
 import { FULL_TWIG_FIELDS, TWIG_WITH_XY } from './twigFragments';
 import TwigPostComponent from './TwigPostComponent';
 import { SpaceContext } from '~features/space/SpaceComponent';
+import useOpenTwig from './useOpenTwig';
+import useSelectTwig from './useSelectTwig';
+import useLinkTwigs from './useLinkTwig';
 //import useMoveTwig from './useMoveTwig';
-//import useLinkTwigs from './useLinkTwigs';
 
 interface TwigLinkComponentProps {
   user: User | null;
@@ -98,42 +97,9 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
     }
   }, [requiresRerender]);
 
-  useEffect(() => {
-    if (props.twig.displayMode === DisplayMode.SCATTERED) return;
-    if (!props.coordsReady) return;
-    if (!twigEl.current) return;
-
-    setCoordsReady(true);
-    const { offsetLeft, offsetTop } = twigEl.current;
-
-    if (
-      props.twig.parent.x + offsetLeft === props.twig.x && 
-      props.twig.parent.y + offsetTop === props.twig.y
-    ) {
-      return;
-    }
-    
-    client.cache.modify({
-      id: client.cache.identify(props.twig),
-      fields: {
-        x: () => props.twig.parent.x + offsetLeft,
-        y: () => props.twig.parent.y + offsetTop,
-      },
-    });
-
-    ///moveTwig(props.twig.id, props.twig.displayMode);
-
-    setRequiresRerender({
-      space: props.space,
-      twigId: props.twig.id,
-      requiresRerender: true,
-    })
-  }, [props.twig.displayMode, props.coordsReady, props.twig.parent?.x, props.twig.parent?.y, twigEl.current?.offsetLeft, twigEl.current?.offsetTop])
-
-  //const { openTwig } = useOpenTwig();
-
-  //const { selectTwig } = useSelectTwig(props.space, props.canEdit);
-  //const { linkTwigs } = useLinkTwigs(props.space, props.abstract);
+  const { openTwig } = useOpenTwig();
+  const { selectTwig } = useSelectTwig(props.space, props.canEdit);
+  const { linkTwigs } = useLinkTwigs(props.space, props.abstract);
 
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -145,7 +111,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
       }));
     }
     if (createLink.sourceId && createLink.targetId === props.twig.detailId) {
-      //linkTwigs();
+      linkTwigs();
     }
   }
 
@@ -155,7 +121,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!isSelected) {
-      //selectTwig(props.abstract, props.twig);
+      selectTwig(props.abstract, props.twig.id);
     }
   }
 
@@ -180,9 +146,9 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   const handleOpenClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!isSelected) {
-      //selectTwig(props.abstract, props.twig);
+      selectTwig(props.abstract, props.twig.id);
     }
-    //openTwig(props.twig, !props.twig.isOpen);
+    openTwig(props.twig, !props.twig.isOpen);
   }
 
   const isLinking = (
@@ -194,12 +160,12 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
     return (
       <Box>
         <Card elevation={5} onClick={handleOpenClick} sx={{
-          width: 35,
-          height: 35,
+          width: 30,
+          height: 30,
           outline: isSelected
             ? `5px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
             : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
-          borderRadius: 5,
+          borderRadius: 2,
           borderTopLeftRadius: 0,
           display: 'flex',
           justifyContent: 'center',
@@ -243,11 +209,11 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
             display: 'flex',
             flexDirection: 'column',
             width: TWIG_WIDTH - 50,
-            opacity: .9,
+            opacity: .8,
             outline: isSelected
               ? `10px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
               : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
-            borderRadius: 8,
+            borderRadius: 5,
             borderTopLeftRadius: 0,
             backgroundColor: isLinking
               ? palette === 'dark'
