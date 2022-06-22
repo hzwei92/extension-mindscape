@@ -72,6 +72,8 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     }
   });
 
+  console.log(props.twig.id, verticalChildren, horizontalChildren)
+
   const [isLoading, setIsLoading] = useState(false);
   const twigEl = useRef<HTMLDivElement | undefined>();
 

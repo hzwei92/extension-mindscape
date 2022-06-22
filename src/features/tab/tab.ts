@@ -1,9 +1,11 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import { SpaceType } from "~features/space/space";
-import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { addTwigs, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
-import { store } from "~store";
+import type { Twig } from "~features/twigs/twig";
+import { FULL_TWIG_FIELDS, TWIG_FIELDS } from "~features/twigs/twigFragments";
+import { addTwigs, selectIdToDescIdToTrue, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
+import { RootState, store } from "~store";
 import type { IdToType } from "~types";
+import { AlarmType, ALARM_DELIMITER, ErrMessage } from "~constants";
 
 export type WindowEntry = {
   twigId: string | null;
@@ -42,6 +44,47 @@ const LOAD_TABS = gql`
   ${FULL_TWIG_FIELDS}
 `;
 
+const CREATE_TAB = gql`
+  mutation CreateTab($tab: TabEntry) {
+    createTab(tab: $tab) {
+      ...FullTwigFields
+    }
+  }
+  ${FULL_TWIG_FIELDS}
+`;
+
+const CREATE_GROUP = gql`
+  mutation CreateGroup($group: GroupEntry!, $window: WindowEntry, $tab: TabEntry, $tabTwigId: String) {
+    createGroup(group: $group, window: $window, tab: $tab, tabTwigId: $tabTwigId) {
+      ...FullTwigFields
+    }
+  }
+  ${FULL_TWIG_FIELDS}
+`;
+
+const UPDATE_TAB = gql`
+  mutation UpdateTab($twigId: String!, $title: String!, $url: String!) {
+    updateTab(twigId: $twigId, title: $title, url: $url) {
+      twig {
+        ...FullTwigFields
+      }
+      deleted {
+        id
+        deleteDate
+      }
+    }
+  }
+  ${FULL_TWIG_FIELDS}
+`;
+
+const MOVE_TAB = gql`
+  mutation MoveTab($twigId: String!, $windowId: Int!, $groupId: Int!, $parentTabId: Int) {
+    moveTab(twigId: $twigId, windowId: $windowId, groupId: $groupId, parentTabId: $parentTabId) {
+      ...FullTwigFields
+    }
+  }
+  ${FULL_TWIG_FIELDS}
+`;
 
 const REMOVE_TAB_TWIG = gql`
   mutation RemoveTabTwig($tabId: Int!) {
@@ -325,12 +368,183 @@ export const loadTabs = async (client: ApolloClient<NormalizedCacheObject>) => {
     store.dispatch(addTwigs({
       space: SpaceType.FRAME,
       twigs: data.loadTabs,
-    }))
+    }));
   } catch (err) {
     console.log(err);
   }
 
 }
+
+export const maintainSubtree = (client: ApolloClient<NormalizedCacheObject>) =>  
+  async (twigId: string, tab: chrome.tabs.Tab) => {
+    const state = store.getState();
+
+    const idToDescIdToTrue = selectIdToDescIdToTrue(SpaceType.FRAME)(state);
+
+    const descTabIds = Object.keys(idToDescIdToTrue[twigId] || {})
+      .reduce((acc, descId) => {
+        const descTwig = client.cache.readFragment({
+          id: client.cache.identify({
+            id: descId,
+            __typename: 'Twig',
+          }),
+          fragment: TWIG_FIELDS,
+        }) as Twig;
+
+        if (descTwig.tabId) {
+          acc.push(descTwig.tabId);
+        }
+        return acc;
+      }, []);
+
+    if (!descTabIds.length) return;
+
+    descTabIds.forEach(descTabId => {
+      // prevent cascade of updates, as descendants are updated/moved
+
+      // TODO
+
+      // tabIdToUpdateBlocked[descTabId] = true;
+      // tabIdToMoveBlocked[descTabId] = true;
+    });
+
+    const index = tab.index + 1;
+
+    const moveAlarmName = AlarmType.MOVE_REQUIRED +
+      ALARM_DELIMITER + 
+      index +
+      ALARM_DELIMITER +
+      descTabIds.join(ALARM_DELIMITER);
+
+    await chrome.alarms.clear(moveAlarmName);
+
+    try {
+      await chrome.tabs.move(descTabIds, {
+        index,
+      });
+    } catch (err) {
+      if (err.message === ErrMessage.CANNOT_EDIT_TABS) {
+        chrome.alarms.create(moveAlarmName, {
+          when: Date.now() + 100,
+        })
+      }
+      else {
+        console.error(err);
+      }
+    }
+
+    const groupAlarmName = AlarmType.GROUP_REQUIRED + 
+      ALARM_DELIMITER + 
+      tab.groupId +
+      ALARM_DELIMITER +
+      descTabIds.join(ALARM_DELIMITER);
+
+    await chrome.alarms.clear(groupAlarmName);
+
+    try {
+      await chrome.tabs.group({
+        tabIds: descTabIds,
+        groupId: tab.groupId,
+      });
+    } catch (err) {
+      if (err.message === ErrMessage.CANNOT_EDIT_TABS) {
+        chrome.alarms.create(groupAlarmName, {
+          when: Date.now() + 100,
+        });
+      }
+      else {
+        console.error('maintainSubtree: tab grouping unavailable', err)
+      }
+    }
+  }
+
+export const createTab = (client: ApolloClient<NormalizedCacheObject>) => 
+  async (tabIdToCreateBlocked: IdToType<boolean>, tabEntry: TabEntry) => {
+    console.log('createTab', tabEntry);
+    tabIdToCreateBlocked[tabEntry.tabId] = true;
+    try {
+      const { data } = await client.mutate({
+        mutation: CREATE_TAB,
+        variables: {
+          tab: tabEntry,
+        }
+      });
+      console.log(data);
+      store.dispatch(addTwigs({
+        space: SpaceType.FRAME,
+        twigs: data.createTab,
+      }));
+      delete tabIdToCreateBlocked[tabEntry.tabId];
+    } catch (err) {
+      console.error(err);
+    } 
+  }
+
+export const createGroup = (client: ApolloClient<NormalizedCacheObject>) => 
+  async (
+    groupEntry: GroupEntry, 
+    windowEntry: WindowEntry | null, 
+    tabEntry: TabEntry | null, 
+    tabTwigId: string | null,
+  ) => {
+    try {
+      const { data } = await client.mutate({
+        mutation: CREATE_GROUP,
+        variables: {
+          group: groupEntry,
+          window: windowEntry,
+          tab: tabEntry,
+          tabTwigId,
+        }
+      });
+      store.dispatch(addTwigs({
+        space: SpaceType.FRAME,
+        twigs: data.createGroup,
+      }));
+      console.log(data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+export const updateTab = (client: ApolloClient<NormalizedCacheObject>) =>
+  async (twigId: string, title: string, url: string) => {
+    try {
+      const { data } = await client.mutate({
+        mutation: UPDATE_TAB,
+        variables: {
+          twigId,
+          title,
+          url,
+        }
+      });
+      console.log(data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  
+export const moveTab = (client: ApolloClient<NormalizedCacheObject>) => 
+  async (twigId: string, windowId: number, groupId: number, parentTabId?: number) => {
+    try {
+      const { data } = await client.mutate({
+        mutation: MOVE_TAB,
+        variables: {
+          twigId,
+          windowId,
+          groupId,
+          parentTabId,
+        }
+      });
+      console.log(data);
+      store.dispatch(setShouldReloadTwigTree({
+        space: SpaceType.FRAME,
+        shouldReloadTwigTree: true,
+      }));
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
 export const removeTab = (client: ApolloClient<NormalizedCacheObject>) =>
   async (tabId: number) => {

@@ -1,31 +1,29 @@
-import { gql, useApolloClient, useReactiveVar } from '@apollo/client';
-import { Box } from '@mui/material';
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '~store';
-import { VIEW_RADIUS, SPACE_BAR_HEIGHT, DisplayMode } from '~constants';
-import { checkPermit, getAppBarWidth } from '~utils';
-import { selectActualMenuWidth } from '../menu/menuSlice';
-import type { User } from '../user/user';
-import { selectPalette, selectWidth } from '../window/windowSlice';
-import { SpaceType } from './space';
-import { selectDrag, selectFrameWidth, selectIsOpen, selectScale, selectScroll, setDrag, setScale, setScroll } from './spaceSlice';
-
-import { selectSourceIdToTargetIdToLinkIdToTrue } from '../arrow/arrowSlice';
-import { ABSTRACT_ARROW_FIELDS } from '../arrow/arrowFragments';
-import type { Arrow } from '../arrow/arrow';
-import type { Role } from '../role/role';
-import SheafComponent from '../arrow/SheafComponent';
-import { AppContext } from '~newtab/App';
-import { selectIdToDescIdToTrue, selectTwigIdToTrue } from '~features/twigs/twigSlice';
-import useTwigTree from '~features/twigs/useTwigTree';
-import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_POS, TWIG_WITH_XY } from '~features/twigs/twigFragments';
-import type { Twig } from '~features/twigs/twig';
-import TwigLinkComponent from '~features/twigs/TwigLinkComponent';
-import TwigPostComponent from '~features/twigs/TwigPostComponent';
-import SpaceControls from './SpaceControls';
-import SpaceNav from './SpaceNav';
-import useCenterTwig from '~features/twigs/useCenterTwig';
-//import useAdjustTwigs from '../twig/useAdjustTwigs';
+import { useApolloClient } from "@apollo/client";
+import { Box } from "@mui/material";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { useAppDispatch, useAppSelector } from "~store";
+import { VIEW_RADIUS, SPACE_BAR_HEIGHT, DisplayMode } from "~constants";
+import { checkPermit, getAppBarWidth } from "~utils";
+import { selectActualMenuWidth } from "../menu/menuSlice";
+import type { User } from "../user/user";
+import { selectPalette, selectWidth } from "../window/windowSlice";
+import { SpaceType } from "./space";
+import { selectDrag, selectFrameWidth, selectIsOpen, selectScale, selectScroll, setDrag, setScale, setScroll } from "./spaceSlice";
+import { selectSourceIdToTargetIdToLinkIdToTrue } from "../arrow/arrowSlice";
+import { ABSTRACT_ARROW_FIELDS } from "../arrow/arrowFragments";
+import type { Arrow } from "../arrow/arrow";
+import type { Role } from "../role/role";
+import SheafComponent from "../arrow/SheafComponent";
+import { AppContext } from "~newtab/App";
+import { selectIdToDescIdToTrue, selectTwigIdToTrue } from "~features/twigs/twigSlice";
+import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_POS, TWIG_WITH_XY } from "~features/twigs/twigFragments";
+import type { Twig } from "~features/twigs/twig";
+import TwigLinkComponent from "~features/twigs/TwigLinkComponent";
+import TwigPostComponent from "~features/twigs/TwigPostComponent";
+import SpaceControls from "./SpaceControls";
+import SpaceNav from "./SpaceNav";
+import useCenterTwig from "~features/twigs/useCenterTwig";
+//import useAdjustTwigs from "../twig/useAdjustTwigs";
 
 interface SpaceComponentProps {
   user: User | null;
@@ -109,7 +107,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const { setFrameSpaceEl, setFocusSpaceEl } = useContext(AppContext);
 
-  useTwigTree(props.space)
   //useAddTwigSub(props.user, props.space, abstract);
 
   //const { moveTwig } = useMoveTwig(props.space);

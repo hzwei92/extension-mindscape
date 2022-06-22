@@ -75,7 +75,6 @@ export const twigSlice: Slice<TwigState> = createSlice({
   initialState,
   reducers: {
     addTwigs: (state, action: PayloadAction<{space: SpaceType, twigs: Twig[]}>) => {
-      console.log(state[SpaceType.FRAME], action);
       const twigIdToTrue: IdToType<true> = {
         ...state[action.payload.space].twigIdToTrue,
       };
@@ -92,22 +91,22 @@ export const twigSlice: Slice<TwigState> = createSlice({
       action.payload.twigs.forEach(twig => {
         twigIdToTrue[twig.id] = true;
 
-        if (twig.windowId) {
-          windowIdToTwigIdToTrue[twig.windowId] = {
-            ...(windowIdToTwigIdToTrue[twig.windowId] || {}),
-            [twig.id]: true,
+        if (twig.tabId) {
+          tabIdToTwigIdToTrue[twig.tabId] = {
+            ...(tabIdToTwigIdToTrue[twig.tabId] || {}),
+            [twig.id]: true 
           };
         }
-        if (twig.groupId) {
+        else if (twig.groupId) {
           groupIdToTwigIdToTrue[twig.groupId] = {
             ...(groupIdToTwigIdToTrue[twig.groupId] || {}),
             [twig.id]: true 
           };
         }
-        if (twig.tabId) {
-          tabIdToTwigIdToTrue[twig.tabId] = {
-            ...(tabIdToTwigIdToTrue[twig.tabId] || {}),
-            [twig.id]: true 
+        else if (twig.windowId) {
+          windowIdToTwigIdToTrue[twig.windowId] = {
+            ...(windowIdToTwigIdToTrue[twig.windowId] || {}),
+            [twig.id]: true,
           };
         }
       });
@@ -140,14 +139,17 @@ export const twigSlice: Slice<TwigState> = createSlice({
       };
       action.payload.twigs.forEach(twig => {
         delete twigIdToTrue[twig.id];
+
         delete (windowIdToTwigIdToTrue[twig.windowId] || {})[twig.id];
         if (windowIdToTwigIdToTrue[twig.windowId] && Object.keys(windowIdToTwigIdToTrue[twig.windowId]).length === 0) {
           delete windowIdToTwigIdToTrue[twig.windowId];
         }
+
         delete (groupIdToTwigIdToTrue[twig.groupId] || {})[twig.id];
         if (groupIdToTwigIdToTrue[twig.groupId] && Object.keys(groupIdToTwigIdToTrue[twig.groupId]).length === 0) {
           delete groupIdToTwigIdToTrue[twig.groupId];
         }
+
         delete (tabIdToTwigIdToTrue[twig.tabId] || {})[twig.id];
         if (tabIdToTwigIdToTrue[twig.windowId] && Object.keys(tabIdToTwigIdToTrue[twig.windowId]).length === 0) {
           delete tabIdToTwigIdToTrue[twig.tabId];
@@ -194,6 +196,7 @@ export const twigSlice: Slice<TwigState> = createSlice({
           ...state[action.payload.space],
           idToChildIdToTrue: action.payload.idToChildIdToTrue,
           idToDescIdToTrue: action.payload.idToDescIdToTrue,
+          shouldReloadTwigTree: false,
         }
       };
     },
