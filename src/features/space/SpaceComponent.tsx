@@ -14,8 +14,8 @@ import type { Arrow } from "../arrow/arrow";
 import type { Role } from "../role/role";
 import SheafComponent from "../arrow/SheafComponent";
 import { AppContext } from "~newtab/App";
-import { selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, selectTwigIdToTrue } from "~features/twigs/twigSlice";
-import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_POS, TWIG_WITH_XY } from "~features/twigs/twigFragments";
+import { selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, selectTwigIdToPosReady, selectTwigIdToTrue } from "~features/twigs/twigSlice";
+import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_XY } from "~features/twigs/twigFragments";
 import type { Twig } from "~features/twigs/twig";
 import TwigLinkComponent from "~features/twigs/TwigLinkComponent";
 import TwigPostComponent from "~features/twigs/TwigPostComponent";
@@ -80,6 +80,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const tabIdToTwigIdToTrue = useAppSelector(selectTabIdToTwigIdToTrue(props.space));
 
+
+
   const tabTwigs = [];
   Object.keys(tabIdToTwigIdToTrue[tabId] || {}).forEach(twigId => {
     const twig = client.cache.readFragment({
@@ -133,7 +135,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const [canScale, setCanScale] = useState(true);
 
   const [moveEvent, setMoveEvent] = useState(null as React.MouseEvent | null);
-
   const [showSettings, setShowSettings] = useState(false);
   const [showRoles, setShowRoles] = useState(false);
   
@@ -148,11 +149,15 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const { centerTwig } = useCenterTwig(props.user, props.space, scale);
 
+  const twigIdToPosReady = useAppSelector(selectTwigIdToPosReady(props.space));
+
   useEffect(() => {
-    if (!tabTwig || !tabTwig.isPositionReady) return;
-    setSelectedTwigId(tabTwigs[0].id);
-    centerTwig(tabTwigs[0].id, true, 0);
-  }, [tabTwig?.id, tabTwig?.isPositionReady]);
+    if (!tabTwig || !twigIdToPosReady[tabTwig.id] || drag.twigId) return;
+
+    setSelectedTwigId(tabTwig.id);
+    
+    centerTwig(tabTwig.id, true, 0);
+  }, [tabTwig?.id, twigIdToPosReady[tabTwig?.id]]);
   
   useEffect(() => {
     if (!spaceEl.current) return;
@@ -336,6 +341,9 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     if (!moveEvent) {
       setMoveEvent(event);
     }
+    else {
+      setMoveEvent(null);
+    }
   }
 
   const handleMouseUp = (event: React.MouseEvent) => {
@@ -476,7 +484,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
             canPost={canPost}
             canView={canView}
             setTouches={setTouches}
-            coordsReady={true}
+            isParentReady={true}
             drag={drag}
             setDrag={setDrag}
           />
@@ -512,7 +520,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
             canPost={canPost}
             canView={canView}
             setTouches={setTouches}
-            coordsReady={true}
             drag={drag}
             setDrag={setDrag}
           />
@@ -619,7 +626,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
               if (!twig || !twig.parent?.id) return null;
               return (
                 <TwigLine 
-                  key={`twig-line-${twigId}`} 
+                  key={`twig-line-${twigId}`}
+                  space={props.space}
                   abstract={abstract} 
                   twig={twig}
                 />

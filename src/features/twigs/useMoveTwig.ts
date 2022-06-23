@@ -1,12 +1,13 @@
 import { gql, useApolloClient, useMutation } from '@apollo/client';
 import { useSnackbar } from 'notistack';
-import { useAppSelector } from '~store';
+import { useAppDispatch, useAppSelector } from '~store';
 import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { applyRole } from '../role/useApplyRole';
 import type { SpaceType } from '../space/space';
 import { selectSessionId } from '../auth/authSlice';
 import type { Twig } from './twig';
 import { TWIG_WITH_XY } from './twigFragments';
+import { setAllPosReadyFalse } from './twigSlice';
 
 const MOVE_TWIG = gql`
   mutation MoveTwig($sessionId: String!, $twigId: String!, $x: Int!, $y: Int!, $displayMode: String!) {
@@ -15,7 +16,6 @@ const MOVE_TWIG = gql`
         id
         x
         y
-        isPositionReady
       }
       role {
         ...FullRoleFields
@@ -27,6 +27,7 @@ const MOVE_TWIG = gql`
 
 export default function useMoveTwig(space: SpaceType) {
   const client = useApolloClient();
+  const dispatch = useAppDispatch();
 
   const sessionId = useAppSelector(selectSessionId);
 

@@ -1,5 +1,5 @@
 import { useApolloClient } from '@apollo/client';
-import { Box, Card, IconButton } from '@mui/material';
+import { Box, Card } from '@mui/material';
 import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '~store';
 import { DisplayMode, TWIG_WIDTH } from '~constants';
@@ -8,11 +8,10 @@ import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
-import { selectChildIdToTrue, selectRequiresRerender, setRequiresRerender } from './twigSlice';
+import { selectChildIdToTrue, selectPosReady, selectShouldReloadTwigTree, selectTwigIdToPosReady, setPosReady } from './twigSlice';
 import type { Arrow } from '../arrow/arrow';
-import RemoveIcon from '@mui/icons-material/Remove';
-import { getColor, getTwigColor } from '~utils';
-import { FULL_TWIG_FIELDS, TWIG_WITH_XY } from './twigFragments';
+import { getTwigColor } from '~utils';
+import { FULL_TWIG_FIELDS, TWIG_FIELDS } from './twigFragments';
 import { selectCreateLink, setCreateLink } from '~features/arrow/arrowSlice';
 import ArrowComponent from '~features/arrow/ArrowComponent';
 import TwigControls from './TwigControls';
@@ -34,7 +33,6 @@ interface TwigPostComponentProps {
   canPost: boolean;
   canView: boolean;
   setTouches: Dispatch<SetStateAction<React.TouchList | null>>;
-  coordsReady: boolean;
   drag: DragState;
   setDrag: Dispatch<SetStateAction<DragState>>;
 }
@@ -54,7 +52,6 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   const { cachePersistor } = useContext(AppContext);
 
   //useAppSelector(state => selectInstanceById(state, props.twigId)); // rerender on instance change
-  const requiresRerender = useAppSelector(state => selectRequiresRerender(state, props.space, props.twig.id));
 
   const palette = useAppSelector(selectPalette);
   const createLink = useAppSelector(selectCreateLink);
@@ -62,6 +59,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   const { selectedTwigId } = useContext(SpaceContext);
   const isSelected = props.twig.id === selectedTwigId;
 
+  const shouldReloadTwigTree = useAppSelector(selectShouldReloadTwigTree(props.space));
   const childIdToTrue = useAppSelector(state => selectChildIdToTrue(state, props.space, props.twig.id));
   const verticalChildren = [];
   const horizontalChildren = [];
@@ -85,61 +83,76 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     }
   });
 
-  //console.log(props.twig.id, verticalChildren, horizontalChildren)
+  const twigIdToPosReady = useAppSelector(selectTwigIdToPosReady(props.space));
 
+  const posReady = twigIdToPosReady[props.twig.id];
+  const parentPosReady = twigIdToPosReady[props.twig.parent?.id] ?? true;
+  const sibsPosReady = shouldReloadTwigTree
+    ? false
+    : posReady
+      ? true
+      : !Object.keys(childIdToTrue[props.twig.parent?.id] || {}).some(sibId => {
+          if (sibId === props.twig.id) return false;
+
+          const sib = client.cache.readFragment({
+            id: client.cache.identify({
+              id: sibId,
+              __typename: 'Twig',
+            }),
+            fragment: TWIG_FIELDS,
+          }) as Twig;
+
+          if (sib.rank > props.twig.rank) return false;
+
+          return !twigIdToPosReady[sibId];
+        });
+      
   const [isLoading, setIsLoading] = useState(false);
   const twigEl = useRef<HTMLDivElement | undefined>();
 
   const { moveTwig } = useMoveTwig(props.space);
 
   useEffect(() => {
-    console.log(props.twig.id, props.twig, parentTwig)
-    if (props.twig.displayMode === DisplayMode.SCATTERED) return;
-    if (props.twig.isPositionReady) return;
-    if (!parentTwig.isPositionReady) return;
-    if (!props.coordsReady) return;
+    if (posReady) return;
+    if (!parentPosReady) return;
+    if (!sibsPosReady) return;
     if (!twigEl.current) return;
 
-    const { offsetLeft, offsetTop } = twigEl.current;
+    if (parentTwig && props.twig.displayMode !== DisplayMode.SCATTERED) {
+      const { offsetLeft, offsetTop } = twigEl.current;
 
-    const x = parentTwig.x + offsetLeft;
-    const y = parentTwig.y + offsetTop;
-    client.cache.modify({
-      id: client.cache.identify(props.twig),
-      fields: {
-        x: () => x,
-        y: () => y,
-        isPositionReady: () => true,
-      },
-    });
-    cachePersistor.persist();
+      const x = parentTwig.x + offsetLeft;
+      const y = parentTwig.y + offsetTop;
+  
+      if (x !== props.twig.x || y !== props.twig.y) {
+        client.cache.modify({
+          id: client.cache.identify(props.twig),
+          fields: {
+            x: () => x,
+            y: () => y,
+          },
+        });
+    
+        moveTwig(props.twig.id, props.twig.displayMode);  
+      }
+    }
 
-    moveTwig(props.twig.id, props.twig.displayMode);
-
-    dispatch(setRequiresRerender({
+    dispatch(setPosReady({
       space: props.space,
       twigId: props.twig.id,
-      requiresRerender: true,
+      posReady: true,
     }));
+    console.log(props.twig.id)
   }, [
-    props.coordsReady, 
+    parentPosReady,
+    sibsPosReady,
+    posReady,
     props.twig.displayMode, 
-    props.twig.isPositionReady,
     parentTwig?.x, 
     parentTwig?.y, 
     twigEl.current?.offsetLeft, 
     twigEl.current?.offsetTop
-  ])
-  
-  useEffect(() => {
-    if (requiresRerender) {
-      dispatch(setRequiresRerender({
-        space: props.space,
-        twigId: props.twig.id,
-        requiresRerender: false,
-      }))
-    }
-  }, [requiresRerender])
+  ]);
   
   const { selectTwig } = useSelectTwig(props.space, props.canEdit);
   const { linkTwigs } = useLinkTwigs(props.space, props.abstract);
@@ -305,7 +318,6 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                     canPost={props.canPost}
                     canView={props.canView}
                     setTouches={props.setTouches}
-                    coordsReady={!requiresRerender}
                     drag={props.drag}
                     setDrag={props.setDrag}
                   />
@@ -333,7 +345,6 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                   canPost={props.canPost}
                   canView={props.canView}
                   setTouches={props.setTouches}
-                  coordsReady={!requiresRerender}
                   drag={props.drag}
                   setDrag={props.setDrag}
                 />

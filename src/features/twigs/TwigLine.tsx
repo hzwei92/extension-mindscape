@@ -1,12 +1,15 @@
 import { useApolloClient } from "@apollo/client";
 import { DisplayMode, VIEW_RADIUS } from "~constants";
 import type { Arrow } from "~features/arrow/arrow";
+import type { SpaceType } from "~features/space/space";
 import { selectPalette } from "~features/window/windowSlice";
 import { useAppSelector } from "~store";
 import type { Twig } from "./twig";
 import { FULL_TWIG_FIELDS } from "./twigFragments";
+import { selectPosReady } from "./twigSlice";
 
 interface TwigLineProps {
+  space: SpaceType;
   abstract: Arrow;
   twig: Twig;
 }
@@ -22,13 +25,14 @@ export default function TwigLine(props: TwigLineProps) {
     fragmentName: 'FullTwigFields',
   }) as Twig
 
+  const posReady = useAppSelector(state => selectPosReady(state, props.space, props.twig.id))
 
   if (
     !props.twig || 
     props.twig.deleteDate || 
     !parentTwig || 
     parentTwig.deleteDate ||
-    (!props.twig.isPositionReady && props.twig.displayMode !== DisplayMode.SCATTERED)|| 
+    !posReady || 
     props.twig.id === props.abstract.rootTwigId
   ) return null;
 

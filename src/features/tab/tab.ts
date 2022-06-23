@@ -2,7 +2,7 @@ import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import { SpaceType } from "~features/space/space";
 import type { Twig } from "~features/twigs/twig";
 import { FULL_TWIG_FIELDS, TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { addTwigs, selectIdToDescIdToTrue, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
+import { addTwigs, selectIdToDescIdToTrue, setAllPosReadyFalse, setPosReady, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
 import { RootState, store } from "~store";
 import type { IdToType } from "~types";
 import { AlarmType, ALARM_DELIMITER, ErrMessage } from "~constants";
@@ -57,7 +57,29 @@ const CREATE_TAB = gql`
 const CREATE_GROUP = gql`
   mutation CreateGroup($group: GroupEntry!, $window: WindowEntry, $tab: TabEntry, $tabTwigId: String) {
     createGroup(group: $group, window: $window, tab: $tab, tabTwigId: $tabTwigId) {
-      ...FullTwigFields
+      window {
+        ...FullTwigFields
+      }
+      windowSibs {
+        id
+        rank
+      }
+      group {
+        ...FullTwigFields
+      }
+      groupSibs {
+        id
+        rank
+      }
+      tab {
+        ...FullTwigFields
+      }
+      tabDescs {
+        id
+        index
+        degree
+        color
+      }
     }
   }
   ${FULL_TWIG_FIELDS}
@@ -90,11 +112,14 @@ const MOVE_TAB = gql`
 const REMOVE_TAB_TWIG = gql`
   mutation RemoveTabTwig($tabId: Int!) {
     removeTabTwig(tabId: $tabId) {
-      twigs {
+      tab {
         id
         deleteDate
+        parent {
+          id
+        }
       }
-      children {
+      tabChildren {
         id
         degree
         rank
@@ -102,9 +127,17 @@ const REMOVE_TAB_TWIG = gql`
           id
         }
       }
-      sibs {
+      tabDescs {
+        id
+        degree
+      }
+      tabSibs {
         id
         rank
+      }
+      tabLinks {
+        id
+        deleteDate
       }
     }
   }
@@ -113,11 +146,11 @@ const REMOVE_TAB_TWIG = gql`
 const REMOVE_GROUP_TWIG = gql`
   mutation RemoveGroupTwig($groupId: Int!) {
     removeGroupTwig(groupId: $groupId) {
-      twig {
+      group {
         id
         deleteDate
       }
-      sibs {
+      groupSibs {
         id
         rank
       }
@@ -489,6 +522,8 @@ export const createTab = (client: ApolloClient<NormalizedCacheObject>) =>
         twigs: data.createTab,
       }));
 
+      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
+
       delete tabIdToCreateBlocked[tabEntry.tabId];
     } catch (err) {
       console.error(err);
@@ -514,15 +549,32 @@ export const createGroup = (client: ApolloClient<NormalizedCacheObject>) =>
       });
       console.log(data);
 
+      const {
+        window,
+        windowSibs,
+        group,
+        groupSibs,
+        tab,
+        tabDescs,
+      } = data.createGroup;
+
+      const twigs = [
+        ...(window ? [window] : []),
+        group,
+        tab,
+      ];
+
       store.dispatch(addTwigs({
         space: SpaceType.FRAME,
-        twigs: data.createGroup,
+        twigs,
       }));
 
       store.dispatch(addTwigUsers({
         space: SpaceType.FRAME,
-        twigs: data.createGroup,
+        twigs,
       }));
+
+      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
     } catch (err) {
       console.error(err);
     }
@@ -558,10 +610,14 @@ export const moveTab = (client: ApolloClient<NormalizedCacheObject>) =>
         }
       });
       console.log(data);
+
       store.dispatch(setShouldReloadTwigTree({
         space: SpaceType.FRAME,
         shouldReloadTwigTree: true,
       }));
+
+      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
+
     } catch (err) {
       console.error(err);
     }
@@ -581,6 +637,9 @@ export const removeTab = (client: ApolloClient<NormalizedCacheObject>) =>
         space: SpaceType.FRAME,
         shouldReloadTwigTree: true,
       }));
+
+      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
+
     } catch (err) {
       console.error(err);
     }
@@ -600,6 +659,26 @@ export const removeGroup = (client: ApolloClient<NormalizedCacheObject>) =>
         space: SpaceType.FRAME,
         shouldReloadTwigTree: true,
       }));
+      
+      const state = store.getState();
+      const idToDescIdToTrue = selectIdToDescIdToTrue(SpaceType.FRAME)(state);
+
+      data.removeGroupTwig.groupSibs.forEach(twig => {
+        store.dispatch(setPosReady({
+          space: SpaceType.FRAME,
+          twigId: twig.id,
+          posReady: false,
+        }));
+
+        Object.keys(idToDescIdToTrue[twig.id] || {}).forEach(descId => {
+          store.dispatch(setPosReady({
+            space: SpaceType.FRAME,
+            twigId: descId,
+            posReady: false,
+          }));
+        });
+      });
+
     } catch (err) {
       console.error(err);
     }
@@ -619,6 +698,8 @@ export const removeWindow = (client: ApolloClient<NormalizedCacheObject>) =>
         space: SpaceType.FRAME,
         shouldReloadTwigTree: true,
       }));
+
+      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
     } catch (err) {
       console.error(err);
     }

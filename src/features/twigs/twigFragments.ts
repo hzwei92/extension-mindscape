@@ -13,7 +13,7 @@ export const TWIG_FIELDS = gql`
     x
     y
     z
-    isPositionReady
+    isRoot
     degree
     rank
     index
@@ -85,7 +85,6 @@ export const TWIG_WITH_POS = gql`
     y
     degree
     rank
-    isPositionReady
     color
     tabId
     groupId

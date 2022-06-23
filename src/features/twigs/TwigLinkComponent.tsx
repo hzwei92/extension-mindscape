@@ -9,7 +9,7 @@ import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
 import TwigControls from './TwigControls';
-import { selectChildIdToTrue, selectRequiresRerender, setRequiresRerender } from './twigSlice';
+import { selectChildIdToTrue, selectPosReady, setPosReady } from './twigSlice';
 import { selectCreateLink, setCreateLink } from '../arrow/arrowSlice';
 import type { Arrow } from '../arrow/arrow';
 import ArrowComponent from '../arrow/ArrowComponent';
@@ -34,7 +34,7 @@ interface TwigLinkComponentProps {
   canPost: boolean;
   canView: boolean;
   setTouches: Dispatch<SetStateAction<React.TouchList | null>>;
-  coordsReady: boolean;
+  isParentReady: boolean;
   drag: DragState;
   setDrag: Dispatch<SetStateAction<DragState>>;
 }
@@ -46,10 +46,10 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   const dispatch = useAppDispatch();
 
   //useAppSelector(state => selectInstanceById(state, props.twigId)); // rerender on instance change
-  const requiresRerender = useAppSelector(state => selectRequiresRerender(state, props.space, props.twig.id));
+  const PosReady = useAppSelector(state => selectPosReady(state, props.space, props.twig.id));
 
-  useAppSelector(state => selectRequiresRerender(state, props.space, props.twig.sourceId));
-  useAppSelector(state => selectRequiresRerender(state, props.space, props.twig.targetId));
+  useAppSelector(state => selectPosReady(state, props.space, props.twig.sourceId));
+  useAppSelector(state => selectPosReady(state, props.space, props.twig.targetId));
 
   const palette = useAppSelector(selectPalette);
   const createLink = useAppSelector(selectCreateLink);
@@ -84,18 +84,18 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   const [isLoading, setIsLoading] = useState(false);
   const twigEl = useRef<HTMLDivElement | undefined>();
 
-  const [coordsReady, setCoordsReady] = useState(props.twig.displayMode === DisplayMode.SCATTERED);
+  const [isParentReady, setisParentReady] = useState(props.twig.displayMode === DisplayMode.SCATTERED);
   const { moveTwig } = useMoveTwig(props.space);
 
   useEffect(() => {
-    if (requiresRerender) {
-      dispatch(setRequiresRerender({
+    if (PosReady) {
+      dispatch(setPosReady({
         space: props.space,
         twigId: props.twig.id,
-        requiresRerender: false,
+        posReady: false,
       }))
     }
-  }, [requiresRerender]);
+  }, [PosReady]);
 
   const { openTwig } = useOpenTwig();
   const { selectTwig } = useSelectTwig(props.space, props.canEdit);
@@ -301,7 +301,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                     canPost={props.canPost}
                     canView={props.canView}
                     setTouches={props.setTouches}
-                    coordsReady={coordsReady && !requiresRerender}
+                    isParentReady={isParentReady && !PosReady}
                     drag={props.drag}
                     setDrag={props.setDrag}
                   />
@@ -329,7 +329,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                   canPost={props.canPost}
                   canView={props.canView}
                   setTouches={props.setTouches}
-                  coordsReady={coordsReady && !requiresRerender}
+                  isParentReady={isParentReady && !PosReady}
                   drag={props.drag}
                   setDrag={props.setDrag}
                 />

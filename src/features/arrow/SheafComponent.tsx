@@ -7,7 +7,7 @@ import type { SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import type { Arrow } from './arrow';
 import type { Twig } from '~features/twigs/twig';
-import { selectRequiresRerender } from '~features/twigs/twigSlice';
+import { selectPosReady } from '~features/twigs/twigSlice';
 import { FULL_TWIG_FIELDS } from '~features/twigs/twigFragments';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import useSelectTwig from '~features/twigs/useSelectTwig';
@@ -49,8 +49,8 @@ export default function SheafComponent(props: SheafComponentProps) {
     fragmentName: 'FullTwigFields'
   }) as Twig;
 
-  useAppSelector(state => selectRequiresRerender(state, props.space, sourceTwig.id));
-  useAppSelector(state => selectRequiresRerender(state, props.space, targetTwig.id));
+  useAppSelector(state => selectPosReady(state, props.space, sourceTwig.id));
+  useAppSelector(state => selectPosReady(state, props.space, targetTwig.id));
 
   if (!sourceTwig || sourceTwig.deleteDate || !targetTwig || targetTwig.deleteDate) return null;
 

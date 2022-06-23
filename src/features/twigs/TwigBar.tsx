@@ -13,7 +13,7 @@ import { getTwigColor } from '~utils';
 import { useApolloClient } from '@apollo/client';
 import { DisplayMode } from '~constants';
 import { FULL_TWIG_FIELDS, TWIG_FIELDS } from './twigFragments';
-import { selectIdToChildIdToTrue, selectIdToDescIdToTrue, setRequiresRerender } from './twigSlice';
+import { selectIdToChildIdToTrue, selectIdToDescIdToTrue, selectPosReady, setAllPosReadyFalse, setPosReady } from './twigSlice';
 import { AppContext } from '~newtab/App';
 
 interface TwigBarProps {
@@ -40,7 +40,8 @@ function TwigBar(props: TwigBarProps) {
   const createLink = useAppSelector(selectCreateLink);
 
   const idToChildIdToTrue = useAppSelector(selectIdToChildIdToTrue(props.space));
-  const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
+
+  const posReady = useAppSelector(state => selectPosReady(state, props.space, props.twig.id));
 
   const beginDrag = () => {
     if (!props.twig.parent) return;
@@ -52,57 +53,57 @@ function TwigBar(props: TwigBarProps) {
         }
       });
 
-      const queue = [];
-      Object.keys(idToChildIdToTrue[props.twig.parent.id] || {}).forEach(sibId => {
-        const sib = client.cache.readFragment({
-          id: client.cache.identify({
-            id: sibId,
-            __typename: 'Twig',
-          }),
-          fragment: TWIG_FIELDS,
-        }) as Twig;
+      dispatch(setAllPosReadyFalse(props.space));
+      // const queue = [];
+      // Object.keys(idToChildIdToTrue[props.twig.parent.id] || {}).forEach(sibId => {
+      //   const sib = client.cache.readFragment({
+      //     id: client.cache.identify({
+      //       id: sibId,
+      //       __typename: 'Twig',
+      //     }),
+      //     fragment: TWIG_FIELDS,
+      //   }) as Twig;
 
-        if (sib.displayMode !== DisplayMode.SCATTERED && sib?.rank > props.twig.rank) {
-          queue.push(sib);
-        }
-      });
+      //   if (sib.displayMode !== DisplayMode.SCATTERED && sib?.rank > props.twig.rank) {
+      //     queue.push(sib);
+      //   }
+      // });
 
-      while (queue.length) {
-        const twig = queue.shift();
-        client.cache.modify({
-          id: client.cache.identify(twig),
-          fields: {
-            isPositionReady: () => false,
-          },
-        });
+      // while (queue.length) {
+      //   const twig = queue.shift();
+      //   dispatch(setPosReady({
+      //     space: props.space,
+      //     twigId: twig.id,
+      //     posReady: false,
+      //   }))
 
-        Object.keys(idToChildIdToTrue[twig.id] || {}).forEach(childId => {
-          const child = client.cache.readFragment({
-            id: client.cache.identify({
-              id: childId,
-              __typename: 'Twig',
-            }),
-            fragment: TWIG_FIELDS,
-          }) as Twig;
-          if (child.displayMode !== DisplayMode.SCATTERED) {
-            queue.push(child);
-          }
-        })
-      }
+      //   Object.keys(idToChildIdToTrue[twig.id] || {}).forEach(childId => {
+      //     const child = client.cache.readFragment({
+      //       id: client.cache.identify({
+      //         id: childId,
+      //         __typename: 'Twig',
+      //       }),
+      //       fragment: TWIG_FIELDS,
+      //     }) as Twig;
+      //     if (child.displayMode !== DisplayMode.SCATTERED) {
+      //       queue.push(child);
+      //     }
+      //   })
+      // }
 
-      let root = props.twig;
-      while (root.displayMode !== DisplayMode.SCATTERED) {
-        root = client.cache.readFragment({
-          id: client.cache.identify(root.parent),
-          fragment: FULL_TWIG_FIELDS,
-          fragmentName: 'FullTwigFields',
-        });
-      }
-      dispatch(setRequiresRerender({
-        space: props.space,
-        twigId: root.id,
-        requiresRerender: true,
-      }))
+      // let root = props.twig;
+      // while (root.displayMode !== DisplayMode.SCATTERED) {
+      //   root = client.cache.readFragment({
+      //     id: client.cache.identify(root.parent),
+      //     fragment: FULL_TWIG_FIELDS,
+      //     fragmentName: 'FullTwigFields',
+      //   });
+      // }
+      // dispatch(setPosReady({
+      //   space: props.space,
+      //   twigId: root.id,
+      //   posReady: true,
+      // }))
     }
     props.setDrag({
       isScreen: false,
@@ -199,7 +200,7 @@ function TwigBar(props: TwigBarProps) {
             {props.twig.index}...
             {props.twig.tabId || props.twig.groupId || props.twig.windowId}...
             {props.twig.displayMode}...
-            {props.twig.isPositionReady ? 1 : 0}
+            {posReady ? 1 : 0}
           </Typography>
         </Box>
         </Box>

@@ -26,7 +26,7 @@ export type Twig = {
   x: number
   y: number
   z: number
-  isPositionReady: boolean;
+  isRoot: boolean;
   degree: number
   rank: number
   index: number | null
