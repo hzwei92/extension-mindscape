@@ -48,14 +48,9 @@ export const FULL_TWIG_FIELDS = gql`
     }
     parent {
       id
-      detailId
-      x
-      y
-      isPositionReady
     }
     children {
       id
-      detailId
     }
   }
   ${TWIG_FIELDS}
@@ -85,14 +80,24 @@ export const TWIG_WITH_POS = gql`
     id
     detailId
     displayMode
+    i
     x
     y
+    degree
+    rank
     isPositionReady
+    color
+    tabId
+    groupId
+    windowId
     deleteDate
     parent {
       id
-      x
-      y
+    }
+    user {
+      id
+      name
+      color
     }
   }
 `;

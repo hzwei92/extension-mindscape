@@ -2,7 +2,7 @@ import type { NormalizedCacheObject } from "@apollo/client"
 import type { ApolloClient } from "@apollo/client"
 import type { CachePersistor } from "apollo3-cache-persist"
 import { v4 } from "uuid"
-import { AlarmType, ALARM_DELIMITER, ErrMessage, MessageName } from "~constants"
+import { AlarmType, ALARM_DELIMITER, ErrMessage, MessageName, PORT_NAME } from "~constants"
 import type { Arrow } from "~features/arrow/arrow"
 import { ARROW_FIELDS } from "~features/arrow/arrowFragments"
 import { getCurrentUser, initUser, refreshToken } from "~features/auth/auth"
@@ -45,6 +45,23 @@ chrome.runtime.onInstalled.addListener(async details => {
   ({ client, persistor: cachePersistor } = await getClient());
 
   store.dispatch(setSessionId(v4()));
+
+  chrome.runtime.onConnect.addListener(port => {
+    if (port.name === PORT_NAME) {
+      port.onMessage.addListener(message => {
+        if (message.name === MessageName.RESTORE_CACHE) {
+          cachePersistor.restore();
+        }
+      })
+    }
+  });
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.name === MessageName.GET_TAB_ID) {
+      sendResponse({
+        tabId: sender.tab.id
+      });
+    }
+  });
 
   chrome.alarms.onAlarm.addListener(async alarm => {
     console.log('alarm', alarm)
@@ -120,23 +137,6 @@ chrome.runtime.onInstalled.addListener(async details => {
       }
     }
   });
-
-  try {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.name === MessageName.GET_TAB_ID) {
-        sendResponse({
-          tabId: sender.tab.id
-        });
-      }
-    });
-  } catch (err) {
-    if (err.message === ErrMessage.NO_RECEIVER) {
-      console.log('Theres no receiver eyyy')
-    }
-    else {
-      console.error(err);
-    }
-  }
 
   chrome.tabs.onCreated.addListener(async tab => {
     console.log('tab created', tab);

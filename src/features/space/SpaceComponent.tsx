@@ -15,7 +15,7 @@ import type { Role } from "../role/role";
 import SheafComponent from "../arrow/SheafComponent";
 import { AppContext } from "~newtab/App";
 import { selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, selectTwigIdToTrue } from "~features/twigs/twigSlice";
-import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_POS } from "~features/twigs/twigFragments";
+import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_POS, TWIG_WITH_XY } from "~features/twigs/twigFragments";
 import type { Twig } from "~features/twigs/twig";
 import TwigLinkComponent from "~features/twigs/TwigLinkComponent";
 import TwigPostComponent from "~features/twigs/TwigPostComponent";
@@ -24,6 +24,7 @@ import SpaceNav from "./SpaceNav";
 import useCenterTwig from "~features/twigs/useCenterTwig";
 import TwigLine from "~features/twigs/TwigLine";
 import { selectUserIdToTrue } from "~features/user/userSlice";
+import useMoveTwig from "~features/twigs/useMoveTwig";
 //import useAdjustTwigs from "../twig/useAdjustTwigs";
 
 
@@ -142,7 +143,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   //useAddTwigSub(props.user, props.space, abstract);
 
-  //const { moveTwig } = useMoveTwig(props.space);
+  const { moveTwig } = useMoveTwig(props.space);
   //const { adjustTwigs} = useAdjustTwigs(abstract)
 
   const { centerTwig } = useCenterTwig(props.user, props.space, scale);
@@ -270,8 +271,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
     const dx1 = dx / scale;
     const dy1 = dy / scale;
-    
-    console.log(dx1, dy1);
 
     setDrag({
       ...drag,
@@ -314,7 +313,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         //graftTwig(drag.twigId, drag.targetTwigId);
       }
       else {
-        //moveTwig(drag.twigId, DisplayMode.SCATTERED);
+        moveTwig(drag.twigId, DisplayMode.SCATTERED);
       }
     }
     else {
@@ -418,16 +417,14 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           id: twig.sourceId,
           __typename: 'Twig',
         }),
-        fragment: FULL_TWIG_FIELDS,
-        fragmentName: 'FullTwigFields'
+        fragment: TWIG_WITH_XY,
       }) as Twig;
       const targetTwig = client.cache.readFragment({
         id: client.cache.identify({
           id: twig.targetId,
           __typename: 'Twig',
         }),
-        fragment: FULL_TWIG_FIELDS,
-        fragmentName: 'FullTwigFields'
+        fragment: TWIG_WITH_XY,
       }) as Twig;
 
       if (!sourceTwig || sourceTwig.deleteDate || !targetTwig || targetTwig.deleteDate) {
@@ -615,9 +612,11 @@ export default function SpaceComponent(props: SpaceComponentProps) {
                   id: twigId,
                   __typename: 'Twig',
                 }),
-                fragment: TWIG_WITH_POS,
+                fragment: FULL_TWIG_FIELDS,
+                fragmentName: 'FullTwigFields',
               }) as Twig;
             
+              if (!twig || !twig.parent?.id) return null;
               return (
                 <TwigLine 
                   key={`twig-line-${twigId}`} 

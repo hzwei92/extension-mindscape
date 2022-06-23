@@ -31,6 +31,11 @@ export default function useCenterTwig(user: User | null, space: SpaceType, scale
         fragment: TWIG_WITH_XY,
       }) as Twig;
 
+      if (!twig) {
+        console.error('Missing twig for twigId ' + twigId);
+        return;
+      };
+
       const x1 = (twig.x + VIEW_RADIUS) * scale;
       const y1 = (twig.y + VIEW_RADIUS) * scale;
 

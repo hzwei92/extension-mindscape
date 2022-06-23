@@ -11,12 +11,13 @@ import { selectColor } from '../window/windowSlice';
 import type { User } from '../user/user';
 import ArrowEditor from './ArrowEditor';
 import { TWIG_WIDTH } from '~constants';
+import { FULL_ARROW_FIELDS } from './arrowFragments';
 
 interface ArrowProps {
   user: User | null;
   space: SpaceType | null;
   abstract: Arrow;
-  arrow: Arrow;
+  arrowId: string;
   instanceId: string;
   isWindow: boolean;
   isGroup: boolean;
@@ -25,6 +26,15 @@ interface ArrowProps {
 
 export default function ArrowComponent(props: ArrowProps) {
   const client = useApolloClient();
+
+  const arrow = client.cache.readFragment({
+    id: client.cache.identify({
+      id: props.arrowId,
+      __typename: 'Arrow',
+    }),
+    fragment: FULL_ARROW_FIELDS,
+    fragmentName: 'FullArrowFields',
+  }) as Arrow;
 
   const color = useAppSelector(selectColor(true));
   const space = useAppSelector(selectSpace);
@@ -52,7 +62,7 @@ export default function ArrowComponent(props: ArrowProps) {
     event.stopPropagation();
   }
 
-  const time = new Date(props.arrow.removeDate || props.arrow.commitDate || props.arrow.saveDate || Date.now()).getTime();
+  const time = new Date(arrow.removeDate || arrow.commitDate || arrow.saveDate || Date.now()).getTime();
   const timeString = getTimeString(time);
 
   return (
@@ -64,18 +74,18 @@ export default function ArrowComponent(props: ArrowProps) {
         color,
         paddingBottom: '4px',
       }}>
-        <UserTag user={props.user} tagUser={props.arrow.user} />
+        <UserTag user={props.user} tagUser={arrow.user} />
         { ' ' }
         { timeString }
         {
-          props.arrow.removeDate
+          arrow.removeDate
             ? ' (deleted)'
-            : props.arrow.commitDate 
+            : arrow.commitDate 
               ? ' (committed)'
               : null
         }
         {
-          // props.arrow.ownerArrow.id === props.abstract?.id
+          // arrow.ownerArrow.id === props.abstract?.id
           //   ? null
           //   : <Box sx={{
           //       marginTop: 1,
@@ -96,18 +106,18 @@ export default function ArrowComponent(props: ArrowProps) {
         width: TWIG_WIDTH - 60,
       }}>
         {
-          props.arrow.draft
+          arrow.draft
             ? <ArrowEditor
                 user={props.user}
                 space={props.space}
-                arrow={props.arrow}
+                arrow={arrow}
                 isReadonly={false}
                 instanceId={props.instanceId}
               />
             : props.isTab
               ? <Box>
                   <Typography fontWeight='bold' fontSize={20}>
-                    {props.arrow.title}
+                    {arrow.title}
                   </Typography>
                   <Box>
                     <Link component='button' sx={{
@@ -117,7 +127,7 @@ export default function ArrowComponent(props: ArrowProps) {
                       wordWrap: 'break-word',
                       textAlign: 'left',
                     }}>
-                      {props.arrow.url}
+                      {arrow.url}
                     </Link>
                   </Box>
                 </Box>

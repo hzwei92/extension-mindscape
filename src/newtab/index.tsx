@@ -21,7 +21,6 @@ function IndexNewtab() {
   const [tabId, setTabId] = useState(-1);
 
   useEffect(() => {
-    console.log('resync', persistor)
     persistor.resync();
 
     loadClient();

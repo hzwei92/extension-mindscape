@@ -1,8 +1,10 @@
+import { useApolloClient } from "@apollo/client";
 import { DisplayMode, VIEW_RADIUS } from "~constants";
 import type { Arrow } from "~features/arrow/arrow";
 import { selectPalette } from "~features/window/windowSlice";
 import { useAppSelector } from "~store";
 import type { Twig } from "./twig";
+import { FULL_TWIG_FIELDS } from "./twigFragments";
 
 interface TwigLineProps {
   abstract: Arrow;
@@ -10,11 +12,22 @@ interface TwigLineProps {
 }
 
 export default function TwigLine(props: TwigLineProps) {
+  const client = useApolloClient();
+
   const palette = useAppSelector(selectPalette);
+  
+  let parentTwig = client.cache.readFragment({
+    id: client.cache.identify(props.twig.parent),
+    fragment: FULL_TWIG_FIELDS,
+    fragmentName: 'FullTwigFields',
+  }) as Twig
+
+
   if (
     !props.twig || 
     props.twig.deleteDate || 
-    !props.twig.parent || 
+    !parentTwig || 
+    parentTwig.deleteDate ||
     (!props.twig.isPositionReady && props.twig.displayMode !== DisplayMode.SCATTERED)|| 
     props.twig.id === props.abstract.rootTwigId
   ) return null;
@@ -22,8 +35,8 @@ export default function TwigLine(props: TwigLineProps) {
   if (props.twig.displayMode === DisplayMode.SCATTERED) {
     return (
       <line 
-        x1={props.twig.parent.x + VIEW_RADIUS}
-        y1={props.twig.parent.y + VIEW_RADIUS}
+        x1={parentTwig.x + VIEW_RADIUS}
+        y1={parentTwig.y + VIEW_RADIUS}
         x2={props.twig.x + VIEW_RADIUS}
         y2={props.twig.y + VIEW_RADIUS}
         stroke={palette === 'dark' ? 'white' : 'black'}
@@ -36,10 +49,10 @@ export default function TwigLine(props: TwigLineProps) {
     return (
       <path
         d={`
-          M ${props.twig.parent.x + VIEW_RADIUS} ${props.twig.parent.y + VIEW_RADIUS} 
-          L ${props.twig.x + VIEW_RADIUS - 10} ${props.twig.parent.y + VIEW_RADIUS}
-          Q ${props.twig.x + VIEW_RADIUS}  ${props.twig.parent.y + VIEW_RADIUS} 
-            ${props.twig.x + VIEW_RADIUS} ${props.twig.parent.y + VIEW_RADIUS + 10}
+          M ${parentTwig.x + VIEW_RADIUS} ${parentTwig.y + VIEW_RADIUS} 
+          L ${props.twig.x + VIEW_RADIUS - 10} ${parentTwig.y + VIEW_RADIUS}
+          Q ${props.twig.x + VIEW_RADIUS}  ${parentTwig.y + VIEW_RADIUS} 
+            ${props.twig.x + VIEW_RADIUS} ${parentTwig.y + VIEW_RADIUS + 10}
           L ${props.twig.x + VIEW_RADIUS} ${props.twig.y + VIEW_RADIUS}
         `}
         stroke={palette === 'dark' ? 'white' : 'black'}
@@ -53,10 +66,10 @@ export default function TwigLine(props: TwigLineProps) {
     return (
       <path
         d={`
-          M ${props.twig.parent.x + VIEW_RADIUS} ${props.twig.parent.y + VIEW_RADIUS} 
-          L ${props.twig.parent.x + VIEW_RADIUS} ${props.twig.y + VIEW_RADIUS - 10} 
-          Q ${props.twig.parent.x + VIEW_RADIUS} ${props.twig.y + VIEW_RADIUS} 
-            ${props.twig.parent.x + VIEW_RADIUS + 10} ${props.twig.y + VIEW_RADIUS} 
+          M ${parentTwig.x + VIEW_RADIUS} ${parentTwig.y + VIEW_RADIUS} 
+          L ${parentTwig.x + VIEW_RADIUS} ${props.twig.y + VIEW_RADIUS - 10} 
+          Q ${parentTwig.x + VIEW_RADIUS} ${props.twig.y + VIEW_RADIUS} 
+            ${parentTwig.x + VIEW_RADIUS + 10} ${props.twig.y + VIEW_RADIUS} 
           L ${props.twig.x + VIEW_RADIUS} ${props.twig.y + VIEW_RADIUS}
         `}
         stroke={palette === 'dark' ? 'white' : 'black'}

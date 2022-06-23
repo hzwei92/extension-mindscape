@@ -4,25 +4,39 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
-import type { Twig } from './twig';
+import type { Twig } from '../twigs/twig';
 import type { SpaceType } from '../space/space';
 import { useAppSelector } from '~store';
 import type { Vote } from '../vote/vote';
 import type { User } from '../user/user';
 import { selectColor } from '../window/windowSlice';
+import { useApolloClient } from '@apollo/client';
+import { FULL_ARROW_FIELDS } from './arrowFragments';
+import type { Arrow } from './arrow';
 
-interface TwigVoterProps {
+interface ArrowVoterProps {
   user: User;
   space: SpaceType;
-  twig: Twig;
+  arrowId: string;
 }
-export default function TwigVoter(props: TwigVoterProps) {
+export default function ArrowVoter(props: ArrowVoterProps) {
+  const client = useApolloClient();
+
+  const arrow = client.cache.readFragment({
+    id: client.cache.identify({
+      id: props.arrowId,
+      __typename: 'Arrow',
+    }),
+    fragment: FULL_ARROW_FIELDS,
+    fragmentName: 'FullArrowFields',
+  }) as Arrow;
+
   const color = useAppSelector(selectColor(true));
 
   const [isVoting, setIsVoting] = useState(false);
 
   let userVote = null as Vote | null;
-  props.twig.detail.votes.some(vote => {
+  arrow.votes.some(vote => {
     if (vote.userId === props.user?.id) {
       userVote = vote;
       return true;
@@ -79,7 +93,7 @@ export default function TwigVoter(props: TwigVoterProps) {
           fontSize: 14,
         }}
       >
-        &nbsp;{ props.twig.detail?.weight || 0 }&nbsp;
+        &nbsp;{ arrow?.weight || 0 }&nbsp;
       </Button>
       <IconButton
         onMouseDown={handleButtonMouseDown}

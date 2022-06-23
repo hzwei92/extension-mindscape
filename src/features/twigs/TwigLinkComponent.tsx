@@ -13,7 +13,7 @@ import { selectChildIdToTrue, selectRequiresRerender, setRequiresRerender } from
 import { selectCreateLink, setCreateLink } from '../arrow/arrowSlice';
 import type { Arrow } from '../arrow/arrow';
 import ArrowComponent from '../arrow/ArrowComponent';
-import TwigVoter from './TwigVoter';
+import ArrowVoter from '../arrow/ArrowVoter';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { getColor, getTwigColor } from '~utils';
 import { FULL_TWIG_FIELDS, TWIG_WITH_XY } from './twigFragments';
@@ -22,7 +22,7 @@ import { SpaceContext } from '~features/space/SpaceComponent';
 import useOpenTwig from './useOpenTwig';
 import useSelectTwig from './useSelectTwig';
 import useLinkTwigs from './useLinkTwig';
-//import useMoveTwig from './useMoveTwig';
+import useMoveTwig from './useMoveTwig';
 
 interface TwigLinkComponentProps {
   user: User | null;
@@ -85,7 +85,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   const twigEl = useRef<HTMLDivElement | undefined>();
 
   const [coordsReady, setCoordsReady] = useState(props.twig.displayMode === DisplayMode.SCATTERED);
-  //const { moveTwig } = useMoveTwig(props.space);
+  const { moveTwig } = useMoveTwig(props.space);
 
   useEffect(() => {
     if (requiresRerender) {
@@ -229,10 +229,10 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
           <Box sx={{
             display: 'flex',
           }}>
-            <TwigVoter
+            <ArrowVoter
               user={props.user}
               space={props.space}
-              twig={props.twig}
+              arrowId={props.twig.detailId}
             />
             <Box sx={{
               padding: 0.5,
@@ -247,7 +247,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                   user={props.user}
                   abstract={props.abstract}
                   space={props.space}
-                  arrow={props.twig.detail}
+                  arrowId={props.twig.detailId}
                   instanceId={props.twig.id}
                   isTab={!!props.twig.tabId}
                   isGroup={!props.twig.tabId && !!props.twig.groupId}

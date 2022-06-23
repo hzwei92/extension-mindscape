@@ -12,6 +12,7 @@ import MenuComponent from "~features/menu/MenuComponent";
 import FrameComponent from "~features/frame/FrameComponent";
 import { FULL_USER_FIELDS } from "~features/user/userFragments";
 import type { CachePersistor } from "apollo3-cache-persist";
+import { selectAuthIsDone } from "~features/auth/authSlice";
 
 export const AppContext = React.createContext({} as {
   tabId: number,
@@ -32,6 +33,8 @@ export default function App(props: AppProps) {
   //console.log('app')
   const client = useApolloClient();
   const dispatch = useAppDispatch();
+
+  const authIsDone = useAppSelector(selectAuthIsDone);
 
   const userId = useAppSelector(selectUserId);
   const user = client.cache.readFragment({
@@ -90,7 +93,17 @@ export default function App(props: AppProps) {
       window.matchMedia('(prefers-color-scheme: dark)')
         .removeEventListener('change', handlePaletteModeChange);
     };
-  }, [])
+  }, []);
+
+
+  useEffect(() => {
+    console.log('herewego', authIsDone, userId)
+    if (authIsDone && !userId) {
+      persistor.resync();
+      props.cachePersistor.restore();
+    }
+  }, [userId, authIsDone])
+
 
   useEffect(() => {
     setTheme(createTheme({

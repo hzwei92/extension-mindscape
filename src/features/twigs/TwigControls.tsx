@@ -20,6 +20,8 @@ import type { User } from '../user/user';
 import UserTag from '../user/UserTag';
 //import useReplyTwig from './useReplyTwig';
 import { selectCreateLink, setCommitArrowId, setCreateLink, setRemoveArrowId } from '../arrow/arrowSlice';
+import { useApolloClient } from '@apollo/client';
+import { FULL_ARROW_FIELDS } from '~features/arrow/arrowFragments';
 //import useCenterTwig from './useCenterTwig';
 
 interface TwigControlsProps {
@@ -36,7 +38,17 @@ interface TwigControlsProps {
   setIsLoading: Dispatch<SetStateAction<boolean>>;
 }
 function TwigControls(props: TwigControlsProps) {
+  const client = useApolloClient();
   const dispatch = useAppDispatch();
+
+  const arrow = client.cache.readFragment({
+    id: client.cache.identify({
+      id: props.twig.detailId,
+      __typename: 'Arrow',
+    }),
+    fragment: FULL_ARROW_FIELDS,
+    fragmentName: 'FullArrowFields',
+  }) as Arrow;
 
   const color = useAppSelector(selectColor(true))
 
@@ -108,7 +120,7 @@ function TwigControls(props: TwigControlsProps) {
 
   const handleCopyClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    navigator.clipboard.writeText(`https://mindscape.pub/m/${props.twig.detail.routeName}`);
+    navigator.clipboard.writeText(`https://mindscape.pub/m/${arrow.routeName}`);
     const handleDismissClick = (event: React.MouseEvent) => {
       closeSnackbar(props.twig.id);
     }
@@ -261,7 +273,7 @@ function TwigControls(props: TwigControlsProps) {
         }}
       >
         {
-          props.twig.user.id !== props.twig.detail.user.id
+          props.twig.user.id !== arrow.user.id
             ? <Box sx={{
                 fontSize: 12,
                 padding: 1,
@@ -272,7 +284,7 @@ function TwigControls(props: TwigControlsProps) {
             : null
         }
         {
-          props.twig.detail.userId === props.user?.id
+          arrow.userId === props.user?.id
             ? <MenuItem onClick={handleRouteClick} sx={{
                 fontSize: 14,
               }}>
@@ -312,7 +324,7 @@ function TwigControls(props: TwigControlsProps) {
           &nbsp; Copy hyperlink (with context)
         </MenuItem>
         {
-          props.twig.detail.userId === props.user?.id && !props.twig.detail.commitDate && !props.twig.detail.removeDate
+          arrow.userId === props.user?.id && !arrow.commitDate && !arrow.removeDate
             ? <MenuItem onClick={handleCommitClick} sx={{
                 fontSize: 14,
               }}>
@@ -328,7 +340,7 @@ function TwigControls(props: TwigControlsProps) {
             : null
         }
         {
-          props.twig.detail.userId === props.user?.id && !props.twig.detail.removeDate
+          arrow.userId === props.user?.id && !arrow.removeDate
             ? <MenuItem onClick={handleRemoveClick} sx={{
                 fontSize: 14,
               }}>
@@ -407,13 +419,13 @@ function TwigControls(props: TwigControlsProps) {
         color,
         fontSize: 12,
       }}>
-        {props.twig.detail.inCount} IN
+        {arrow.inCount} IN
       </Button>
       <Button onMouseDown={handleMouseDown} onClick={handleNextClick} sx={{
         color,
         fontSize: 12,
       }}>
-        {props.twig.detail.outCount} OUT
+        {arrow.outCount} OUT
       </Button>
     </Box>
   )

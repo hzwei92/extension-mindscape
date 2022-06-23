@@ -12,12 +12,12 @@ import { selectChildIdToTrue, selectRequiresRerender, setRequiresRerender } from
 import type { Arrow } from '../arrow/arrow';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { getColor, getTwigColor } from '~utils';
-import { FULL_TWIG_FIELDS } from './twigFragments';
+import { FULL_TWIG_FIELDS, TWIG_WITH_XY } from './twigFragments';
 import { selectCreateLink, setCreateLink } from '~features/arrow/arrowSlice';
 import ArrowComponent from '~features/arrow/ArrowComponent';
 import TwigControls from './TwigControls';
 import TwigBar from './TwigBar';
-import TwigVoter from './TwigVoter';
+import ArrowVoter from '../arrow/ArrowVoter';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import useSelectTwig from './useSelectTwig';
 import useMoveTwig from './useMoveTwig';
@@ -40,9 +40,16 @@ interface TwigPostComponentProps {
 }
 function TwigPostComponent(props: TwigPostComponentProps) {
   //console.log('twig post', props.twig.id);
-
   const client = useApolloClient();
   const dispatch = useAppDispatch();
+
+  const parentTwig = props.twig.parent 
+    ? client.cache.readFragment({
+        id: client.cache.identify(props.twig.parent),
+        fragment: FULL_TWIG_FIELDS,
+        fragmentName: 'FullTwigFields'
+      }) as Twig
+    : null;
 
   const { cachePersistor } = useContext(AppContext);
 
@@ -86,39 +93,40 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   const { moveTwig } = useMoveTwig(props.space);
 
   useEffect(() => {
+    console.log(props.twig.id, props.twig, parentTwig)
     if (props.twig.displayMode === DisplayMode.SCATTERED) return;
     if (props.twig.isPositionReady) return;
+    if (!parentTwig.isPositionReady) return;
     if (!props.coordsReady) return;
     if (!twigEl.current) return;
 
     const { offsetLeft, offsetTop } = twigEl.current;
 
-    const x = props.twig.parent.x + offsetLeft;
-    const y = props.twig.parent.y + offsetTop 
-    if (x !== props.twig.x || y !== props.twig.y) {
-      client.cache.modify({
-        id: client.cache.identify(props.twig),
-        fields: {
-          x: () => x,
-          y: () => y,
-        },
-      });
-      cachePersistor.persist()
-      moveTwig(props.twig.id, props.twig.displayMode);
+    const x = parentTwig.x + offsetLeft;
+    const y = parentTwig.y + offsetTop;
+    client.cache.modify({
+      id: client.cache.identify(props.twig),
+      fields: {
+        x: () => x,
+        y: () => y,
+        isPositionReady: () => true,
+      },
+    });
+    cachePersistor.persist();
 
-      dispatch(setRequiresRerender({
-        space: props.space,
-        twigId: props.twig.id,
-        requiresRerender: true,
-      }));
-    }
+    moveTwig(props.twig.id, props.twig.displayMode);
 
+    dispatch(setRequiresRerender({
+      space: props.space,
+      twigId: props.twig.id,
+      requiresRerender: true,
+    }));
   }, [
     props.coordsReady, 
     props.twig.displayMode, 
     props.twig.isPositionReady,
-    props.twig.parent?.x, 
-    props.twig.parent?.y, 
+    parentTwig?.x, 
+    parentTwig?.y, 
     twigEl.current?.offsetLeft, 
     twigEl.current?.offsetTop
   ])
@@ -237,10 +245,10 @@ function TwigPostComponent(props: TwigPostComponentProps) {
           <Box sx={{
             display: 'flex',
           }}>
-            <TwigVoter
+            <ArrowVoter
               user={props.user}
               space={props.space}
-              twig={props.twig}
+              arrowId={props.twig.detailId}
             />
             <Box sx={{
               padding: 0.5,
@@ -255,7 +263,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                   user={props.user}
                   abstract={props.abstract}
                   space={props.space}
-                  arrow={props.twig.detail}
+                  arrowId={props.twig.detailId}
                   instanceId={props.twig.id}
                   isTab={!!props.twig.tabId}
                   isGroup={!props.twig.tabId && !!props.twig.groupId}
@@ -297,7 +305,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                     canPost={props.canPost}
                     canView={props.canView}
                     setTouches={props.setTouches}
-                    coordsReady={props.twig.isPositionReady && !requiresRerender}
+                    coordsReady={!requiresRerender}
                     drag={props.drag}
                     setDrag={props.setDrag}
                   />
@@ -325,7 +333,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
                   canPost={props.canPost}
                   canView={props.canView}
                   setTouches={props.setTouches}
-                  coordsReady={props.twig.isPositionReady && !requiresRerender}
+                  coordsReady={!requiresRerender}
                   drag={props.drag}
                   setDrag={props.setDrag}
                 />

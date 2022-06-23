@@ -1,7 +1,7 @@
 import { gql, useApolloClient, useMutation } from '@apollo/client';
 import { useSnackbar } from 'notistack';
 import { useAppSelector } from '~store';
-import { ROLE_FIELDS } from '../role/roleFragments';
+import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { applyRole } from '../role/useApplyRole';
 import type { SpaceType } from '../space/space';
 import { selectSessionId } from '../auth/authSlice';
@@ -18,11 +18,11 @@ const MOVE_TWIG = gql`
         isPositionReady
       }
       role {
-        ...RoleFields
+        ...FullRoleFields
       }
     }
   }
-  ${ROLE_FIELDS}
+  ${FULL_ROLE_FIELDS}
 `;
 
 export default function useMoveTwig(space: SpaceType) {
@@ -53,7 +53,6 @@ export default function useMoveTwig(space: SpaceType) {
       }),
       fragment: TWIG_WITH_XY,
     }) as Twig;
-
     move({
       variables: {
         sessionId: sessionId,
