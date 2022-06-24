@@ -12,18 +12,18 @@ import { SpaceType } from './space';
 import { selectIsOpen, selectSpace } from './spaceSlice';
 import { selectMenuMode } from '../menu/menuSlice';
 import { AppContext } from '~newtab/App';
+import { SpaceContext } from './SpaceComponent';
 
 interface SpaceControlsProps {
   space: SpaceType;
   setShowSettings: Dispatch<SetStateAction<boolean>>;
   setShowRoles: Dispatch<SetStateAction<boolean>>;
-  scale: number;
-  setScale: Dispatch<SetStateAction<number>>;
 }
 export default function SpaceControls(props: SpaceControlsProps) {
   const dispatch = useAppDispatch();
 
   const { width } = useContext(AppContext);
+  const { scale, setScale } = useContext(SpaceContext);
 
   const menuMode = useAppSelector(selectMenuMode);
 
@@ -45,12 +45,12 @@ export default function SpaceControls(props: SpaceControlsProps) {
     if (!spaceEl?.current) return;
 
     const center = {
-      x: (spaceEl.current.scrollLeft + (spaceEl.current.clientWidth / 2)) / props.scale,
-      y: (spaceEl.current.scrollTop + (spaceEl.current.clientHeight / 2)) / props.scale,
+      x: (spaceEl.current.scrollLeft + (spaceEl.current.clientWidth / 2)) / scale,
+      y: (spaceEl.current.scrollTop + (spaceEl.current.clientHeight / 2)) / scale,
     }
-    const scale1 = scaleDown(props.scale);
+    const scale1 = scaleDown(scale);
 
-    props.setScale(scale1);
+    setScale(scale1);
 
     const left = (center.x * scale1) - (spaceEl.current.clientWidth / 2);
     const top = (center.y * scale1) - (spaceEl.current.clientHeight / 2);
@@ -67,12 +67,12 @@ export default function SpaceControls(props: SpaceControlsProps) {
     if (!spaceEl?.current) return;
 
     const center = {
-      x: (spaceEl.current.scrollLeft + (spaceEl.current.clientWidth / 2)) / props.scale,
-      y: (spaceEl.current.scrollTop + (spaceEl.current.clientHeight / 2)) / props.scale,
+      x: (spaceEl.current.scrollLeft + (spaceEl.current.clientWidth / 2)) / scale,
+      y: (spaceEl.current.scrollTop + (spaceEl.current.clientHeight / 2)) / scale,
     };
-    const scale1 = scaleUp(props.scale);
+    const scale1 = scaleUp(scale);
 
-    props.setScale(scale1);
+    setScale(scale1);
 
     const left = (center.x * scale1) - (spaceEl.current.clientWidth / 2);
     const top = (center.y * scale1) - (spaceEl.current.clientHeight / 2);
@@ -133,7 +133,7 @@ export default function SpaceControls(props: SpaceControlsProps) {
             flexDirection: 'row',
             justifyContent: 'space-between'
           }}>
-            <Button disabled={props.scale === .03125} variant='contained' onClick={handleScaleDownClick} sx={{
+            <Button disabled={scale === .03125} variant='contained' onClick={handleScaleDownClick} sx={{
               minWidth: 0,
               minHeight: 0,
               width: '20px',
@@ -147,9 +147,9 @@ export default function SpaceControls(props: SpaceControlsProps) {
               flexDirection: 'row',
               justifyContent: 'center',
             }}>
-              { Math.round(props.scale * 100) }%
+              { Math.round(scale * 100) }%
             </Box>
-            <Button disabled={props.scale === 4} variant='contained' onClick={handleScaleUpClick} sx={{
+            <Button disabled={scale === 4} variant='contained' onClick={handleScaleUpClick} sx={{
               minWidth: 0,
               minHeight: 0,
               width: '20px',

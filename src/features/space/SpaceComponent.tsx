@@ -31,6 +31,8 @@ import useMoveTwig from "~features/twigs/useMoveTwig";
 export const SpaceContext = React.createContext({} as {
   selectedTwigId: string;
   setSelectedTwigId: Dispatch<SetStateAction<string>>;
+  scale: number;
+  setScale: Dispatch<SetStateAction<number>>;
 });
 
 interface SpaceComponentProps {
@@ -79,8 +81,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
 
   const tabIdToTwigIdToTrue = useAppSelector(selectTabIdToTwigIdToTrue(props.space));
-
-
 
   const tabTwigs = [];
   Object.keys(tabIdToTwigIdToTrue[tabId] || {}).forEach(twigId => {
@@ -145,7 +145,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   //useAddTwigSub(props.user, props.space, abstract);
 
   const { moveTwig } = useMoveTwig(props.space);
-  //const { adjustTwigs} = useAdjustTwigs(abstract)
+  //const { adjustTwigs } = useAdjustTwigs(abstract)
 
   const { centerTwig } = useCenterTwig(props.user, props.space, scale);
 
@@ -155,9 +155,9 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     if (!tabTwig || !twigIdToPosReady[tabTwig.id] || drag.twigId) return;
 
     setSelectedTwigId(tabTwig.id);
-    
+    console.log('scale', scale)
     centerTwig(tabTwig.id, true, 0);
-  }, [tabTwig?.id, twigIdToPosReady[tabTwig?.id]]);
+  }, [tabTwig?.id, !twigIdToPosReady[tabTwig?.id]]);
   
   useEffect(() => {
     if (!spaceEl.current) return;
@@ -543,116 +543,115 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     <SpaceContext.Provider value={{
       selectedTwigId,
       setSelectedTwigId,
+      scale,
+      setScale,
     }}>
-    <Box 
-      ref={spaceEl}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onScroll={handleScroll}
-      onWheel={handleWheel}
-      onTouchEnd={handleTouchEnd}
-      sx={{
-        position: 'relative',
-        top: `${SPACE_BAR_HEIGHT}px`,
-        height: `calc(100% - ${SPACE_BAR_HEIGHT}px)`,
-        width: '100%',
-        overflow: 'scroll',
-      }}
-    >
       <Box 
-        onMouseMove={handleMouseMove}
+        ref={spaceEl}
+        onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
+        onScroll={handleScroll}
+        onWheel={handleWheel}
+        onTouchEnd={handleTouchEnd}
         sx={{
-          width: w * (scale < 1 ? scale : 1),
-          height: h * (scale < 1 ? scale : 1),
           position: 'relative',
-          cursor: drag.isScreen || drag.twigId
-            ? 'grabbing'
-            : 'grab',
-          transform: `scale(${scale})`,
-          transformOrigin: '0 0'
+          top: `${SPACE_BAR_HEIGHT}px`,
+          height: `calc(100% - ${SPACE_BAR_HEIGHT}px)`,
+          width: '100%',
+          overflow: 'scroll',
         }}
       >
-        <svg viewBox={`0 0 ${w} ${h}`} style={{
-          width: w,
-          height: h,
-        }}>
-          <defs>
+        <Box 
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          sx={{
+            width: w * (scale < 1 ? scale : 1),
+            height: h * (scale < 1 ? scale : 1),
+            position: 'relative',
+            cursor: drag.isScreen || drag.twigId
+              ? 'grabbing'
+              : 'grab',
+            transform: `scale(${scale})`,
+            transformOrigin: '0 0'
+          }}
+        >
+          <svg viewBox={`0 0 ${w} ${h}`} style={{
+            width: w,
+            height: h,
+          }}>
+            <defs>
+              {
+                Object.keys(userIdToTrue).map(userId => {
+                  const user = client.cache.readFragment({
+                    id: client.cache.identify({
+                      id: userId,
+                      __typename: 'User',
+                    }),
+                    fragment: gql`
+                      fragment UserWithColor on User {
+                        id
+                        color
+                      }
+                    `,
+                  }) as User;
+                  return (
+                    <marker 
+                      key={`marker-${userId}`}
+                      id={`marker-${userId}`} 
+                      markerWidth='6'
+                      markerHeight='10'
+                      refX='7'
+                      refY='5'
+                      orient='auto'
+                    >
+                      <polyline 
+                        points='0,0 5,5 0,10'
+                        fill='none'
+                        stroke={user?.color}
+                      />
+                    </marker>
+                  )
+                })
+              }
+            </defs>
             {
-              Object.keys(userIdToTrue).map(userId => {
-                const user = client.cache.readFragment({
+              Object.keys(twigIdToTrue).map(twigId => {
+                const twig = client.cache.readFragment({
                   id: client.cache.identify({
-                    id: userId,
-                    __typename: 'User',
+                    id: twigId,
+                    __typename: 'Twig',
                   }),
-                  fragment: gql`
-                    fragment UserWithColor on User {
-                      id
-                      color
-                    }
-                  `,
-                }) as User;
+                  fragment: FULL_TWIG_FIELDS,
+                  fragmentName: 'FullTwigFields',
+                }) as Twig;
+              
+                if (!twig || !twig.parent?.id) return null;
                 return (
-                  <marker 
-                    key={`marker-${userId}`}
-                    id={`marker-${userId}`} 
-                    markerWidth='6'
-                    markerHeight='10'
-                    refX='7'
-                    refY='5'
-                    orient='auto'
-                  >
-                    <polyline 
-                      points='0,0 5,5 0,10'
-                      fill='none'
-                      stroke={user?.color}
-                    />
-                  </marker>
-                )
+                  <TwigLine 
+                    key={`twig-line-${twigId}`}
+                    space={props.space}
+                    abstract={abstract} 
+                    twig={twig}
+                  />
+                );
               })
             }
-          </defs>
-          {
-            Object.keys(twigIdToTrue).map(twigId => {
-              const twig = client.cache.readFragment({
-                id: client.cache.identify({
-                  id: twigId,
-                  __typename: 'Twig',
-                }),
-                fragment: FULL_TWIG_FIELDS,
-                fragmentName: 'FullTwigFields',
-              }) as Twig;
-            
-              if (!twig || !twig.parent?.id) return null;
-              return (
-                <TwigLine 
-                  key={`twig-line-${twigId}`}
-                  space={props.space}
-                  abstract={abstract} 
-                  twig={twig}
-                />
-              );
-            })
-          }
-          { sheafs }
-        </svg>
-        { twigs }
+            { sheafs }
+          </svg>
+          { twigs }
+        </Box>
+        <SpaceControls
+          space={props.space}
+          setShowSettings={setShowSettings}
+          setShowRoles={setShowRoles}
+        />
+        <SpaceNav
+          user={props.user}
+          space={props.space}
+          abstract={abstract}
+          canEdit={canEdit}
+        />
       </Box>
-      <SpaceControls
-        space={props.space}
-        setShowSettings={setShowSettings}
-        setShowRoles={setShowRoles}
-        scale={scale}
-        setScale={setScale}
-      />
-      <SpaceNav
-        user={props.user}
-        space={props.space}
-        abstract={abstract}
-        canEdit={canEdit}
-        scale={scale}
-      />
-    </Box>
     </SpaceContext.Provider>
   );
 }

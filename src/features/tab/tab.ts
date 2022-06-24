@@ -551,11 +551,8 @@ export const createGroup = (client: ApolloClient<NormalizedCacheObject>) =>
 
       const {
         window,
-        windowSibs,
         group,
-        groupSibs,
         tab,
-        tabDescs,
       } = data.createGroup;
 
       const twigs = [

@@ -26,7 +26,6 @@ interface SpaceNavProps {
   space: SpaceType;
   abstract: Arrow;
   canEdit: boolean;
-  scale: number;
 }
 
 export default function SpaceNav(props: SpaceNavProps) {
@@ -50,7 +49,7 @@ export default function SpaceNav(props: SpaceNavProps) {
   const hasEarlier = index > 0;
   const hasLater = index < twigs.length - 1;
 
-  const { centerTwig } = useCenterTwig(props.user, props.space, props.scale);
+  const { centerTwig } = useCenterTwig(props.user, props.space);
   const { selectTwig } = useSelectTwig(props.space, props.canEdit)
 
   useEffect(() => {

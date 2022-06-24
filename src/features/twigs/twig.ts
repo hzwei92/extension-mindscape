@@ -46,6 +46,48 @@ export type Twig = {
   __typename: string
 }
 
+
+export const createTwig = (
+  user: User, 
+  id: string,
+  abstract: Arrow, 
+  detail: Arrow, 
+  parent: Twig, 
+  x: number,
+  y: number,
+  color: string | null,
+  isOpen: boolean,
+) => {
+  const date = new Date();
+  const twig = {
+    id,
+    sourceId: null,
+    targetId: null,
+    userId: user.id,
+    user,
+    abstractId: abstract.id,
+    abstract,
+    detailId: detail.id,
+    detail,
+    parent,
+    children: [],
+    i: abstract.twigN + 1,
+    x,
+    y,
+    z: abstract.twigZ + 1,
+    color,
+    tabId: null,
+    groupId: null,
+    windowId: null,
+    isOpen,
+    createDate: date,
+    updateDate: date,
+    deleteDate: null,
+    __typename: 'Twig'
+  } as Twig;
+  return twig;
+}
+
 const GET_TWIGS = gql`
   mutation GetTwigs($abstractId: String!) {
     getTwigs(abstractId: $abstractId) {
