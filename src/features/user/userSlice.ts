@@ -55,6 +55,9 @@ export const userSlice: Slice<UserState> = createSlice({
       };
     },
   },
+  extraReducers: (builder) => {
+    builder.addDefaultCase(state => state)
+  },
 });
 
 export const {

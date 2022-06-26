@@ -36,7 +36,7 @@ export default function ArrowVoter(props: ArrowVoterProps) {
   const [isVoting, setIsVoting] = useState(false);
 
   let userVote = null as Vote | null;
-  arrow.votes.some(vote => {
+  (arrow.votes || []).some(vote => {
     if (vote.userId === props.user?.id) {
       userVote = vote;
       return true;

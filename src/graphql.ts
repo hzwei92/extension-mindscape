@@ -113,7 +113,7 @@ export const getClient = async () => {
     storage: new LocalStorageWrapper(localStorage),
     debug: false,
     key: 'apollo-cache-persist',
-    debounce: 0,
+    //debounce: 0,
   });
   
   await persistor.restore();

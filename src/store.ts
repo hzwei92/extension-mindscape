@@ -6,24 +6,32 @@ import {
   REGISTER,
   REHYDRATE,
   RESYNC,
-  persistReducer,
-  persistStore
-} from "@plasmohq/redux-persist"
-import { Storage } from "@plasmohq/storage"
-import { Action, combineReducers, configureStore, Store, ThunkAction } from "@reduxjs/toolkit"
-import { localStorage } from "redux-persist-webextension-storage"
-import counterSlice from "~features/counter/counterSlice"
-import authSlice from "~features/auth/authSlice"
-import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux"
-import userSlice from "~features/user/userSlice"
-import windowSlice from "~features/window/windowSlice"
-import arrowSlice from "~features/arrow/arrowSlice"
-import menuSlice from "~features/menu/menuSlice"
-import spaceSlice from "~features/space/spaceSlice"
-import twigSlice from "~features/twigs/twigSlice"
-import { ErrMessage, MessageName, PORT_NAME } from "~constants"
+  persistStore,
+  persistCombineReducers,
+} from "@plasmohq/redux-persist";
+import { Storage } from "@plasmohq/storage";
+import { Action, configureStore, Store, ThunkAction } from "@reduxjs/toolkit";
+import { localStorage } from "redux-persist-webextension-storage";
+import counterSlice from "~features/counter/counterSlice";
+import authSlice from "~features/auth/authSlice";
+import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import userSlice from "~features/user/userSlice";
+import windowSlice from "~features/window/windowSlice";
+import arrowSlice from "~features/arrow/arrowSlice";
+import menuSlice from "~features/menu/menuSlice";
+import spaceSlice from "~features/space/spaceSlice";
+import twigSlice from "~features/twigs/twigSlice";
+import { ErrMessage, MessageName, PORT_NAME } from "~constants";
 
-const rootReducer = combineReducers({
+export const persistConfig = {
+  key: 'redux',
+  version: 1,
+  storage: localStorage,
+  debug: true,
+  throttle: 0,
+};
+
+const persistedReducer = persistCombineReducers(persistConfig, {
   arrow: arrowSlice,
   auth: authSlice,
   counter: counterSlice,
@@ -32,15 +40,7 @@ const rootReducer = combineReducers({
   twig: twigSlice,
   user: userSlice,
   window: windowSlice,
-})
-
-export const persistConfig = {
-  key: "root",
-  version: 1,
-  storage: localStorage
-}
-
-const persistedReducer = persistReducer(persistConfig, rootReducer)
+});
 
 export const store: Store = configureStore({
   reducer: persistedReducer,
@@ -58,8 +58,8 @@ export const store: Store = configureStore({
         ]
       }
     })
-})
-export const persistor = persistStore(store)
+});
+export const persistor = persistStore(store);
 
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;

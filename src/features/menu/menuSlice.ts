@@ -44,6 +44,9 @@ export const menuSlice: Slice = createSlice({
       }
     },
   },
+  extraReducers: (builder) => {
+    builder.addDefaultCase(state => state)
+  },
 });
 
 export const { setMenuMode, setMenuIsResizing, setMenuWidth } = menuSlice.actions;

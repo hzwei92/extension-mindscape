@@ -29,6 +29,9 @@ export const windowSlice: Slice = createSlice({
       };
     },
   },
+  extraReducers: (builder) => {
+    builder.addDefaultCase(state => state)
+  },
 });
 
 export const { setPalette, togglePalette } = windowSlice.actions;

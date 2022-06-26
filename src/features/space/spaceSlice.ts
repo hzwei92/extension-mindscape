@@ -47,7 +47,10 @@ export const spaceSlice: Slice<SpaceState> = createSlice({
         },
       };
     },
-  }
+  },
+  extraReducers: (builder) => {
+    builder.addDefaultCase(state => state)
+  },
 });
 
 export const {

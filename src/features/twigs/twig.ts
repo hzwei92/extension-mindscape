@@ -1,14 +1,6 @@
-import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client"
-import type { Arrow } from "~features/arrow/arrow"
-import { SpaceType } from "~features/space/space"
-import type { User } from "~features/user/user"
-import { USER_FIELDS } from "~features/user/userFragments"
-import { addTwigUsers } from "~features/user/userSlice"
-import { getClient } from "~graphql"
-import { store } from "~store"
-import type { IdToType } from "~types"
-import { FULL_TWIG_FIELDS, TWIG_WITH_PARENT } from "./twigFragments"
-import { addTwigs, selectTwigIdToTrue, setTwigTree } from "./twigSlice"
+import type { DisplayMode } from "~constants";
+import type { Arrow } from "~features/arrow/arrow";
+import type { User } from "~features/user/user";
 
 export type Twig = {
   id: string
@@ -29,13 +21,8 @@ export type Twig = {
   isRoot: boolean;
   degree: number
   rank: number
-  index: number | null
   color: string | null
   displayMode: string
-  ownWidth: number
-  ownHeight: number
-  width: number
-  height: number
   windowId: number | null
   groupId: number | null
   tabId: number | null
@@ -57,6 +44,10 @@ export const createTwig = (
   y: number,
   color: string | null,
   isOpen: boolean,
+  windowId: number | null,
+  groupId: number | null,
+  tabId: number | null,
+  displayMode: DisplayMode,
 ) => {
   const date = new Date();
   const twig = {
@@ -71,125 +62,23 @@ export const createTwig = (
     detail,
     parent,
     children: [],
+    isRoot: false,
     i: abstract.twigN + 1,
     x,
     y,
     z: abstract.twigZ + 1,
     color,
-    tabId: null,
-    groupId: null,
-    windowId: null,
+    degree: parent.degree + 1,
+    rank: 0,
+    tabId,
+    groupId,
+    windowId,
     isOpen,
+    displayMode,
     createDate: date,
     updateDate: date,
     deleteDate: null,
     __typename: 'Twig'
   } as Twig;
   return twig;
-}
-
-const GET_TWIGS = gql`
-  mutation GetTwigs($abstractId: String!) {
-    getTwigs(abstractId: $abstractId) {
-      ...FullTwigFields
-    }
-  }
-  ${FULL_TWIG_FIELDS}
-`;
-
-export const getTwigs = (client: ApolloClient<NormalizedCacheObject>) => 
-  async (userId: string) => {
-    const user = client.readFragment({
-      id: client.cache.identify({
-        id: userId,
-        __typename: 'User',
-      }),
-      fragment: USER_FIELDS
-    }) as User;
-
-    if (!user) {
-      throw Error('Missing user with id ' + userId)
-    };
-
-    try {
-      const { data } = await client.mutate({
-        mutation: GET_TWIGS,
-        variables: {
-          abstractId: user.frameId,
-        }
-      });
-      console.log(data);
-
-      store.dispatch(addTwigs({
-        space: SpaceType.FRAME,
-        twigs: data.getTwigs
-      }));
-      
-      store.dispatch(addTwigUsers({
-        space: SpaceType.FRAME,
-        twigs: data.getTwigs,
-      }));
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-export const loadTwigTree = (client: ApolloClient<NormalizedCacheObject>) => {
-  const state = store.getState();
-  const twigIdToTrue = selectTwigIdToTrue(SpaceType.FRAME)(state);
-
-  const twigs = [];
-  Object.keys(twigIdToTrue).forEach(twigId => {
-    const twig = client.cache.readFragment({
-      id: client.cache.identify({
-        id: twigId,
-        __typename: 'Twig',
-      }),
-      fragment: FULL_TWIG_FIELDS,
-      fragmentName: 'FullTwigFields',
-    }) as Twig;
-    //console.log(twigId, twig)
-    if (twig && !twig.deleteDate) {
-      twigs.push(twig);
-    }
-  });
-
-  const idToChildIdToTrue: IdToType<IdToType<true>> = {};
-  const idToDescIdToTrue: IdToType<IdToType<true>> = {};
-
-  twigs.forEach(twig => {
-    if (twig.parent) {
-      if (idToChildIdToTrue[twig.parent.id]) {
-        idToChildIdToTrue[twig.parent.id][twig.id] = true;
-      }
-      else {
-        idToChildIdToTrue[twig.parent.id] = {
-          [twig.id]: true,
-        };
-      }
-
-      let twig1 = twig;
-      while (twig1?.parent) {
-        if (idToDescIdToTrue[twig1.parent.id]) {
-          idToDescIdToTrue[twig1.parent.id][twig.id] = true;
-        }
-        else {
-          idToDescIdToTrue[twig1.parent.id] = {
-            [twig.id]: true,
-          };
-        }
-        twig1 = client.cache.readFragment({
-          id: client.cache.identify(twig1.parent),
-          fragment: TWIG_WITH_PARENT,
-        }) as Twig;
-      }
-    }
-  });
-
-  console.log('setTwigTree')
-  store.dispatch(setTwigTree({
-    space: SpaceType.FRAME,
-    idToChildIdToTrue,
-    idToDescIdToTrue,
-  }))
 }

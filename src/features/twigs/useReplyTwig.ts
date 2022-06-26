@@ -12,13 +12,13 @@ import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { applyRole } from '../role/useApplyRole';
 import { FULL_ARROW_FIELDS } from '../arrow/arrowFragments';
 import { Arrow, createArrow } from '../arrow/arrow';
-import { addArrows } from '../arrow/arrowSlice';
 import { selectSessionId } from '../auth/authSlice';
 import useSelectTwig from './useSelectTwig';
 import useCenterTwig from './useCenterTwig';
 import { useContext } from 'react';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import { createTwig, Twig } from './twig';
+import { DisplayMode } from '~constants';
 
 const REPLY_TWIG = gql`
   mutation ReplyTwig(
@@ -89,11 +89,6 @@ export default function useReplyTwig(user: User | null, space: SpaceType, abstra
         space,
         twigs: data.replyTwig.twigs
       }));
-
-      dispatch(addArrows({
-        space,
-        arrows: data.replyTwig.twigs.map((twig: Twig) => twig.detail)
-      }));
     }
   });
 
@@ -123,8 +118,8 @@ export default function useReplyTwig(user: User | null, space: SpaceType, abstra
       },
     });
 
-    const post = createArrow(user, postId, draft, abstract, null, null);
-    const twig = createTwig(user, twigId, abstract, post, parentTwig, x, y, null, false);
+    const post = createArrow(user, postId, draft, null, null, abstract, null, null);
+    const twig = createTwig(user, twigId, abstract, post, parentTwig, x, y, null, false, null, null, null, DisplayMode.SCATTERED);
     
     client.cache.writeQuery({
       query: gql`

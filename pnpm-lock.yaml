@@ -78,7 +78,7 @@ devDependencies:
   '@types/node': 17.0.42
   '@types/react': 18.0.12
   '@types/react-dom': 18.0.5
-  plasmo: 0.43.4
+  plasmo: 0.43.6
   prettier: 2.6.2
   typescript: 4.7.3
 
@@ -3713,8 +3713,8 @@ packages:
   /picocolors/1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
 
-  /plasmo/0.43.4:
-    resolution: {integrity: sha512-7w7kRyQtTb5Lu4ug6llBPqdrimMeSiW9rU4wntTTCrGq6FWSIb3Q3UuhhqcaYL4ZxpkrpygRaumWFm+KiPWgiw==}
+  /plasmo/0.43.6:
+    resolution: {integrity: sha512-ctXrZUl6XbE2m9tywpN5PWv0ANDuVCoZQNk7oZ7wuh8h/UHuSU747IpKQa7hxxNTWGktodkDg5iByvLdlIv/oA==}
     hasBin: true
     dependencies:
       '@expo/spawn-async': 1.6.0
@@ -4128,6 +4128,7 @@ packages:
 
   /stable/0.1.8:
     resolution: {integrity: sha512-ji9qxRnOVfcuLDySj9qzhGSEFVobyt1kIOSkj1qZzYLzq7Tos/oUUWvotUPQLlrsidqsK6tBH89Bc9kL5zHA6w==}
+    deprecated: 'Modern JS already guarantees Array#sort() is a stable sort, so this library is deprecated. See the compatibility table on MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#browser_compatibility'
     dev: true
 
   /string-width/5.1.2:

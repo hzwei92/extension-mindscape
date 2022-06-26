@@ -72,10 +72,11 @@ export enum DisplayMode {
 export enum AlarmType {
   REFRESH_TOKEN = 'REFRESH_TOKEN',
   NO_GROUP = 'NO_GROUP',
-  MOVE_REQUIRED = 'MOVE_REQUIRED',
-  GROUP_REQUIRED = 'GROUP_REQUIRED',
-  SELECT_TAB = 'SELECT_TAB',
+  CREATE_GROUP = 'CREATE_GROUP',
+  CREATE_TAB = 'CREATE_TAB',
   UPDATE_TAB = 'UPDATE_TAB',
+  MAINTAIN_SUBTREE = 'MAINTAIN_SUBTREE',
+  MOVE_TAB = 'MOVE_TAB',
 };
 
 export enum MessageName {
@@ -85,6 +86,7 @@ export enum MessageName {
 };
 
 export enum ErrMessage {
+  NOT_READY = 'NOT_READY',
   CANNOT_EDIT_TABS = 'Tabs cannot be edited right now (user may be dragging a tab).',
   NO_RECEIVER = 'Could not establish connection. Receiving end does not exist.',
 }

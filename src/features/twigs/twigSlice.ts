@@ -71,6 +71,7 @@ export const twigSlice: Slice<TwigState> = createSlice({
   initialState,
   reducers: {
     addTwigs: (state, action: PayloadAction<{space: SpaceType, twigs: Twig[]}>) => {
+      console.log(action);
       const twigIdToTrue: IdToType<true> = {
         ...state[action.payload.space].twigIdToTrue,
       };
@@ -134,15 +135,36 @@ export const twigSlice: Slice<TwigState> = createSlice({
         ...state[action.payload.space].twigIdToPosReady,
       };
 
-      const windowIdToTwigIdToTrue: IdToType<IdToType<true>> = {
-        ...state[action.payload.space].windowIdToTwigIdToTrue,
-      };
-      const groupIdToTwigIdToTrue: IdToType<IdToType<true>> = {
-        ...state[action.payload.space].groupIdToTwigIdToTrue,
-      };
-      const tabIdToTwigIdToTrue: IdToType<IdToType<true>> = {
-        ...state[action.payload.space].tabIdToTwigIdToTrue,
-      };
+      const windowIdToTwigIdToTrue: IdToType<IdToType<true>> = Object.keys(state[action.payload.space].windowIdToTwigIdToTrue)
+        .reduce((acc, windowId) => {
+          acc[windowId] = Object.keys(state[action.payload.space].windowIdToTwigIdToTrue[windowId] || {})
+            .reduce((acc, twigId) => {
+              acc[twigId] = true
+              return acc;
+            }, {});
+          return acc;
+        }, {});
+        
+      const groupIdToTwigIdToTrue: IdToType<IdToType<true>> = Object.keys(state[action.payload.space].groupIdToTwigIdToTrue)
+      .reduce((acc, groupId) => {
+        acc[groupId] = Object.keys(state[action.payload.space].groupIdToTwigIdToTrue[groupId] || {})
+          .reduce((acc, twigId) => {
+            acc[twigId] = true
+            return acc;
+          }, {});
+        return acc;
+      }, {});
+      
+      const tabIdToTwigIdToTrue: IdToType<IdToType<true>> = Object.keys(state[action.payload.space].tabIdToTwigIdToTrue)
+      .reduce((acc, tabId) => {
+        acc[tabId] = Object.keys(state[action.payload.space].tabIdToTwigIdToTrue[tabId] || {})
+          .reduce((acc, twigId) => {
+            acc[twigId] = true
+            return acc;
+          }, {});
+        return acc;
+      }, {});
+      
       action.payload.twigs.forEach(twig => {
         delete twigIdToTrue[twig.id];
 
@@ -262,6 +284,9 @@ export const twigSlice: Slice<TwigState> = createSlice({
         },
       };
     },
+  },
+  extraReducers: (builder) => {
+    builder.addDefaultCase(state => state)
   },
 });
 

@@ -61,7 +61,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const offsetTop = SPACE_BAR_HEIGHT;
 
-  const [scale, setScale] = useState(0.5);
+  const [scale, setScale] = useState(0.75);
   const [scroll, setScroll] = useState({
     left: 0,
     top: 0,

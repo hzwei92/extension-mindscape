@@ -83,6 +83,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     }
   });
 
+  //console.log(props.twig.id, verticalChildren.length, horizontalChildren.length);
   const twigIdToPosReady = useAppSelector(selectTwigIdToPosReady(props.space));
 
   const posReady = twigIdToPosReady[props.twig.id];
@@ -142,7 +143,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
       twigId: props.twig.id,
       posReady: true,
     }));
-    console.log(props.twig.id)
+    console.log(props.twig.id);
   }, [
     parentPosReady,
     sibsPosReady,

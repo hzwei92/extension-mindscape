@@ -17,7 +17,6 @@ export default function useCenterTwig(user: User | null, space: SpaceType, scale
     ({ scale } = useContext(SpaceContext));
   }
 
-  console.log('asdf', scale)
   const spaceEl = space === 'FRAME'
     ? frameSpaceEl
     : focusSpaceEl;

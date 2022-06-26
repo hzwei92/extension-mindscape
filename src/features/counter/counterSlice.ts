@@ -14,7 +14,10 @@ const counterSlice = createSlice({
     decrement: (state) => {
       state.count -= 2
     }
-  }
+  },
+  extraReducers: (builder) => {
+    builder.addDefaultCase(state => state)
+  },
 })
 
 export const { increment, decrement } = counterSlice.actions

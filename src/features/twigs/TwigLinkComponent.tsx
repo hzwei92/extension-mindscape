@@ -301,7 +301,6 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                     canPost={props.canPost}
                     canView={props.canView}
                     setTouches={props.setTouches}
-                    isParentReady={isParentReady && !PosReady}
                     drag={props.drag}
                     setDrag={props.setDrag}
                   />
@@ -329,7 +328,6 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                   canPost={props.canPost}
                   canView={props.canView}
                   setTouches={props.setTouches}
-                  isParentReady={isParentReady && !PosReady}
                   drag={props.drag}
                   setDrag={props.setDrag}
                 />

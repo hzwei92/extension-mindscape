@@ -76,7 +76,9 @@ export type CreateLinkType = {
 export const createArrow = (
   user: User,
   id: string,
-  draft: string,
+  draft: string | null,
+  title: string | null,
+  url: string | null,
   abstract: Arrow,
   source: Arrow | null,
   target: Arrow | null,
@@ -87,8 +89,8 @@ export const createArrow = (
     routeName: id,
     draft,
     text: '',
-    title: null,
-    url: null,
+    title,
+    url,
     color: user.color,
 
     userId: user.id,

@@ -60,6 +60,9 @@ export const authSlice: Slice<AuthState> = createSlice({
       };
     }
   },
+  extraReducers: (builder) => {
+    builder.addDefaultCase(state => state)
+  },
 });
 
 export const {

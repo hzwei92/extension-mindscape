@@ -16,12 +16,7 @@ export const TWIG_FIELDS = gql`
     isRoot
     degree
     rank
-    index
     displayMode
-    ownWidth
-    ownHeight
-    width
-    height
     color
     windowId
     groupId
