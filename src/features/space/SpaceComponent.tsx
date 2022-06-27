@@ -2,8 +2,8 @@ import { gql, useApolloClient } from "@apollo/client";
 import { Box } from "@mui/material";
 import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "~store";
-import { VIEW_RADIUS, SPACE_BAR_HEIGHT, DisplayMode } from "~constants";
-import { checkPermit, getAppBarWidth } from "~utils";
+import { VIEW_RADIUS, SPACE_BAR_HEIGHT, DisplayMode, TWIG_WIDTH } from "~constants";
+import { checkPermit, getAppBarWidth, getTwigColor } from "~utils";
 import { selectActualMenuWidth } from "../menu/menuSlice";
 import type { User } from "../user/user";
 import { selectPalette } from "../window/windowSlice";
@@ -14,7 +14,7 @@ import type { Arrow } from "../arrow/arrow";
 import type { Role } from "../role/role";
 import SheafLineComponent from "../sheaf/SheafLineComponent";
 import { AppContext } from "~newtab/App";
-import { selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, selectTwigIdToPosReady, selectTwigIdToTrue } from "~features/twigs/twigSlice";
+import { selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, selectTwigIdToHeight, selectTwigIdToPosReady, selectTwigIdToTrue } from "~features/twigs/twigSlice";
 import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_XY } from "~features/twigs/twigFragments";
 import type { Twig } from "~features/twigs/twig";
 import TwigSheafComponent from "~features/twigs/TwigSheafComponent";
@@ -25,6 +25,7 @@ import useCenterTwig from "~features/twigs/useCenterTwig";
 import TwigLine from "~features/twigs/TwigLine";
 import { selectUserIdToTrue } from "~features/user/userSlice";
 import useMoveTwig from "~features/twigs/useMoveTwig";
+import { TimerTwoTone } from "@mui/icons-material";
 //import useAdjustTwigs from "../twig/useAdjustTwigs";
 
 
@@ -78,6 +79,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const userIdToTrue = useAppSelector(selectUserIdToTrue(props.space));
 
   const twigIdToTrue = useAppSelector(selectTwigIdToTrue(props.space));
+  const twigIdToHeight = useAppSelector(selectTwigIdToHeight(props.space));
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
 
   const tabIdToTwigIdToTrue = useAppSelector(selectTabIdToTwigIdToTrue(props.space));
@@ -400,9 +402,10 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     handleMouseMove(event, targetId);
   }
 
-  const sheafs: JSX.Element[] = [];
   // const adjusted: IdToCoordsType = {};
+  const sheafs: JSX.Element[] = [];
   const twigs: JSX.Element[] = [];
+  const dropTargets: JSX.Element[] = [];
   Object.keys(twigIdToTrue).forEach(twigId => {
     const twig = client.cache.readFragment({
       id: client.cache.identify({
@@ -414,6 +417,25 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     }) as Twig;
 
     //console.log(twigId, twig);
+
+    if (
+      drag.twigId &&
+      twig.id !== drag.twigId && 
+      !Object.keys(idToDescIdToTrue[drag.twigId] || {}).some(descId => descId === twig.id)
+    ) {
+      dropTargets.push(
+        <Box key={'twig-bottom-droptarget-' + twig.id} sx={{
+          position: 'absolute',
+          left: twig.x + VIEW_RADIUS,
+          top: twig.y + VIEW_RADIUS + twigIdToHeight[twig.id] - 50,
+          zIndex: twig.z + 1,
+          width: TWIG_WIDTH,
+          height: 100,
+          backgroundColor: getTwigColor(twig.color || twig.user.color),
+          opacity: 0.4
+        }} />
+      );
+    }
 
     if (!twig || twig.deleteDate || twig.displayMode !== DisplayMode.SCATTERED) {
       return;
@@ -526,6 +548,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         </Box>
       )
     }
+
+
   });
 
   // if (Object.keys(adjusted).length) {
@@ -639,6 +663,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
             { sheafs }
           </svg>
           { twigs }
+          { dropTargets }
         </Box>
         <SpaceControls
           space={props.space}

@@ -8,7 +8,7 @@ import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
-import { selectChildIdToTrue, selectPosReady, selectShouldReloadTwigTree, selectTwigIdToPosReady, setPosReady } from './twigSlice';
+import { selectChildIdToTrue, selectHeight, selectPosReady, selectShouldReloadTwigTree, selectTwigIdToPosReady, setHeight, setPosReady } from './twigSlice';
 import type { Arrow } from '../arrow/arrow';
 import { getTwigColor } from '~utils';
 import { FULL_TWIG_FIELDS, TWIG_FIELDS } from './twigFragments';
@@ -83,7 +83,8 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     }
   });
 
-  //console.log(props.twig.id, verticalChildren.length, horizontalChildren.length);
+  const height = useAppSelector(state => selectHeight(state, props.space, props.twig.id));
+
   const twigIdToPosReady = useAppSelector(selectTwigIdToPosReady(props.space));
 
   const posReady = twigIdToPosReady[props.twig.id];
@@ -115,9 +116,10 @@ function TwigPostComponent(props: TwigPostComponentProps) {
       posReady: true,
     }));
   }
-  
+
   const [isLoading, setIsLoading] = useState(false);
-  const twigEl = useRef<HTMLDivElement | undefined>();
+  const twigEl = useRef<HTMLElement>();
+  const cardEl = useRef<HTMLElement>();
 
   const { moveTwig } = useMoveTwig(props.space);
 
@@ -163,6 +165,13 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     twigEl.current?.offsetTop
   ]);
 
+  if (cardEl.current?.clientHeight && cardEl.current.clientHeight !== height) {
+    dispatch(setHeight({
+      space: props.space,
+      twigId: props.twig.id,
+      height: cardEl.current.clientHeight,
+    }));
+  }
   
   const { selectTwig } = useSelectTwig(props.space, props.canEdit);
   const { linkTwigs } = useLinkTwigs(props.space, props.abstract);
@@ -227,77 +236,79 @@ function TwigPostComponent(props: TwigPostComponentProps) {
         position: 'relative',
         pointerEvents: 'none',
       }}>
-        <Card 
-          elevation={isSelected? 15 : 5}
-          onMouseMove={handleMouseMove}
-          onMouseDown={handleMouseDown}
-          onClick={handleClick}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            width: TWIG_WIDTH,
-            opacity: .8,
-            outline: isSelected
-              ? `10px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
-              : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
-            borderRadius: 2,
-            borderTopLeftRadius: 0,
-            backgroundColor: isLinking
-              ? palette === 'dark'
-                ? 'dimgrey'
-                : 'darkgrey'
-              : null,
-            cursor: createLink.sourceId
-              ? 'crosshair'
-              : 'default', 
-            pointerEvents: 'auto',
-          }}
-        >
-          <TwigBar
-            space={props.space} 
-            abstract={props.abstract} 
-            twig={props.twig}
-            canEdit={props.canEdit}
-            setTouches={props.setTouches}
-            isSelected={isSelected}
-            drag={props.drag}
-            setDrag={props.setDrag}
-          />
-          <Box sx={{
-            display: 'flex',
-          }}>
+        <Box ref={cardEl}>
+          <Card 
+            elevation={isSelected? 15 : 5}
+            onMouseMove={handleMouseMove}
+            onMouseDown={handleMouseDown}
+            onClick={handleClick}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              width: TWIG_WIDTH,
+              opacity: .8,
+              outline: isSelected
+                ? `10px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`
+                : `1px solid ${getTwigColor(props.twig.color) || props.twig.user?.color}`,
+              borderRadius: 2,
+              borderTopLeftRadius: 0,
+              backgroundColor: isLinking
+                ? palette === 'dark'
+                  ? 'dimgrey'
+                  : 'darkgrey'
+                : null,
+              cursor: createLink.sourceId
+                ? 'crosshair'
+                : 'default', 
+              pointerEvents: 'auto',
+            }}
+          >
+            <TwigBar
+              space={props.space} 
+              abstract={props.abstract} 
+              twig={props.twig}
+              canEdit={props.canEdit}
+              setTouches={props.setTouches}
+              isSelected={isSelected}
+              drag={props.drag}
+              setDrag={props.setDrag}
+            />
             <Box sx={{
-              padding: 0.5,
-              paddingLeft: 4,
+              display: 'flex',
             }}>
-              <ArrowComponent
-                user={props.user}
-                abstract={props.abstract}
-                space={props.space}
-                arrowId={props.twig.detailId}
-                instanceId={props.twig.id}
-                isTab={!!props.twig.tabId}
-                isGroup={!props.twig.tabId && !!props.twig.groupId}
-                isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
-              />
-              <TwigControls
-                user={props.user}
-                space={props.space}
-                twig={props.twig}
-                abstract={props.abstract}
-                role={props.role}
-                canPost={props.canPost}
-                canView={props.canView}
-                isPost={true}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-                canEdit={props.canEdit}
-              />
+              <Box sx={{
+                padding: 0.5,
+                paddingLeft: 4,
+              }}>
+                <ArrowComponent
+                  user={props.user}
+                  abstract={props.abstract}
+                  space={props.space}
+                  arrowId={props.twig.detailId}
+                  instanceId={props.twig.id}
+                  isTab={!!props.twig.tabId}
+                  isGroup={!props.twig.tabId && !!props.twig.groupId}
+                  isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
+                />
+                <TwigControls
+                  user={props.user}
+                  space={props.space}
+                  twig={props.twig}
+                  abstract={props.abstract}
+                  role={props.role}
+                  canPost={props.canPost}
+                  canView={props.canView}
+                  isPost={true}
+                  isLoading={isLoading}
+                  setIsLoading={setIsLoading}
+                  canEdit={props.canEdit}
+                />
+              </Box>
             </Box>
-          </Box>
-        </Card>
+          </Card>
+        </Box>
         {
           verticalChildren
             .sort((a, b) => a.rank < b.rank ? -1 : 1)
