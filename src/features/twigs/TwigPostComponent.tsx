@@ -108,6 +108,14 @@ function TwigPostComponent(props: TwigPostComponentProps) {
           return !twigIdToPosReady[sibId];
         });
       
+  if (!posReady && props.twig.displayMode === DisplayMode.SCATTERED) {
+    dispatch(setPosReady({
+      space: props.space,
+      twigId: props.twig.id,
+      posReady: true,
+    }));
+  }
+  
   const [isLoading, setIsLoading] = useState(false);
   const twigEl = useRef<HTMLDivElement | undefined>();
 
@@ -154,6 +162,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     twigEl.current?.offsetLeft, 
     twigEl.current?.offsetTop
   ]);
+
   
   const { selectTwig } = useSelectTwig(props.space, props.canEdit);
   const { linkTwigs } = useLinkTwigs(props.space, props.abstract);
@@ -259,31 +268,20 @@ function TwigPostComponent(props: TwigPostComponentProps) {
           <Box sx={{
             display: 'flex',
           }}>
-            <ArrowVoter
-              user={props.user}
-              space={props.space}
-              arrowId={props.twig.detailId}
-            />
             <Box sx={{
               padding: 0.5,
-              paddingLeft: 0,
+              paddingLeft: 4,
             }}>
-              <Box sx={{
-                marginLeft: 0.5,
-                marginRight: 0.5,
-                position: 'relative',
-              }}>
-                <ArrowComponent
-                  user={props.user}
-                  abstract={props.abstract}
-                  space={props.space}
-                  arrowId={props.twig.detailId}
-                  instanceId={props.twig.id}
-                  isTab={!!props.twig.tabId}
-                  isGroup={!props.twig.tabId && !!props.twig.groupId}
-                  isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
-                />
-              </Box>
+              <ArrowComponent
+                user={props.user}
+                abstract={props.abstract}
+                space={props.space}
+                arrowId={props.twig.detailId}
+                instanceId={props.twig.id}
+                isTab={!!props.twig.tabId}
+                isGroup={!props.twig.tabId && !!props.twig.groupId}
+                isWindow={!props.twig.tabId && !props.twig.groupId && !!props.twig.windowId}
+              />
               <TwigControls
                 user={props.user}
                 space={props.space}

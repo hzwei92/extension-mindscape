@@ -33,7 +33,7 @@ const REMOVE_TAB_TWIG = gql`
         id
         rank
       }
-      links {
+      sheafs {
         id
         deleteDate
       }
@@ -55,7 +55,7 @@ export const removeTab = (client: ApolloClient<NormalizedCacheObject>) =>
             
       store.dispatch(removeTwigs({
         space: SpaceType.FRAME,
-        twigs: [data.removeTabTwig.twig],
+        twigs: [data.removeTabTwig.twig, ...data.removeTabTwig.sheafs],
       }));
 
       store.dispatch(setShouldReloadTwigTree({

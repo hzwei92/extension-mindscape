@@ -42,7 +42,14 @@ export const userSlice: Slice<UserState> = createSlice({
           ...state[action.payload.space],
           userIdToTrue: action.payload.twigs.reduce((acc, twig) => {
             acc[twig.userId] = true;
-            acc[twig.detail.userId] = true;
+            if (twig.detail) {
+              acc[twig.detail.userId] = true;
+            }
+            else if (twig.sheaf) {
+              twig.sheaf.links.forEach(link => {
+                acc[link.userId] = true;
+              })
+            }
             return acc;
           }, { ...state[action.payload.space].userIdToTrue })
         }

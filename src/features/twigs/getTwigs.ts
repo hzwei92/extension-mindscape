@@ -8,12 +8,12 @@ import { FULL_TWIG_FIELDS } from "./twigFragments";
 import { addTwigs } from "./twigSlice";
 
 const GET_TWIGS = gql`
-mutation GetTwigs($abstractId: String!) {
-  getTwigs(abstractId: $abstractId) {
-    ...FullTwigFields
+  mutation GetTwigs($abstractId: String!) {
+    getTwigs(abstractId: $abstractId) {
+      ...FullTwigFields
+    }
   }
-}
-${FULL_TWIG_FIELDS}
+  ${FULL_TWIG_FIELDS}
 `;
 
 export const getTwigs = (client: ApolloClient<NormalizedCacheObject>) => 

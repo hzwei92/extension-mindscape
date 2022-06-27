@@ -20,6 +20,7 @@ import useCenterTwig from '~features/twigs/useCenterTwig';
 import useSelectTwig from '~features/twigs/useSelectTwig';
 import { AppContext } from '~newtab/App';
 import { SpaceContext } from './SpaceComponent';
+import { getTwigColor } from '~utils';
 
 interface SpaceNavProps {
   user: User | null;
@@ -167,19 +168,23 @@ export default function SpaceNav(props: SpaceNavProps) {
     }}>
       <Fab title='Earliest' size='small' disabled={!hasEarlier} onClick={handleNavEarliest}  sx={{
         margin: 1,
-        color: hasEarlier ? (twigs[0]?.user?.color || 'dimgrey') : 'dimgrey',
+        color: hasEarlier 
+          ? (getTwigColor(twigs[0]?.color) || twigs[0]?.user?.color || 'dimgrey') 
+          : 'dimgrey',
       }}>
         <SkipPreviousIcon color='inherit' />
       </Fab>
       <Fab title='Previous' size='small' disabled={!hasEarlier} onClick={handleNavPrev} sx={{
         margin: 1,
-        color: hasEarlier ? (twigs[index - 1]?.user?.color || 'dimgrey') : 'dimgrey',
+        color: hasEarlier 
+          ? (getTwigColor(twigs[index - 1]?.color) || twigs[index - 1]?.user?.color || 'dimgrey') 
+          : 'dimgrey',
       }}>
         <FastRewindIcon color='inherit' />
       </Fab>
       <Fab title='Selected' size='small' disabled={!selectedTwigId} onClick={handleNavFocus} sx={{
         margin: 1,
-        color:  twigs[index]?.user?.color || 'dimgrey',
+        color:  getTwigColor(twigs[index]?.color) || twigs[index]?.user?.color || 'dimgrey',
         border: space === props.space
           ? '3px solid'
           : 'none'
@@ -188,13 +193,17 @@ export default function SpaceNav(props: SpaceNavProps) {
       </Fab>
       <Fab title='Next' size='small' disabled={!hasLater} onClick={handleNavNext} sx={{
         margin: 1,
-        color: hasLater ? (twigs[index + 1]?.user?.color || 'dimgrey') : 'dimgrey',
+        color: hasLater 
+          ? (getTwigColor(twigs[index + 1]?.color) || twigs[index + 1]?.user?.color || 'dimgrey') 
+          : 'dimgrey',
       }}>
         <FastForwardIcon color='inherit' />
       </Fab>
       <Fab title='Latest' size='small' disabled={!hasLater} onClick={handleNavLatest} sx={{
         margin: 1,
-        color: hasLater ? (twigs[twigs.length - 1]?.user?.color || 'dimgrey') : 'dimgrey',
+        color: hasLater 
+          ? (getTwigColor(twigs[twigs.length - 1]?.color )|| twigs[twigs.length - 1]?.user?.color  || 'dimgrey') 
+          : 'dimgrey',
       }}>
         <SkipNextIcon color='inherit' />
       </Fab>

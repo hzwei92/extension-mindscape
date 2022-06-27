@@ -27,7 +27,7 @@ export default function FrameComponent(props: FrameComponentProps) {
   const menuWidth = useAppSelector(selectActualMenuWidth);
 
   const spaceIsResizing = false;
-  const frameWidth = width - menuWidth;
+  const frameWidth = width - getAppBarWidth(width) - menuWidth;
   const space = useAppSelector(selectSpace);
 
   const focusIsOpen = false //useAppSelector(selectIsOpen('FOCUS'));

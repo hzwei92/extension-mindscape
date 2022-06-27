@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { FULL_SHEAF_FIELDS } from '~features/sheaf/sheafFragments';
 import { FULL_ARROW_FIELDS } from '../arrow/arrowFragments';
 
 export const TWIG_FIELDS = gql`
@@ -9,6 +10,7 @@ export const TWIG_FIELDS = gql`
     userId
     abstractId
     detailId
+    sheafId
     i
     x
     y
@@ -41,6 +43,9 @@ export const FULL_TWIG_FIELDS = gql`
     detail {
       ...FullArrowFields
     }
+    sheaf {
+      ...FullSheafFields
+    }
     parent {
       id
     }
@@ -50,6 +55,7 @@ export const FULL_TWIG_FIELDS = gql`
   }
   ${TWIG_FIELDS}
   ${FULL_ARROW_FIELDS}
+  ${FULL_SHEAF_FIELDS}
 `;
 
 

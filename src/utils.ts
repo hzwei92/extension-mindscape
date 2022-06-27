@@ -151,7 +151,7 @@ export const checkPermit = (permissionLevel: string, roleType?: string) => {
 export const getTwigColor = (color?: string) => {
   if (color) {
     if (color === 'grey') {
-      return '#dadce0';
+      return '#b2b4b8';
     }
     if (color === 'blue') {
       return '#8ab4f8';

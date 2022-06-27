@@ -1,7 +1,7 @@
 import { gql, useMutation } from '@apollo/client';
 import { useCallback } from 'react';
 import { useSnackbar } from 'notistack';
-import { addArrows, selectCreateLink, setCreateLink } from '../arrow/arrowSlice';
+import { selectCreateLink, setCreateLink } from '../arrow/arrowSlice';
 import { FULL_TWIG_FIELDS } from './twigFragments';
 import { addTwigs } from './twigSlice';
 import { ROLE_FIELDS } from '../role/roleFragments';

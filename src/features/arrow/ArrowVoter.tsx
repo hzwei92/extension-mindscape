@@ -17,26 +17,17 @@ import type { Arrow } from './arrow';
 interface ArrowVoterProps {
   user: User;
   space: SpaceType;
-  arrowId: string;
+  arrow: Arrow;
 }
 export default function ArrowVoter(props: ArrowVoterProps) {
   const client = useApolloClient();
-
-  const arrow = client.cache.readFragment({
-    id: client.cache.identify({
-      id: props.arrowId,
-      __typename: 'Arrow',
-    }),
-    fragment: FULL_ARROW_FIELDS,
-    fragmentName: 'FullArrowFields',
-  }) as Arrow;
 
   const color = useAppSelector(selectColor(true));
 
   const [isVoting, setIsVoting] = useState(false);
 
   let userVote = null as Vote | null;
-  (arrow.votes || []).some(vote => {
+  (props.arrow.votes || []).some(vote => {
     if (vote.userId === props.user?.id) {
       userVote = vote;
       return true;
@@ -93,7 +84,7 @@ export default function ArrowVoter(props: ArrowVoterProps) {
           fontSize: 14,
         }}
       >
-        &nbsp;{ arrow?.weight || 0 }&nbsp;
+        &nbsp;{ props.arrow?.weight || 0 }&nbsp;
       </Button>
       <IconButton
         onMouseDown={handleButtonMouseDown}

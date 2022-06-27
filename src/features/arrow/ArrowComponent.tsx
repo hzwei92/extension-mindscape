@@ -12,6 +12,7 @@ import type { User } from '../user/user';
 import ArrowEditor from './ArrowEditor';
 import { TWIG_WIDTH } from '~constants';
 import { FULL_ARROW_FIELDS } from './arrowFragments';
+import ArrowVoter from './ArrowVoter';
 
 interface ArrowProps {
   user: User | null;
@@ -68,7 +69,19 @@ export default function ArrowComponent(props: ArrowProps) {
   return (
     <Box sx={{
       margin:1,
+      position: 'relative',
     }}>
+      <Box sx={{
+        position: 'absolute',
+        left: -35,
+        top: -18,
+      }}>
+        <ArrowVoter 
+          user={props.user}
+          space={props.space}
+          arrow={arrow}
+        />
+      </Box>
       <Box sx={{
         fontSize: 14,
         color,

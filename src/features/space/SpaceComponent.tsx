@@ -12,12 +12,12 @@ import { selectIsOpen } from "./spaceSlice";
 import { ABSTRACT_ARROW_FIELDS } from "../arrow/arrowFragments";
 import type { Arrow } from "../arrow/arrow";
 import type { Role } from "../role/role";
-import SheafComponent from "../arrow/SheafComponent";
+import SheafLineComponent from "../sheaf/SheafLineComponent";
 import { AppContext } from "~newtab/App";
 import { selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, selectTwigIdToPosReady, selectTwigIdToTrue } from "~features/twigs/twigSlice";
 import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_XY } from "~features/twigs/twigFragments";
 import type { Twig } from "~features/twigs/twig";
-import TwigLinkComponent from "~features/twigs/TwigLinkComponent";
+import TwigSheafComponent from "~features/twigs/TwigSheafComponent";
 import TwigPostComponent from "~features/twigs/TwigPostComponent";
 import SpaceControls from "./SpaceControls";
 import SpaceNav from "./SpaceNav";
@@ -419,7 +419,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       return;
     }
 
-    if (twig.sourceId !== twig.targetId) {
+    if (twig.sheafId) {
       const sourceTwig = client.cache.readFragment({
         id: client.cache.identify({
           id: twig.sourceId,
@@ -474,7 +474,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           zIndex: twig.z,
           pointerEvents: 'none',
         }}>
-          <TwigLinkComponent
+          <TwigSheafComponent
             user={props.user}
             space={props.space}
             role={role}
@@ -491,8 +491,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         </Box>
       )
       sheafs.push(
-        <SheafComponent
-          key={`sheaf-${twigId}`}
+        <SheafLineComponent
+          key={`sheaf-line-${twigId}`}
           user={props.user}
           abstract={abstract}
           space={props.space}

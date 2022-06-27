@@ -16,15 +16,15 @@ import ArrowComponent from '../arrow/ArrowComponent';
 import ArrowVoter from '../arrow/ArrowVoter';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { getColor, getTwigColor } from '~utils';
-import { FULL_TWIG_FIELDS, TWIG_WITH_XY } from './twigFragments';
+import { FULL_TWIG_FIELDS } from './twigFragments';
 import TwigPostComponent from './TwigPostComponent';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import useOpenTwig from './useOpenTwig';
 import useSelectTwig from './useSelectTwig';
 import useLinkTwigs from './useLinkTwig';
-import useMoveTwig from './useMoveTwig';
+import SheafComponent from '~features/sheaf/SheafComponent';
 
-interface TwigLinkComponentProps {
+interface TwigSheafComponentProps {
   user: User | null;
   space: SpaceType;
   role: Role | null;
@@ -39,7 +39,7 @@ interface TwigLinkComponentProps {
   setDrag: Dispatch<SetStateAction<DragState>>;
 }
 
-function TwigLinkComponent(props: TwigLinkComponentProps) {
+function TwigSheafComponent(props: TwigSheafComponentProps) {
   //console.log('twig link', props.twig.id);
 
   const client = useApolloClient();
@@ -83,9 +83,6 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
 
   const [isLoading, setIsLoading] = useState(false);
   const twigEl = useRef<HTMLDivElement | undefined>();
-
-  const [isParentReady, setisParentReady] = useState(props.twig.displayMode === DisplayMode.SCATTERED);
-  const { moveTwig } = useMoveTwig(props.space);
 
   useEffect(() => {
     if (PosReady) {
@@ -155,6 +152,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
     createLink.sourceId === props.twig.detailId || 
     createLink.targetId === props.twig.detailId
   );
+  console.log(props.twig.sheaf)
 
   if (!props.twig.isOpen) {
     return (
@@ -178,7 +176,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
             flexDirection: 'column',
             justifyContent: 'center',
           }}>
-              {props.twig.detail.weight}
+              {props.twig.sheaf.weight}
           </Box>
         </Card>
       </Box>
@@ -229,11 +227,6 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
           <Box sx={{
             display: 'flex',
           }}>
-            <ArrowVoter
-              user={props.user}
-              space={props.space}
-              arrowId={props.twig.detailId}
-            />
             <Box sx={{
               padding: 0.5,
               paddingLeft: 0,
@@ -243,11 +236,11 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                 marginRight: 0.5,
                 position: 'relative',
               }}>
-                <ArrowComponent
+                <SheafComponent
                   user={props.user}
                   abstract={props.abstract}
                   space={props.space}
-                  arrowId={props.twig.detailId}
+                  twig={props.twig}
                   instanceId={props.twig.id}
                   isTab={!!props.twig.tabId}
                   isGroup={!props.twig.tabId && !!props.twig.groupId}
@@ -255,30 +248,20 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
                 />
                 <Box sx={{
                   position: 'absolute',
-                  left: TWIG_WIDTH - 115,
+                  left: TWIG_WIDTH - 85,
                   top: -6,
                 }}>
-                  <IconButton onClick={handleOpenClick}>
-                    <RemoveIcon sx={{
-                      color: getColor(palette),
+                  <IconButton onClick={handleOpenClick} sx={{
+                    color: palette === 'dark'
+                      ? 'white'
+                      : 'black'
+                  }}>
+                    <RemoveIcon color='inherit' sx={{
                       fontSize: 12,
                     }}/>
                   </IconButton>
                 </Box>
               </Box>
-              <TwigControls
-                user={props.user}
-                space={props.space}
-                twig={props.twig}
-                abstract={props.abstract}
-                role={props.role}
-                canPost={props.canPost}
-                canView={props.canView}
-                isPost={false}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-                canEdit={props.canEdit}
-              />
             </Box>
           </Box>
         </Card>
@@ -339,4 +322,4 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   );
 }
 
-export default React.memo(TwigLinkComponent)
+export default React.memo(TwigSheafComponent)

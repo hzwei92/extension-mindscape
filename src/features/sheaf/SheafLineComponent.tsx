@@ -5,21 +5,23 @@ import { VIEW_RADIUS } from '~constants';
 import { getPolylineCoords } from '~utils';
 import type { SpaceType } from '../space/space';
 import type { User } from '../user/user';
-import type { Arrow } from './arrow';
+import type { Arrow } from '../arrow/arrow';
 import type { Twig } from '~features/twigs/twig';
 import { selectPosReady } from '~features/twigs/twigSlice';
 import { FULL_TWIG_FIELDS } from '~features/twigs/twigFragments';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import useSelectTwig from '~features/twigs/useSelectTwig';
+import { FULL_SHEAF_FIELDS } from './sheafFragments';
+import type { Sheaf } from './sheaf';
 
-interface SheafComponentProps {
+interface SheafLineComponentProps {
   user: User;
   abstract: Arrow;
   space: SpaceType;
   twig: Twig;
   canEdit: boolean;
 }
-export default function SheafComponent(props: SheafComponentProps) {
+export default function SheafLineComponent(props: SheafLineComponentProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
@@ -66,6 +68,13 @@ export default function SheafComponent(props: SheafComponentProps) {
   //   }
   // }, [links.length]);
 
+  const sheaf = client.cache.readFragment({
+    id: client.cache.identify(props.twig.sheaf),
+    fragment: FULL_SHEAF_FIELDS,
+    fragmentName: 'FullSheafFields',
+  }) as Sheaf;
+
+  const link = sheaf.links[0];
   
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -92,8 +101,8 @@ export default function SheafComponent(props: SheafComponentProps) {
           targetTwig.y + VIEW_RADIUS,
         )}
         strokeWidth={2 + (isSelected ? 2 : 0) + rating}
-        markerMid={`url(#marker-${props.twig.detail.userId})`}
-        markerEnd={`url(#marker-${props.twig.detail.userId})`}
+        markerMid={`url(#marker-${link.userId})`}
+        markerEnd={`url(#marker-${link.userId})`}
       />
       <line 
         style={{
@@ -107,7 +116,7 @@ export default function SheafComponent(props: SheafComponentProps) {
         x2={targetTwig.x + VIEW_RADIUS}
         y2={targetTwig.y + VIEW_RADIUS}
         strokeWidth={10 * ((isSelected ? 4 : 2) + rating)}
-        stroke={props.twig.detail.user.color}
+        stroke={link.user.color}
         strokeLinecap={'round'}
       />
     </g>
