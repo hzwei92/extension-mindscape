@@ -1,9 +1,10 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
+import type { CachePersistor } from "apollo3-cache-persist";
 import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { FULL_ARROW_FIELDS } from "~features/arrow/arrowFragments";
 import { SpaceType } from "~features/space/space";
 import { setAllPosReadyFalse, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
-import { store } from "~store";
+import { persistor, store } from "~store";
 import { getTwigByTabId } from "./tab";
 
 const UPDATE_TAB = gql`
@@ -25,7 +26,7 @@ const UPDATE_TAB = gql`
   ${FULL_ARROW_FIELDS}
 `;
 
-export const updateTab = (client: ApolloClient<NormalizedCacheObject>) =>
+export const updateTab = (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) =>
   async (tab: chrome.tabs.Tab) => {
     const twig = getTwigByTabId(client)(tab.id);
 
@@ -49,14 +50,19 @@ export const updateTab = (client: ApolloClient<NormalizedCacheObject>) =>
           url: tab.url,
         }
       });
+      await cachePersistor.persist();
       console.log(data);
 
       store.dispatch(setShouldReloadTwigTree({
         space: SpaceType.FRAME,
         shouldReloadTwigTree: true,
-      }))
+      }));
+
+      await persistor.flush();
+      
       store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
 
+      await persistor.flush();
     } catch (err) {
       console.error(err);
     }

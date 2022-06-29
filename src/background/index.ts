@@ -32,6 +32,7 @@ import { syncBookmarks } from "~features/bookmarks/syncBookmarks"
 import { createBookmark } from "~features/bookmarks/createBookmark"
 import { removeBookmark } from "~features/bookmarks/removeBookmark"
 import { moveBookmark } from "~features/bookmarks/moveBookmark"
+import { changeBookmark } from "~features/bookmarks/changeBookmark"
 
 let client: ApolloClient<NormalizedCacheObject>;
 let cachePersistor: CachePersistor<NormalizedCacheObject>;
@@ -97,7 +98,7 @@ chrome.runtime.onInstalled.addListener(async details => {
       }
     }
     else if (changeInfo.url || changeInfo.title) {
-      updateTab(client)(tab)
+      updateTab(client, cachePersistor)(tab)
     }
   });
   chrome.tabs.onMoved.addListener(async (tabId, moveInfo) => {
@@ -145,6 +146,26 @@ chrome.runtime.onInstalled.addListener(async details => {
 
   // manage bookmarks
   chrome.bookmarks.onCreated.addListener(createBookmark(client, cachePersistor));
+  chrome.bookmarks.onChildrenReordered.addListener((id, reorderInfo) => {
+    console.log('bookmarks reordered', id, reorderInfo);
+  })
+  chrome.bookmarks.onImportEnded.addListener(() => {
+    const state = store.getState();
+
+    const userId = selectUserId(state);
+    
+    const user = client.cache.readFragment({
+      id: client.cache.identify({
+        id: userId,
+        __typename: 'User',
+      }),
+      fragment: FULL_USER_FIELDS,
+      fragmentName: 'FullUserFields'
+    }) as User;
+
+    syncBookmarks(client, cachePersistor)(user.frame.rootTwigId)
+  })
+  chrome.bookmarks.onChanged.addListener(changeBookmark(client, cachePersistor));
   chrome.bookmarks.onMoved.addListener(moveBookmark(client, cachePersistor));
   chrome.bookmarks.onRemoved.addListener(removeBookmark(client, cachePersistor));
 

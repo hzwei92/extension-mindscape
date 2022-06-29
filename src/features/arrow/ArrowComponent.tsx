@@ -119,7 +119,7 @@ export default function ArrowComponent(props: ArrowProps) {
         width: TWIG_WIDTH - 60,
       }}>
         {
-          arrow.draft
+          !arrow.url && !arrow.title
             ? <ArrowEditor
                 user={props.user}
                 space={props.space}

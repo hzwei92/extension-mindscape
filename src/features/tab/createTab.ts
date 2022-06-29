@@ -7,7 +7,7 @@ import type { Twig } from "~features/twigs/twig";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { addTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
 import { addTwigUsers } from "~features/user/userSlice";
-import { store } from "~store";
+import { persistor, store } from "~store";
 import { getTwigByGroupId, getTwigByTabId, TabEntry } from "./tab";
 
 
@@ -86,7 +86,7 @@ export const createTab = (client: ApolloClient<NormalizedCacheObject>, cachePers
         : 3,
       rank: 1,
       title: tab.title,
-      url: tab.url,
+      url: tab.url || tab.pendingUrl,
       color: group.color
     };
     
@@ -110,7 +110,10 @@ export const createTab = (client: ApolloClient<NormalizedCacheObject>, cachePers
         twigs: [data.createTab.twig],
       }));
 
+      await persistor.flush();
       store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
+
+      await persistor.flush();
     } catch (err) {
       console.error(err);
     } 
