@@ -31,6 +31,7 @@ import type { IdToType } from "~types"
 import { syncBookmarks } from "~features/bookmarks/syncBookmarks"
 import { createBookmark } from "~features/bookmarks/createBookmark"
 import { removeBookmark } from "~features/bookmarks/removeBookmark"
+import { moveBookmark } from "~features/bookmarks/moveBookmark"
 
 let client: ApolloClient<NormalizedCacheObject>;
 let cachePersistor: CachePersistor<NormalizedCacheObject>;
@@ -74,7 +75,6 @@ chrome.runtime.onInstalled.addListener(async details => {
     console.log('tab created', tab);
     createTab(client, cachePersistor)(tab)
   });
-
   chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     console.log('tab updated', tabId, changeInfo, tab)
 
@@ -100,7 +100,6 @@ chrome.runtime.onInstalled.addListener(async details => {
       updateTab(client)(tab)
     }
   });
-
   chrome.tabs.onMoved.addListener(async (tabId, moveInfo) => {
     console.log('tab moved', tabId, moveInfo);
     if (tabIdToMoveBlocked[tabId]) {
@@ -114,19 +113,15 @@ chrome.runtime.onInstalled.addListener(async details => {
       moveTab(client, cachePersistor)(tab);
     }
   });
-
   chrome.tabs.onAttached.addListener((tabId, attachInfo) => {
     console.log('tab attached', tabId, attachInfo);
   });
-
   chrome.tabs.onRemoved.addListener(removeTab(client));
 
   chrome.tabGroups.onCreated.addListener(createGroup(client, cachePersistor));
-
   chrome.tabGroups.onUpdated.addListener(group => {
     console.log('group updated', group);
   });
-
   chrome.tabGroups.onRemoved.addListener(removeGroup(client));
 
   chrome.windows.onCreated.addListener(window => {
@@ -146,12 +141,11 @@ chrome.runtime.onInstalled.addListener(async details => {
 
     createWindow(client)(window, user.frame.rootTwigId);
   });
-
   chrome.windows.onRemoved.addListener(removeWindow(client));
 
   // manage bookmarks
-  chrome.bookmarks.onCreated.addListener(createBookmark(client, cachePersistor))
-
+  chrome.bookmarks.onCreated.addListener(createBookmark(client, cachePersistor));
+  chrome.bookmarks.onMoved.addListener(moveBookmark(client, cachePersistor));
   chrome.bookmarks.onRemoved.addListener(removeBookmark(client, cachePersistor));
 
   persistor.subscribe(async () => {  
