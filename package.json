@@ -57,6 +57,7 @@
     ],
     "permissions": [
       "alarms",
+      "bookmarks",
       "cookies",
       "tabs",
       "tabGroups"

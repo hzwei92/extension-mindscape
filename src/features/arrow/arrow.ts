@@ -1,3 +1,4 @@
+import type { Sheaf } from '~features/sheaf/sheaf';
 import type { Role } from '../role/role';
 import type { Sub } from '../sub/sub';
 import type { User } from '../user/user';
@@ -20,6 +21,9 @@ export type Arrow = {
   targetId: string;
   target: Arrow;
 
+  sheafId: string;
+  sheaf: Sheaf;
+
   ins: Arrow[];
   outs: Arrow[];
   inCount: number;
@@ -27,6 +31,7 @@ export type Arrow = {
 
   abstractId: string;
   abstract: Arrow;
+
   twigs: Arrow[];
   twigN: number;
   twigZ: number;

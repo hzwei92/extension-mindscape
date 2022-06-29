@@ -1,18 +1,18 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
+import type { CachePersistor } from "apollo3-cache-persist";
 import { v4 } from "uuid";
 import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { SpaceType } from "~features/space/space";
 import type { Twig } from "~features/twigs/twig";
-import { FULL_TWIG_FIELDS, TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { addTwigs, selectGroupIdToTwigIdToTrue, selectTabIdToTwigIdToTrue, setAllPosReadyFalse } from "~features/twigs/twigSlice";
-import { addTwigUsers, selectUserId } from "~features/user/userSlice";
+import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
+import { addTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
+import { addTwigUsers } from "~features/user/userSlice";
 import { store } from "~store";
-import type { IdToType } from "~types";
-import { getTwigByGroupId, getTwigByTabId, getTwigByWindowId, TabEntry } from "./chrome";
+import { getTwigByGroupId, getTwigByTabId, TabEntry } from "./tab";
 
 
 const CREATE_TAB = gql`
-  mutation CreateTab($tabEntry: TabEntry) {
+  mutation CreateTab($tabEntry: TabEntry!) {
     createTab(tabEntry: $tabEntry) {
       twig {
         ...FullTwigFields
@@ -27,7 +27,7 @@ const CREATE_TAB = gql`
 `;
 
 
-export const createTab = (client: ApolloClient<NormalizedCacheObject>) => 
+export const createTab = (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) => 
   async (tab: chrome.tabs.Tab) => {
     console.log('tab created', tab);
     let groupId = tab.groupId;
@@ -75,7 +75,6 @@ export const createTab = (client: ApolloClient<NormalizedCacheObject>) =>
 
     const group = await chrome.tabGroups.get(groupId);
 
-    // create just a tab
     let tabEntry: TabEntry = {
       twigId: v4(),
       parentTwigId: parentTwig.id,
@@ -98,6 +97,7 @@ export const createTab = (client: ApolloClient<NormalizedCacheObject>) =>
           tabEntry,
         }
       });
+      await cachePersistor.persist();
       console.log(data);
 
       store.dispatch(addTwigs({

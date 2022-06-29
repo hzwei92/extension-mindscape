@@ -4,7 +4,7 @@ import { FULL_ARROW_FIELDS } from "~features/arrow/arrowFragments";
 import { SpaceType } from "~features/space/space";
 import { setAllPosReadyFalse, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
 import { store } from "~store";
-import { getTwigByTabId } from "./chrome";
+import { getTwigByTabId } from "./tab";
 
 const UPDATE_TAB = gql`
   mutation UpdateTab($twigId: String!, $title: String!, $url: String!) {

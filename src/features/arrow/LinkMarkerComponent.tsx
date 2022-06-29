@@ -5,23 +5,22 @@ import { VIEW_RADIUS } from '~constants';
 import { getPolylineCoords } from '~utils';
 import type { SpaceType } from '../space/space';
 import type { User } from '../user/user';
-import type { Arrow } from '../arrow/arrow';
+import type { Arrow } from './arrow';
 import type { Twig } from '~features/twigs/twig';
 import { selectPosReady } from '~features/twigs/twigSlice';
 import { FULL_TWIG_FIELDS } from '~features/twigs/twigFragments';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import useSelectTwig from '~features/twigs/useSelectTwig';
-import { FULL_SHEAF_FIELDS } from './sheafFragments';
-import type { Sheaf } from './sheaf';
+import { FULL_ARROW_FIELDS } from './arrowFragments';
 
-interface SheafLineComponentProps {
+interface LinkMarkerComponentProps {
   user: User;
   abstract: Arrow;
   space: SpaceType;
   twig: Twig;
   canEdit: boolean;
 }
-export default function SheafLineComponent(props: SheafLineComponentProps) {
+export default function LinkMarkerComponent(props: LinkMarkerComponentProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
@@ -68,13 +67,11 @@ export default function SheafLineComponent(props: SheafLineComponentProps) {
   //   }
   // }, [links.length]);
 
-  const sheaf = client.cache.readFragment({
-    id: client.cache.identify(props.twig.sheaf),
-    fragment: FULL_SHEAF_FIELDS,
-    fragmentName: 'FullSheafFields',
-  }) as Sheaf;
-
-  const link = sheaf.links[0];
+  const link = client.cache.readFragment({
+    id: client.cache.identify(props.twig.detail),
+    fragment: FULL_ARROW_FIELDS,
+    fragmentName: 'FullArrowFields',
+  }) as Arrow;
   
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();

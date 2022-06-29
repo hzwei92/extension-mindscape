@@ -5,11 +5,16 @@ export type Sheaf  = {
   routeName: string;
 
   sourceId: string;
-  source: Arrow;
+  source: Sheaf;
   targetId: string;
-  target: Arrow;
+  target: Sheaf;
 
-  links: Arrow[];
+  ins: Sheaf[];
+  outs: Sheaf[];
+  inCount: number;
+  outCount: number;
+  
+  arrows: Arrow[];
 
   clicks: number;
   tokens: number;

@@ -6,7 +6,7 @@ import { TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { selectIdToDescIdToTrue } from "~features/twigs/twigSlice";
 import { store } from "~store";
 import type { IdToType } from "~types";
-import { getTwigByTabId } from "./chrome";
+import { getTwigByTabId } from "./tab";
 
 export const maintainSubtree = (client: ApolloClient<NormalizedCacheObject>) =>  
   (tabIdToMoveBlocked: IdToType<number>) =>

@@ -11,7 +11,7 @@ import { FULL_USER_FIELDS } from "~features/user/userFragments";
 import { addTwigUsers, selectUserId } from "~features/user/userSlice";
 import { store } from "~store";
 import { getEmptyDraft } from "~utils";
-import type { WindowEntry } from "./chrome";
+import type { WindowEntry } from "./tab";
 
 const CREATE_WINDOW = gql`
   mutation CreateWindow($windowEntry: WindowEntry!) {

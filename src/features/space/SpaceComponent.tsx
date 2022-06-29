@@ -12,12 +12,12 @@ import { selectIsOpen } from "./spaceSlice";
 import { ABSTRACT_ARROW_FIELDS } from "../arrow/arrowFragments";
 import type { Arrow } from "../arrow/arrow";
 import type { Role } from "../role/role";
-import SheafLineComponent from "../sheaf/SheafLineComponent";
+import LinkMarkerComponent from "../arrow/LinkMarkerComponent";
 import { AppContext } from "~newtab/App";
 import { selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, selectTwigIdToHeight, selectTwigIdToPosReady, selectTwigIdToTrue } from "~features/twigs/twigSlice";
 import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_XY } from "~features/twigs/twigFragments";
 import type { Twig } from "~features/twigs/twig";
-import TwigSheafComponent from "~features/twigs/TwigSheafComponent";
+import TwigLinkComponent from "~features/twigs/TwigLinkComponent";
 import TwigPostComponent from "~features/twigs/TwigPostComponent";
 import SpaceControls from "./SpaceControls";
 import SpaceNav from "./SpaceNav";
@@ -25,7 +25,6 @@ import useCenterTwig from "~features/twigs/useCenterTwig";
 import TwigLine from "~features/twigs/TwigLine";
 import { selectUserIdToTrue } from "~features/user/userSlice";
 import useMoveTwig from "~features/twigs/useMoveTwig";
-import { TimerTwoTone } from "@mui/icons-material";
 //import useAdjustTwigs from "../twig/useAdjustTwigs";
 
 
@@ -418,6 +417,10 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
     //console.log(twigId, twig);
 
+    if (!twig || twig.deleteDate) {
+      return;
+    }
+    
     if (
       drag.twigId &&
       twig.id !== drag.twigId && 
@@ -437,7 +440,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       );
     }
 
-    if (!twig || twig.deleteDate || twig.displayMode !== DisplayMode.SCATTERED) {
+    if (twig.displayMode !== DisplayMode.SCATTERED) {
       return;
     }
 
@@ -496,7 +499,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           zIndex: twig.z,
           pointerEvents: 'none',
         }}>
-          <TwigSheafComponent
+          <TwigLinkComponent
             user={props.user}
             space={props.space}
             role={role}
@@ -513,7 +516,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         </Box>
       )
       sheafs.push(
-        <SheafLineComponent
+        <LinkMarkerComponent
           key={`sheaf-line-${twigId}`}
           user={props.user}
           abstract={abstract}

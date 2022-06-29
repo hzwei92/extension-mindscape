@@ -127,24 +127,22 @@ export default function ArrowComponent(props: ArrowProps) {
                 isReadonly={false}
                 instanceId={props.instanceId}
               />
-            : props.isTab
-              ? <Box>
-                  <Typography fontWeight='bold' fontSize={20}>
-                    {arrow.title}
-                  </Typography>
-                  <Box>
-                    <Link component='button' sx={{
-                      cursor: 'pointer',
-                      whiteSpace: 'pre-wrap',
-                      width: '100%',
-                      wordWrap: 'break-word',
-                      textAlign: 'left',
-                    }}>
-                      {arrow.url}
-                    </Link>
-                  </Box>
+            : <Box>
+                <Typography fontWeight='bold' fontSize={20}>
+                  {arrow.title}
+                </Typography>
+                <Box>
+                  <Link component='button' sx={{
+                    cursor: 'pointer',
+                    whiteSpace: 'pre-wrap',
+                    width: '100%',
+                    wordWrap: 'break-word',
+                    textAlign: 'left',
+                  }}>
+                    {arrow.url}
+                  </Link>
                 </Box>
-              : null
+              </Box>
         }
 
       </Box>

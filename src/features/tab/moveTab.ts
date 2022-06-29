@@ -6,7 +6,7 @@ import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { SpaceType } from "~features/space/space";
 import { selectIdToDescIdToTrue, setAllPosReadyFalse, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
 import { store } from "~store";
-import { getTwigByGroupId, getTwigByTabId } from "./chrome";
+import { getTwigByGroupId, getTwigByTabId } from "./tab";
 
 const MOVE_TAB = gql`
   mutation MoveTab($twigId: String!, $groupTwigId: String!, $parentTwigId: String) {

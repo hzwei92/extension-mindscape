@@ -9,7 +9,7 @@ import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { addTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
 import { addTwigUsers } from "~features/user/userSlice";
 import { persistor, store } from "~store";
-import { getTwigByWindowId, GroupEntry } from "./chrome";
+import { getTwigByWindowId, GroupEntry } from "./tab";
 
 const CREATE_GROUP = gql`
   mutation CreateGroup($groupEntry: GroupEntry!) {

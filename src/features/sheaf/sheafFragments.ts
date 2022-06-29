@@ -7,6 +7,8 @@ export const SHEAF_FIELDS = gql`
     routeName
     sourceId
     targetId
+    inCount
+    outCount
     clicks
     tokens
     weight
@@ -15,14 +17,3 @@ export const SHEAF_FIELDS = gql`
     deleteDate
   }
 `;
-
-export const FULL_SHEAF_FIELDS = gql`
-  fragment FullSheafFields on Sheaf {
-    ...SheafFields
-    links {
-      ...FullArrowFields
-    }
-  }
-  ${SHEAF_FIELDS}
-  ${FULL_ARROW_FIELDS}
-`

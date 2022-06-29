@@ -5,9 +5,9 @@ import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { addTwigs, removeTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
 import { addTwigUsers } from "~features/user/userSlice";
-import { store } from "~store";
+import { persistor, store } from "~store";
 import type { IdToType } from "~types";
-import type { GroupEntry, TabEntry, WindowEntry } from "./chrome";
+import type { GroupEntry, TabEntry, WindowEntry } from "./tab";
 
 
 const SYNC_TAB_STATE = gql`
@@ -195,6 +195,7 @@ export const syncTabState = (client: ApolloClient<NormalizedCacheObject>, cacheP
       twigs: deleted,
     }));
 
+    await persistor.flush();
     store.dispatch(addTwigs({
       space: SpaceType.FRAME,
       twigs: [...windows, ...groups, ...tabs],
@@ -205,7 +206,9 @@ export const syncTabState = (client: ApolloClient<NormalizedCacheObject>, cacheP
       twigs: [...windows, ...groups, ...tabs],
     }));
 
-    store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
+    await persistor.flush();
 
+    store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
+    await persistor.flush();
 
   }

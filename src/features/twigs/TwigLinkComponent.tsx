@@ -8,23 +8,20 @@ import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
-import TwigControls from './TwigControls';
 import { selectChildIdToTrue, selectPosReady, setPosReady } from './twigSlice';
 import { selectCreateLink, setCreateLink } from '../arrow/arrowSlice';
 import type { Arrow } from '../arrow/arrow';
-import ArrowComponent from '../arrow/ArrowComponent';
-import ArrowVoter from '../arrow/ArrowVoter';
 import RemoveIcon from '@mui/icons-material/Remove';
-import { getColor, getTwigColor } from '~utils';
+import { getTwigColor } from '~utils';
 import { FULL_TWIG_FIELDS } from './twigFragments';
 import TwigPostComponent from './TwigPostComponent';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import useOpenTwig from './useOpenTwig';
 import useSelectTwig from './useSelectTwig';
 import useLinkTwigs from './useLinkTwig';
-import SheafComponent from '~features/sheaf/SheafComponent';
+import ArrowComponent from '~features/arrow/ArrowComponent';
 
-interface TwigSheafComponentProps {
+interface TwigLinkComponentProps {
   user: User | null;
   space: SpaceType;
   role: Role | null;
@@ -39,7 +36,7 @@ interface TwigSheafComponentProps {
   setDrag: Dispatch<SetStateAction<DragState>>;
 }
 
-function TwigSheafComponent(props: TwigSheafComponentProps) {
+function TwigLinkComponent(props: TwigLinkComponentProps) {
   //console.log('twig link', props.twig.id);
 
   const client = useApolloClient();
@@ -236,11 +233,11 @@ function TwigSheafComponent(props: TwigSheafComponentProps) {
                 marginRight: 0.5,
                 position: 'relative',
               }}>
-                <SheafComponent
+                <ArrowComponent
                   user={props.user}
                   abstract={props.abstract}
                   space={props.space}
-                  twig={props.twig}
+                  arrowId={props.twig.detailId}
                   instanceId={props.twig.id}
                   isTab={!!props.twig.tabId}
                   isGroup={!props.twig.tabId && !!props.twig.groupId}
@@ -322,4 +319,4 @@ function TwigSheafComponent(props: TwigSheafComponentProps) {
   );
 }
 
-export default React.memo(TwigSheafComponent)
+export default React.memo(TwigLinkComponent)
