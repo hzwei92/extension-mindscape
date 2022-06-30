@@ -27,7 +27,7 @@ async (userId: string) => {
   }) as User;
 
   if (!user) {
-    throw Error('Missing user with id ' + userId)
+    throw new Error('Missing user with id ' + userId)
   };
 
   try {

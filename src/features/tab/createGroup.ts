@@ -26,7 +26,6 @@ const CREATE_GROUP = gql`
 
 export const createGroup = (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) => 
   async (group: chrome.tabGroups.TabGroup) => {
-    console.log('group created', group)
     const windowTabs = await chrome.tabs.query({
       windowId: group.windowId,
     });
@@ -41,8 +40,9 @@ export const createGroup = (client: ApolloClient<NormalizedCacheObject>, cachePe
         }
       });
     
-    const windowTwig = getTwigByWindowId(client)(group.windowId);
+    const windowTwig = await getTwigByWindowId(group.windowId);
 
+    console.log('trying to create group', group, windowTwig);
     if (!windowTwig) {
       const name = AlarmType.CREATE_GROUP +
         ALARM_DELIMITER +
@@ -56,8 +56,6 @@ export const createGroup = (client: ApolloClient<NormalizedCacheObject>, cachePe
     }
 
     const groupEntry: GroupEntry =  {
-      twigId: v4(),
-      parentTwigId: windowTwig.id,
       windowId: group.windowId,
       groupId: group.id,
       rank: groupIds.indexOf(group.id) + 1,

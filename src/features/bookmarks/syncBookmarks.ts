@@ -23,45 +23,50 @@ const SYNC_BOOKMARKS = gql`
   ${FULL_TWIG_FIELDS}
 `;
 
+
+export const getBookmarkEntries = async () => {
+  const [root] = await chrome.bookmarks.getTree();
+    
+  const entries = [];
+
+  const queue = root.children.map(node => {
+    return {
+      node,
+      degree: 1,
+    }
+  });
+
+  while (queue.length) {
+    const { 
+      node, 
+      degree
+    } = queue.shift();
+
+    const entry: BookmarkEntry = {
+      bookmarkId: node.id,
+      parentBookmarkId: node.parentId,
+      title: node.title,
+      url: node.url,
+      degree,
+      rank: (node.index ?? 0) + 1,
+    };
+    entries.push(entry);
+
+    (node.children || []).forEach(child => {
+      queue.push({
+        node: child,
+        degree: degree + 1,
+      })
+    });
+  }
+
+  return entries;
+}
+
 export const syncBookmarks = (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) =>
   async (parentTwigId: string) => {
-    console.log('syncing bookmarks')
-    const [root] = await chrome.bookmarks.getTree();
+    const entries = getBookmarkEntries();
     
-    const entries = [];
-
-    const queue = root.children.map(node => {
-      return {
-        node,
-        degree: 1,
-      }
-    });
-
-    while (queue.length) {
-      const { 
-        node, 
-        degree
-      } = queue.shift();
-
-      const entry: BookmarkEntry = {
-        bookmarkId: node.id,
-        parentBookmarkId: node.parentId,
-        title: node.title,
-        url: node.url,
-        degree,
-        rank: (node.index ?? 0) + 1,
-      };
-      entries.push(entry);
-
-      (node.children || []).forEach(child => {
-        queue.push({
-          node: child,
-          degree: degree + 1,
-        })
-      });
-    }
-    console.log(entries);
-
     try {
       const { data } = await client.mutate({
         mutation: SYNC_BOOKMARKS,

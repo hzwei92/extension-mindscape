@@ -7,9 +7,11 @@ import { TWIG_WITH_XY } from './twigFragments';
 import { useContext } from 'react';
 import { AppContext } from '~newtab/App';
 import { SpaceContext } from '~features/space/SpaceComponent';
+import { useAppSelector } from '~store';
+import { selectTwigIdToPos } from './twigSlice';
 
 export default function useCenterTwig(user: User | null, space: SpaceType, scale?: number) {
-  const client = useApolloClient();
+  const twigIdToPos = useAppSelector(selectTwigIdToPos(space));
 
   const { frameSpaceEl, focusSpaceEl } = useContext(AppContext);
   
@@ -26,21 +28,15 @@ export default function useCenterTwig(user: User | null, space: SpaceType, scale
       if (!spaceEl?.current) return;
       if (!user) return;
       
-      const twig = client.cache.readFragment({
-        id: client.cache.identify({
-          id: twigId,
-          __typename: 'Twig',
-        }),
-        fragment: TWIG_WITH_XY,
-      }) as Twig;
+      const pos = twigIdToPos[twigId];
 
-      if (!twig) {
-        console.error('Missing twig for twigId ' + twigId);
+      if (!pos) {
+        console.error('Missing pos for twigId ' + twigId);
         return;
       };
 
-      const x1 = (twig.x + VIEW_RADIUS) * scale;
-      const y1 = (twig.y + VIEW_RADIUS) * scale;
+      const x1 = (pos.x + VIEW_RADIUS) * scale;
+      const y1 = (pos.y + VIEW_RADIUS) * scale;
 
       console.log('centerTwig', scale);
 

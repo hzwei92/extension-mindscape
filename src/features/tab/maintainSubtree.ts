@@ -13,7 +13,7 @@ export const maintainSubtree = (client: ApolloClient<NormalizedCacheObject>) =>
   async (tabId: number) => {
     const state = store.getState();
 
-    const twig = getTwigByTabId(client)(tabId);
+    const twig = await getTwigByTabId(tabId);
 
     if (!twig) {
       throw new Error('Missing twig with tabId ' + tabId)

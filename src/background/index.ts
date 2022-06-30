@@ -33,6 +33,7 @@ import { createBookmark } from "~features/bookmarks/createBookmark"
 import { removeBookmark } from "~features/bookmarks/removeBookmark"
 import { moveBookmark } from "~features/bookmarks/moveBookmark"
 import { changeBookmark } from "~features/bookmarks/changeBookmark"
+import { syncBrowserState } from "./syncBrowserState"
 
 let client: ApolloClient<NormalizedCacheObject>;
 let cachePersistor: CachePersistor<NormalizedCacheObject>;
@@ -107,7 +108,7 @@ chrome.runtime.onInstalled.addListener(async details => {
       return;
     }
     const tab = await chrome.tabs.get(tabId);
-    const tabTwig = getTwigByTabId(client)(tabId);
+    const tabTwig = await getTwigByTabId(tabId);
     if (tabTwig?.groupId && tabTwig.groupId === tab.groupId) {
       maintainSubtree(client)(tabIdToMoveBlocked)(tabId);
       moveTab(client, cachePersistor)(tab);
@@ -118,7 +119,10 @@ chrome.runtime.onInstalled.addListener(async details => {
   });
   chrome.tabs.onRemoved.addListener(removeTab(client));
 
-  chrome.tabGroups.onCreated.addListener(createGroup(client, cachePersistor));
+  chrome.tabGroups.onCreated.addListener((group) => {
+    console.log('group created', group)
+    createGroup(client, cachePersistor)(group);
+  });
   chrome.tabGroups.onUpdated.addListener(group => {
     console.log('group updated', group);
   });
@@ -139,7 +143,7 @@ chrome.runtime.onInstalled.addListener(async details => {
       fragmentName: 'FullUserFields'
     }) as User;
 
-    createWindow(client)(window, user.frame.rootTwigId);
+    createWindow(client, cachePersistor)(window, user.frame.rootTwigId);
   });
   chrome.windows.onRemoved.addListener(removeWindow(client));
 
@@ -188,22 +192,7 @@ chrome.runtime.onInstalled.addListener(async details => {
 
         const tabTrees = await orderAndGroupTabs();
 
-        await syncTabState(client, cachePersistor)(user.frame.rootTwigId, tabTrees);
-      }
-      if (shouldSyncBookmarks) {
-        shouldSyncBookmarks = false;
-        const userId = selectUserId(state);
-
-        const user = client.cache.readFragment({
-          id: client.cache.identify({
-            id: userId,
-            __typename: 'User',
-          }),
-          fragment: FULL_USER_FIELDS,
-          fragmentName: 'FullUserFields'
-        }) as User;
-
-        await syncBookmarks(client, cachePersistor)(user.frame.rootTwigId);
+        await syncBrowserState(client, cachePersistor)(user.frame.rootTwigId, tabTrees);
       }
       const shouldReloadTwigTree = selectShouldReloadTwigTree(SpaceType.FRAME)(state);
       if (shouldReloadTwigTree) {

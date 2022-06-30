@@ -5,18 +5,15 @@ import type { Twig } from "~features/twigs/twig";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { selectGroupIdToTwigIdToTrue, selectTabIdToTwigIdToTrue, selectWindowIdToTwigIdToTrue } from "~features/twigs/twigSlice";
 import { selectUserId } from "~features/user/userSlice";
+import { getClient } from "~graphql";
 import { store } from "~store";
 
 export type WindowEntry = {
-  twigId: string;
-  parentTwigId: string;
   windowId: number;
   rank: number;
 };
 
 export type GroupEntry = {
-  twigId: string;
-  parentTwigId: string;
   groupId: number;
   windowId: number;
   rank: number;
@@ -24,9 +21,8 @@ export type GroupEntry = {
 };
 
 export type TabEntry = {
-  twigId: string;
-  parentTwigId: string;
   tabId: number;
+  parentTabId: number;
   groupId: number;
   windowId: number;
   degree: number;
@@ -37,96 +33,97 @@ export type TabEntry = {
 };
 
 
-export const getTwigByTabId = (client: ApolloClient<NormalizedCacheObject>) => 
-  (tabId: number): Twig => {
-    const state = store.getState();
+export const getTwigByTabId = async (tabId: number): Promise<Twig> => {
+  const { client } = await getClient();
 
-    const userId = selectUserId(state);
-    const tabIdToTwigIdToTrue = selectTabIdToTwigIdToTrue(SpaceType.FRAME)(state);
+  const state = store.getState();
 
-    console.log('tabIdToTwigIdToTrue', tabIdToTwigIdToTrue);
-    
-    const twigs = [];
-    Object.keys(tabIdToTwigIdToTrue[tabId] || {}).forEach(twigId => {
-      const twig = client.cache.readFragment({
-        id: client.cache.identify({
-          id: twigId,
-          __typename: 'Twig',
-        }),
-        fragment: FULL_TWIG_FIELDS,
-        fragmentName: 'FullTwigFields',
-      }) as Twig;
+  const userId = selectUserId(state);
+  const tabIdToTwigIdToTrue = selectTabIdToTwigIdToTrue(SpaceType.FRAME)(state);
 
-      if (twig?.userId === userId) {
-        twigs.push(twig);
-      }
-    });
-
-    if (twigs.length > 1) {
-      console.error('Multiple twigs for tabId ' + tabId, twigs);
-    }
-    
-    return twigs[0];
-  }
-
-export const getTwigByGroupId = (client: ApolloClient<NormalizedCacheObject>) => 
-  (groupId: number): Twig => {
-    const state = store.getState();
-
-    const userId = selectUserId(state);
-    const groupIdToTwigIdToTrue = selectGroupIdToTwigIdToTrue(SpaceType.FRAME)(state);
+  console.log('tabIdToTwigIdToTrue', tabIdToTwigIdToTrue);
   
-    console.log('groupIdToTwigIdToTrue', groupIdToTwigIdToTrue)
-    const twigs = [];
-    Object.keys(groupIdToTwigIdToTrue[groupId] || {}).forEach(twigId => {
-      const twig = client.cache.readFragment({
-        id: client.cache.identify({
-          id: twigId,
-          __typename: 'Twig',
-        }),
-        fragment: FULL_TWIG_FIELDS,
-        fragmentName: 'FullTwigFields',
-      }) as Twig;
+  const twigs = [];
+  Object.keys(tabIdToTwigIdToTrue[tabId] || {}).forEach(twigId => {
+    const twig = client.cache.readFragment({
+      id: client.cache.identify({
+        id: twigId,
+        __typename: 'Twig',
+      }),
+      fragment: FULL_TWIG_FIELDS,
+      fragmentName: 'FullTwigFields',
+    }) as Twig;
 
-      if (twig?.userId === userId) {
-        twigs.push(twig);
-      }
-    });
-
-    if (twigs.length > 1) {
-      console.error('Multiple twigs for groupId ' + groupId, twigs);
+    if (twig?.userId === userId) {
+      twigs.push(twig);
     }
-    
-    return twigs[0];
+  });
+
+  if (twigs.length > 1) {
+    console.error('Multiple twigs for tabId ' + tabId, twigs);
   }
-
-
-export const getTwigByWindowId = (client: ApolloClient<NormalizedCacheObject>) => 
-  (windowId: number): Twig => {
-    const state = store.getState();
-
-    const userId = selectUserId(state);
-    const windowIdToTwigIdToTrue = selectWindowIdToTwigIdToTrue(SpaceType.FRAME)(state);
   
-    const twigs = [];
-    Object.keys(windowIdToTwigIdToTrue[windowId] || {}).forEach(twigId => {
-      const twig = client.cache.readFragment({
-        id: client.cache.identify({
-          id: twigId,
-          __typename: 'Twig',
-        }),
-        fragment: FULL_TWIG_FIELDS,
-        fragmentName: 'FullTwigFields',
-      }) as Twig;
+  return twigs[0];
+}
 
-      if (twig?.userId === userId) {
-        twigs.push(twig);
-      }
-    });
+export const getTwigByGroupId = async (groupId: number): Promise<Twig> => {
+  const { client } = await getClient();
+  const state = store.getState();
 
-    if (twigs.length > 1) {
-      console.error('Multiple twigs for windowId ' + windowId, twigs);
+  const userId = selectUserId(state);
+  const groupIdToTwigIdToTrue = selectGroupIdToTwigIdToTrue(SpaceType.FRAME)(state);
+
+  console.log('groupIdToTwigIdToTrue', groupIdToTwigIdToTrue)
+  const twigs = [];
+  Object.keys(groupIdToTwigIdToTrue[groupId] || {}).forEach(twigId => {
+    const twig = client.cache.readFragment({
+      id: client.cache.identify({
+        id: twigId,
+        __typename: 'Twig',
+      }),
+      fragment: FULL_TWIG_FIELDS,
+      fragmentName: 'FullTwigFields',
+    }) as Twig;
+
+    if (twig?.userId === userId) {
+      twigs.push(twig);
     }
-    
-    return twigs[0];
+  });
+
+  if (twigs.length > 1) {
+    console.error('Multiple twigs for groupId ' + groupId, twigs);
   }
+  
+  return twigs[0];
+}
+
+
+export const getTwigByWindowId = async (windowId: number): Promise<Twig> => {
+  const { client } = await getClient()
+  const state = store.getState();
+
+  const userId = selectUserId(state);
+  const windowIdToTwigIdToTrue = selectWindowIdToTwigIdToTrue(SpaceType.FRAME)(state);
+
+  const twigs = [];
+  Object.keys(windowIdToTwigIdToTrue[windowId] || {}).forEach(twigId => {
+    const twig = client.cache.readFragment({
+      id: client.cache.identify({
+        id: twigId,
+        __typename: 'Twig',
+      }),
+      fragment: FULL_TWIG_FIELDS,
+      fragmentName: 'FullTwigFields',
+    }) as Twig;
+
+    if (twig?.userId === userId) {
+      twigs.push(twig);
+    }
+  });
+
+  if (twigs.length > 1) {
+    console.error('Multiple twigs for windowId ' + windowId, twigs);
+  }
+  
+  return twigs[0];
+}

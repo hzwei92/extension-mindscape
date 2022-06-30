@@ -63,6 +63,8 @@ export default function ArrowComponent(props: ArrowProps) {
     event.stopPropagation();
   }
 
+  if (!arrow) return null;
+  
   const time = new Date(arrow.removeDate || arrow.commitDate || arrow.saveDate || Date.now()).getTime();
   const timeString = getTimeString(time);
 

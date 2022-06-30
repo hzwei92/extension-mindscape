@@ -55,10 +55,10 @@ export const createTab = (client: ApolloClient<NormalizedCacheObject>, cachePers
 
     let parentTwig: Twig;
     if (tab.openerTabId) {
-      parentTwig = getTwigByTabId(client)(tab.openerTabId);
+      parentTwig = await  getTwigByTabId(tab.openerTabId);
     }
     else {
-      parentTwig = getTwigByGroupId(client)(groupId);
+      parentTwig = await getTwigByGroupId(groupId);
     }
     if (!parentTwig) {
       const name = AlarmType.CREATE_TAB +
@@ -75,14 +75,11 @@ export const createTab = (client: ApolloClient<NormalizedCacheObject>, cachePers
     const group = await chrome.tabGroups.get(groupId);
 
     let tabEntry: TabEntry = {
-      twigId: v4(),
-      parentTwigId: parentTwig.id,
       tabId: tab.id,
       groupId,
       windowId: tab.windowId,
-      degree: parentTwig
-        ? parentTwig.degree + 1
-        : 3,
+      parentTabId: tab.openerTabId,
+      degree: parentTwig.degree + 1,
       rank: 1,
       title: tab.title,
       url: tab.url || tab.pendingUrl,

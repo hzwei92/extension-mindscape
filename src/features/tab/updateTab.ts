@@ -28,7 +28,7 @@ const UPDATE_TAB = gql`
 
 export const updateTab = (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) =>
   async (tab: chrome.tabs.Tab) => {
-    const twig = getTwigByTabId(client)(tab.id);
+    const twig = await getTwigByTabId(tab.id);
 
     if (!twig?.id) {
       const name = AlarmType.UPDATE_TAB +

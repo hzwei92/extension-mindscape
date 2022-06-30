@@ -34,7 +34,7 @@ const SYNC_TAB_STATE = gql`
   ${FULL_TWIG_FIELDS}
 `;
 
-const getWindowEntries = async (parentTwigId: string) => {
+export const getWindowEntries = async () => {
   const windows = await chrome.windows.getAll();
       
   const focusWindow = await chrome.windows.getLastFocused();
@@ -47,8 +47,6 @@ const getWindowEntries = async (parentTwigId: string) => {
     })
     .map((window, i) => {
       const entry: WindowEntry = {
-        twigId: v4(),
-        parentTwigId,
         windowId: window.id,
         rank: i + 1,
       };
@@ -58,7 +56,7 @@ const getWindowEntries = async (parentTwigId: string) => {
   return windowEntries;
 }
 
-const getGroupEntries = async (windowEntries: WindowEntry[]) => {
+export const getGroupEntries = async (windowEntries: WindowEntry[]) => {
   const groups = await chrome.tabGroups.query({});
 
   const idToGroup: IdToType<chrome.tabGroups.TabGroup> = groups.reduce((acc, group) => {
@@ -85,8 +83,6 @@ const getGroupEntries = async (windowEntries: WindowEntry[]) => {
     return groupIds.map((groupId, i) => {
       const group = idToGroup[groupId];
       const groupEntry: GroupEntry = {
-        twigId: v4(),
-        parentTwigId: windowEntry.twigId,
         windowId: windowEntry.windowId,
         groupId: groupId,
         rank: i + 1,
@@ -102,7 +98,7 @@ const getGroupEntries = async (windowEntries: WindowEntry[]) => {
   return groupEntries;
 }
 
-const getTabEntries = async (tabTrees: any[], groupEntries: GroupEntry[]) => {
+export const getTabEntries = async (tabTrees: any[], groupEntries: GroupEntry[]) => {
   const tabs = await chrome.tabs.query({});
   const idToTab: IdToType<chrome.tabs.Tab> = tabs.reduce((acc, tab) => {
     acc[tab.id] = tab;
@@ -134,13 +130,10 @@ const getTabEntries = async (tabTrees: any[], groupEntries: GroupEntry[]) => {
       }
       
       const entry: TabEntry = {
-        twigId: v4(),
-        parentTwigId: depth === 0
-          ? groupIdToEntry[tab.groupId].twigId
-          : tabIdToEntry[parentTabId].twigId,
         windowId: tab.windowId,
         groupId: tab.groupId,
         tabId: parseInt(tabId),
+        parentTabId,
         degree: depth + 3,
         rank,
         title: tab.title,
@@ -165,7 +158,7 @@ const getTabEntries = async (tabTrees: any[], groupEntries: GroupEntry[]) => {
 
 export const syncTabState = (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) => 
   async (twigId: string, tabTrees: any[]) => {
-    const windowEntries = await getWindowEntries(twigId);
+    const windowEntries = await getWindowEntries();
     
     const groupEntries = await getGroupEntries(windowEntries);
 
