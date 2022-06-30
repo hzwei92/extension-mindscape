@@ -1,7 +1,7 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import type { CachePersistor } from "apollo3-cache-persist";
 import { SpaceType } from "~features/space/space";
-import { setAllPosReadyFalse, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
+import { setShouldReloadTwigTree } from "~features/twigs/twigSlice";
 import { store } from "~store";
 
 const MOVE_BOOKMARK = gql`
@@ -49,8 +49,6 @@ export const moveBookmark = (client: ApolloClient<NormalizedCacheObject>, cacheP
         space: SpaceType.FRAME,
         shouldReloadTwigTree: true,
       }));
-
-      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
 
     } catch (err) {
       console.error(err)

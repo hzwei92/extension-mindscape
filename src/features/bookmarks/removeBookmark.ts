@@ -1,7 +1,7 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client"
 import type { CachePersistor } from "apollo3-cache-persist"
 import { SpaceType } from "~features/space/space";
-import { removeTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
+import { removeTwigs } from "~features/twigs/twigSlice";
 import { store } from "~store";
 
 const REMOVE_BOOKMARK = gql`
@@ -37,9 +37,7 @@ export const removeBookmark = (client: ApolloClient<NormalizedCacheObject>, cach
         space: SpaceType.FRAME,
         twigs: data.removeBookmark.twigs,
       }));
-
-      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
-
+      
     } catch (err) {
       console.error(err);
     }

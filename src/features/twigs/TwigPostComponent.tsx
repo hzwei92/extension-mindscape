@@ -8,10 +8,10 @@ import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
-import { selectChildIdToTrue, selectHeight, selectPos, selectPosReady, selectShouldReloadTwigTree, selectTwigIdToPosReady, setHeight, setPos, setPosReady } from './twigSlice';
+import { selectChildIdToTrue, selectHeight, selectPos, selectShouldReloadTwigTree, setHeight, setPos } from './twigSlice';
 import type { Arrow } from '../arrow/arrow';
 import { getTwigColor } from '~utils';
-import { FULL_TWIG_FIELDS, TWIG_FIELDS } from './twigFragments';
+import { FULL_TWIG_FIELDS } from './twigFragments';
 import { selectCreateLink, setCreateLink } from '~features/arrow/arrowSlice';
 import ArrowComponent from '~features/arrow/ArrowComponent';
 import TwigControls from './TwigControls';
@@ -57,7 +57,6 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   const { selectedTwigId } = useContext(SpaceContext);
   const isSelected = props.twig.id === selectedTwigId;
 
-  const shouldReloadTwigTree = useAppSelector(selectShouldReloadTwigTree(props.space));
   const childIdToTrue = useAppSelector(state => selectChildIdToTrue(state, props.space, props.twig.id));
   const verticalChildren = [];
   const horizontalChildren = [];
@@ -82,41 +81,6 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   });
 
   const height = useAppSelector(state => selectHeight(state, props.space, props.twig.id));
-
-  // const twigIdToPosReady = useAppSelector(selectTwigIdToPosReady(props.space));
-
-  // const posReady = twigIdToPosReady[props.twig.id];
-  // const parentPosReady = twigIdToPosReady[props.twig.parent?.id] ?? true;
-  // const sibsPosReady = shouldReloadTwigTree
-  //   ? false
-  //   : posReady
-  //     ? true
-  //     : !Object.keys(childIdToTrue[props.twig.parent?.id] || {}).some(sibId => {
-  //         if (sibId === props.twig.id) return false;
-
-  //         const sib = client.cache.readFragment({
-  //           id: client.cache.identify({
-  //             id: sibId,
-  //             __typename: 'Twig',
-  //           }),
-  //           fragment: TWIG_FIELDS,
-  //         }) as Twig;
-
-  //         if (sib.rank > props.twig.rank) return false;
-
-  //         return !twigIdToPosReady[sibId];
-  //       });
-    
-  // useEffect(() => {
-  //   if (!posReady && props.twig.displayMode === DisplayMode.SCATTERED) {
-  //     dispatch(setPosReady({
-  //       space: props.space,
-  //       twigId: props.twig.id,
-  //       posReady: true,
-  //     }));
-  //   }
-  // }, [])
-
  
   const [isLoading, setIsLoading] = useState(false);
   const twigEl = useRef<HTMLElement>();
@@ -146,49 +110,6 @@ function TwigPostComponent(props: TwigPostComponentProps) {
       }))
     }
   }, [parentPos, pos, props.twig.displayMode, twigEl.current?.offsetLeft, twigEl.current?.offsetTop]);
-
-  // useEffect(() => {
-  //   console.log(props.twig.id, posReady);
-  //   if (posReady) return;
-  //   if (!parentPosReady) return;
-  //   if (!sibsPosReady) return;
-  //   if (!twigEl.current) return;
-
-  //   if (parentTwig && props.twig.displayMode !== DisplayMode.SCATTERED) {
-  //     const { offsetLeft, offsetTop } = twigEl.current;
-
-  //     const x = parentTwig.x + offsetLeft;
-  //     const y = parentTwig.y + offsetTop;
-
-  //     console.log(x, y, offsetLeft, offsetTop);
-  
-  //     if (x !== props.twig.x || y !== props.twig.y) {
-  //       client.cache.modify({
-  //         id: client.cache.identify(props.twig),
-  //         fields: {
-  //           x: () => x,
-  //           y: () => y,
-  //         },
-  //       });
-  //       //moveTwig(props.twig.id, props.twig.displayMode);  
-  //     }
-  //   }
-
-  //   dispatch(setPosReady({
-  //     space: props.space,
-  //     twigId: props.twig.id,
-  //     posReady: true,
-  //   }));
-  // }, [
-  //   parentPosReady,
-  //   sibsPosReady,
-  //   posReady,
-  //   props.twig.displayMode, 
-  //   parentTwig?.x, 
-  //   parentTwig?.y, 
-  //   twigEl.current?.offsetLeft, 
-  //   twigEl.current?.offsetTop
-  // ]);
 
   if (cardEl.current?.clientHeight && cardEl.current.clientHeight !== height) {
     dispatch(setHeight({

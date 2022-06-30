@@ -1,6 +1,6 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import { SpaceType } from "~features/space/space";
-import { removeTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
+import { removeTwigs } from "~features/twigs/twigSlice";
 import { store } from "~store";
 
 const REMOVE_TAB_TWIG = gql`
@@ -56,9 +56,7 @@ export const removeTab = (client: ApolloClient<NormalizedCacheObject>) =>
         space: SpaceType.FRAME,
         twigs: [data.removeTabTwig.twig, ...data.removeTabTwig.sheafs],
       }));
-
-      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
-
+      
     } catch (err) {
       console.error(err);
     }

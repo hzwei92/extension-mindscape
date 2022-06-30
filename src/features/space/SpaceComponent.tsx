@@ -6,7 +6,6 @@ import { VIEW_RADIUS, SPACE_BAR_HEIGHT, DisplayMode, TWIG_WIDTH } from "~constan
 import { checkPermit, getAppBarWidth, getTwigColor } from "~utils";
 import { selectActualMenuWidth } from "../menu/menuSlice";
 import type { User } from "../user/user";
-import { selectPalette } from "../window/windowSlice";
 import { DragState, ScrollState, SpaceType } from "./space";
 import { selectIsOpen } from "./spaceSlice";
 import { ABSTRACT_ARROW_FIELDS } from "../arrow/arrowFragments";
@@ -14,7 +13,7 @@ import type { Arrow } from "../arrow/arrow";
 import type { Role } from "../role/role";
 import LinkMarkerComponent from "../arrow/LinkMarkerComponent";
 import { AppContext } from "~newtab/App";
-import { movePos, selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, selectTwigIdToHeight, selectTwigIdToPos, selectTwigIdToPosReady, selectTwigIdToTrue, setPos } from "~features/twigs/twigSlice";
+import { movePos, selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, selectTwigIdToHeight, selectTwigIdToPos, setPos } from "~features/twigs/twigSlice";
 import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_XY } from "~features/twigs/twigFragments";
 import type { Twig } from "~features/twigs/twig";
 import TwigLinkComponent from "~features/twigs/TwigLinkComponent";
@@ -44,8 +43,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const { tabId, width, cachePersistor } = useContext(AppContext);
-  const palette = useAppSelector(selectPalette);
+  const { tabId, width } = useContext(AppContext);
 
   const menuWidth = useAppSelector(selectActualMenuWidth);
 
@@ -77,7 +75,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const userIdToTrue = useAppSelector(selectUserIdToTrue(props.space));
 
-  const twigIdToTrue = useAppSelector(selectTwigIdToTrue(props.space));
   const twigIdToPos = useAppSelector(selectTwigIdToPos(props.space));
   const twigIdToHeight = useAppSelector(selectTwigIdToHeight(props.space));
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
@@ -151,15 +148,14 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const { centerTwig } = useCenterTwig(props.user, props.space, scale);
 
-  const twigIdToPosReady = useAppSelector(selectTwigIdToPosReady(props.space));
-
   useEffect(() => {
-    if (!tabTwig || !twigIdToPosReady[tabTwig.id] || drag.twigId) return;
+    if (!tabTwig || drag.twigId) return;
 
     setSelectedTwigId(tabTwig.id);
     console.log('scale', scale)
     centerTwig(tabTwig.id, true, 0);
-  }, [tabTwig?.id, !twigIdToPosReady[tabTwig?.id]]);
+
+  }, [tabTwig?.id]);
   
   useEffect(() => {
     if (!spaceEl.current) return;
@@ -503,7 +499,6 @@ export default function SpaceComponent(props: SpaceComponentProps) {
             canPost={canPost}
             canView={canView}
             setTouches={setTouches}
-            isParentReady={true}
             drag={drag}
             setDrag={setDrag}
           />

@@ -2,7 +2,7 @@ import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import type { CachePersistor } from "apollo3-cache-persist";
 import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { SpaceType } from "~features/space/space";
-import { selectIdToDescIdToTrue, setAllPosReadyFalse, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
+import { selectIdToDescIdToTrue, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
 import { store } from "~store";
 import { getTwigByGroupId, getTwigByTabId } from "./tab";
 
@@ -102,9 +102,7 @@ export const moveTab = (client: ApolloClient<NormalizedCacheObject>, cachePersis
       store.dispatch(setShouldReloadTwigTree({
         space: SpaceType.FRAME,
         shouldReloadTwigTree: true,
-      }))
-
-      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
+      }));
 
     } catch (err) {
       console.error(err);

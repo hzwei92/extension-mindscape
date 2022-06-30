@@ -1,6 +1,6 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import { SpaceType } from "~features/space/space";
-import { removeTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
+import { removeTwigs } from "~features/twigs/twigSlice";
 import { store } from "~store";
 
 
@@ -34,8 +34,7 @@ export const removeGroup = (client: ApolloClient<NormalizedCacheObject>) =>
         space: SpaceType.FRAME,
         twigs: [data.removeGroupTwig.twig],
       }));
-
-      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
+      
     } catch (err) {
       console.error(err);
     }

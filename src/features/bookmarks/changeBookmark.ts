@@ -2,7 +2,6 @@ import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import type { CachePersistor } from "apollo3-cache-persist";
 import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { setAllPosReadyFalse } from "~features/twigs/twigSlice";
 import { store } from "~store";
 
 const CHANGE_BOOKMARK = gql`
@@ -26,8 +25,6 @@ export const changeBookmark = (client: ApolloClient<NormalizedCacheObject>, cach
       });
       await cachePersistor.persist();
       console.log(data);
-
-      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
       
     } catch (err) {
       console.error(err);

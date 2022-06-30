@@ -8,7 +8,7 @@ import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
-import { selectChildIdToTrue, selectPosReady, setPosReady } from './twigSlice';
+import { selectChildIdToTrue } from './twigSlice';
 import { selectCreateLink, setCreateLink } from '../arrow/arrowSlice';
 import type { Arrow } from '../arrow/arrow';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -31,7 +31,6 @@ interface TwigLinkComponentProps {
   canPost: boolean;
   canView: boolean;
   setTouches: Dispatch<SetStateAction<React.TouchList | null>>;
-  isParentReady: boolean;
   drag: DragState;
   setDrag: Dispatch<SetStateAction<DragState>>;
 }
@@ -43,10 +42,6 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   const dispatch = useAppDispatch();
 
   //useAppSelector(state => selectInstanceById(state, props.twigId)); // rerender on instance change
-  const posReady = useAppSelector(state => selectPosReady(state, props.space, props.twig.id));
-
-  useAppSelector(state => selectPosReady(state, props.space, props.twig.sourceId));
-  useAppSelector(state => selectPosReady(state, props.space, props.twig.targetId));
 
   const palette = useAppSelector(selectPalette);
   const createLink = useAppSelector(selectCreateLink);
@@ -55,7 +50,6 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   const isSelected = props.twig.id === selectedTwigId;
   
   const childIdToTrue = useAppSelector(state => selectChildIdToTrue(state, props.space, props.twig.id));
-  //console.log('children', childIdToTrue);
   const verticalChildren = [];
   const horizontalChildren = [];
 
@@ -78,18 +72,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
     }
   });
 
-  const [isLoading, setIsLoading] = useState(false);
   const twigEl = useRef<HTMLDivElement | undefined>();
-
-  // useEffect(() => {
-  //   if (posReady) {
-  //     dispatch(setPosReady({
-  //       space: props.space,
-  //       twigId: props.twig.id,
-  //       posReady: false,
-  //     }))
-  //   }
-  // }, [posReady]);
 
   const { openTwig } = useOpenTwig();
   const { selectTwig } = useSelectTwig(props.space, props.canEdit);

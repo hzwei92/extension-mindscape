@@ -12,8 +12,7 @@ import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArro
 import { getTwigColor } from '~utils';
 import { useApolloClient } from '@apollo/client';
 import { DisplayMode } from '~constants';
-import { selectPos, setAllPosReadyFalse } from './twigSlice';
-import { AppContext } from '~newtab/App';
+import { selectPos } from './twigSlice';
 
 interface TwigBarProps {
   space: SpaceType;
@@ -47,58 +46,6 @@ function TwigBar(props: TwigBarProps) {
           displayMode: () => DisplayMode.SCATTERED
         }
       });
-
-      dispatch(setAllPosReadyFalse(props.space));
-      // const queue = [];
-      // Object.keys(idToChildIdToTrue[props.twig.parent.id] || {}).forEach(sibId => {
-      //   const sib = client.cache.readFragment({
-      //     id: client.cache.identify({
-      //       id: sibId,
-      //       __typename: 'Twig',
-      //     }),
-      //     fragment: TWIG_FIELDS,
-      //   }) as Twig;
-
-      //   if (sib.displayMode !== DisplayMode.SCATTERED && sib?.rank > props.twig.rank) {
-      //     queue.push(sib);
-      //   }
-      // });
-
-      // while (queue.length) {
-      //   const twig = queue.shift();
-      //   dispatch(setPosReady({
-      //     space: props.space,
-      //     twigId: twig.id,
-      //     posReady: false,
-      //   }))
-
-      //   Object.keys(idToChildIdToTrue[twig.id] || {}).forEach(childId => {
-      //     const child = client.cache.readFragment({
-      //       id: client.cache.identify({
-      //         id: childId,
-      //         __typename: 'Twig',
-      //       }),
-      //       fragment: TWIG_FIELDS,
-      //     }) as Twig;
-      //     if (child.displayMode !== DisplayMode.SCATTERED) {
-      //       queue.push(child);
-      //     }
-      //   })
-      // }
-
-      // let root = props.twig;
-      // while (root.displayMode !== DisplayMode.SCATTERED) {
-      //   root = client.cache.readFragment({
-      //     id: client.cache.identify(root.parent),
-      //     fragment: FULL_TWIG_FIELDS,
-      //     fragmentName: 'FullTwigFields',
-      //   });
-      // }
-      // dispatch(setPosReady({
-      //   space: props.space,
-      //   twigId: root.id,
-      //   posReady: true,
-      // }))
     }
     props.setDrag({
       isScreen: false,

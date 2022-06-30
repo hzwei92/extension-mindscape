@@ -2,7 +2,7 @@ import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import type { CachePersistor } from "apollo3-cache-persist";
 import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { addTwigs, removeTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
+import { addTwigs, removeTwigs } from "~features/twigs/twigSlice";
 import { addTwigUsers } from "~features/user/userSlice";
 import { persistor, store } from "~store";
 import type { BookmarkEntry } from "./bookmark";
@@ -92,8 +92,6 @@ export const syncBookmarks = (client: ApolloClient<NormalizedCacheObject>, cache
         space: SpaceType.FRAME,
         twigs: bookmarks,
       }));
-
-      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
 
       await persistor.flush();
     } catch (err) {

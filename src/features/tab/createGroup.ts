@@ -4,7 +4,7 @@ import { v4 } from "uuid";
 import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { addTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
+import { addTwigs } from "~features/twigs/twigSlice";
 import { addTwigUsers } from "~features/user/userSlice";
 import { store } from "~store";
 import { getTwigByWindowId, GroupEntry } from "./tab";
@@ -84,7 +84,6 @@ export const createGroup = (client: ApolloClient<NormalizedCacheObject>, cachePe
         twigs: [data.createGroup.twig],
       }));
 
-      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
     } catch (err) {
       console.error(err);
     }

@@ -3,7 +3,7 @@ import type { CachePersistor } from "apollo3-cache-persist";
 import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { FULL_ARROW_FIELDS } from "~features/arrow/arrowFragments";
 import { SpaceType } from "~features/space/space";
-import { setAllPosReadyFalse, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
+import { setShouldReloadTwigTree } from "~features/twigs/twigSlice";
 import { store } from "~store";
 import { getTwigByTabId } from "./tab";
 
@@ -58,7 +58,6 @@ export const updateTab = (client: ApolloClient<NormalizedCacheObject>, cachePers
         shouldReloadTwigTree: true,
       }));
       
-      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
     } catch (err) {
       console.error(err);
     }

@@ -5,7 +5,7 @@ import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { SpaceType } from "~features/space/space";
 import type { Twig } from "~features/twigs/twig";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { addTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
+import { addTwigs } from "~features/twigs/twigSlice";
 import { addTwigUsers } from "~features/user/userSlice";
 import { store } from "~store";
 import { getTwigByGroupId, getTwigByTabId, TabEntry } from "./tab";
@@ -108,8 +108,6 @@ export const createTab = (client: ApolloClient<NormalizedCacheObject>, cachePers
         space: SpaceType.FRAME,
         twigs: data.createTab.twigs,
       }));
-
-      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
 
     } catch (err) {
       console.error(err);

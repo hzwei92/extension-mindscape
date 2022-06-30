@@ -2,7 +2,7 @@ import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import { v4 } from "uuid";
 import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { addTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
+import { addTwigs } from "~features/twigs/twigSlice";
 import { addTwigUsers } from "~features/user/userSlice";
 import { store } from "~store";
 import type { WindowEntry } from "./tab";
@@ -46,8 +46,6 @@ export const createWindow = (client: ApolloClient<NormalizedCacheObject>) =>
         space: SpaceType.FRAME,
         twigs: [data.createWindow.twig],
       }));
-
-      store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
 
     }).catch(err => {
       console.error(err);
@@ -139,6 +137,4 @@ export const createWindow = (client: ApolloClient<NormalizedCacheObject>) =>
     //   space: SpaceType.FRAME,
     //   twigs: [windowTwig],
     // }));
-
-    // store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
   } 

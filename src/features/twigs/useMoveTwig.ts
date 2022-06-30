@@ -1,13 +1,11 @@
-import { gql, useApolloClient, useMutation } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client';
 import { useSnackbar } from 'notistack';
 import { useAppDispatch, useAppSelector } from '~store';
 import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { applyRole } from '../role/useApplyRole';
 import type { SpaceType } from '../space/space';
 import { selectSessionId } from '../auth/authSlice';
-import type { Twig } from './twig';
-import { TWIG_WITH_XY } from './twigFragments';
-import { addTwigs, selectTwigIdToPos, setAllPosReadyFalse } from './twigSlice';
+import { addTwigs } from './twigSlice';
 
 const MOVE_TWIG = gql`
   mutation MoveTwig($sessionId: String!, $twigId: String!, $x: Int!, $y: Int!, $displayMode: String!) {

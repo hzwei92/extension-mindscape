@@ -3,7 +3,7 @@ import type { CachePersistor } from "apollo3-cache-persist";
 import { v4 } from "uuid";
 import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { addTwigs, removeTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
+import { addTwigs, removeTwigs } from "~features/twigs/twigSlice";
 import { addTwigUsers } from "~features/user/userSlice";
 import { store } from "~store";
 import type { IdToType } from "~types";
@@ -204,7 +204,5 @@ export const syncTabState = (client: ApolloClient<NormalizedCacheObject>, cacheP
       space: SpaceType.FRAME,
       twigs: [...windows, ...groups, ...tabs],
     }));
-
-    store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
 
   }
