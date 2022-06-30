@@ -111,7 +111,7 @@ export const getClient = async () => {
   const persistor = new CachePersistor({
     cache,
     storage: new LocalStorageWrapper(localStorage),
-    debug: false,
+    debug: true,
     key: 'apollo-cache-persist',
     //debounce: 0,
   });

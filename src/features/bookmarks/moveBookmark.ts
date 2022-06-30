@@ -2,7 +2,7 @@ import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import type { CachePersistor } from "apollo3-cache-persist";
 import { SpaceType } from "~features/space/space";
 import { setAllPosReadyFalse, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
-import { persistor, store } from "~store";
+import { store } from "~store";
 
 const MOVE_BOOKMARK = gql`
   mutation MoveBookmark($bookmarkId: String!, $parentBookmarkId: String!, $rank: Int!) {
@@ -50,11 +50,8 @@ export const moveBookmark = (client: ApolloClient<NormalizedCacheObject>, cacheP
         shouldReloadTwigTree: true,
       }));
 
-      await persistor.flush();
-
       store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
 
-      await persistor.flush();
     } catch (err) {
       console.error(err)
     }

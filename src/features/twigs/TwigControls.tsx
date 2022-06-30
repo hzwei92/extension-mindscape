@@ -419,13 +419,13 @@ function TwigControls(props: TwigControlsProps) {
         color,
         fontSize: 12,
       }}>
-        {arrow.inCount} IN
+        {arrow.sheaf.inCount} IN
       </Button>
       <Button onMouseDown={handleMouseDown} onClick={handleNextClick} sx={{
         color,
         fontSize: 12,
       }}>
-        {arrow.outCount} OUT
+        {arrow.sheaf.outCount} OUT
       </Button>
     </Box>
   )

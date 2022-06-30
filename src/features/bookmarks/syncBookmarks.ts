@@ -1,6 +1,5 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import type { CachePersistor } from "apollo3-cache-persist";
-import { v4 } from "uuid";
 import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { addTwigs, removeTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
@@ -31,10 +30,12 @@ export const syncBookmarks = (client: ApolloClient<NormalizedCacheObject>, cache
     
     const entries = [];
 
-    const queue = [{
-      node: root,
-      degree: 1,
-    }];
+    const queue = root.children.map(node => {
+      return {
+        node,
+        degree: 1,
+      }
+    });
 
     while (queue.length) {
       const { 
@@ -86,14 +87,12 @@ export const syncBookmarks = (client: ApolloClient<NormalizedCacheObject>, cache
         space: SpaceType.FRAME,
         twigs: bookmarks,
       }));
-      await persistor.flush();
 
       store.dispatch(addTwigUsers({
         space: SpaceType.FRAME,
         twigs: bookmarks,
       }));
 
-      await persistor.flush();
       store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
 
       await persistor.flush();

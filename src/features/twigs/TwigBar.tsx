@@ -3,7 +3,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import React, { Dispatch, DragEventHandler, SetStateAction, useContext } from 'react';
 import type { Twig } from './twig';
 import type { DragState, SpaceType } from '../space/space';
-import { useAppDispatch, useAppSelector } from '~store';
+import { persistor, useAppDispatch, useAppSelector } from '~store';
 import type { Arrow } from '../arrow/arrow';
 import { selectPalette } from '../window/windowSlice';
 import { selectCreateLink } from '../arrow/arrowSlice';
@@ -12,8 +12,7 @@ import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArro
 import { getTwigColor } from '~utils';
 import { useApolloClient } from '@apollo/client';
 import { DisplayMode } from '~constants';
-import { FULL_TWIG_FIELDS, TWIG_FIELDS } from './twigFragments';
-import { selectIdToChildIdToTrue, selectIdToDescIdToTrue, selectPosReady, setAllPosReadyFalse, setPosReady } from './twigSlice';
+import { selectPos, setAllPosReadyFalse } from './twigSlice';
 import { AppContext } from '~newtab/App';
 
 interface TwigBarProps {
@@ -31,17 +30,13 @@ function TwigBar(props: TwigBarProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const { cachePersistor } = useContext(AppContext);
-
   const palette = useAppSelector(selectPalette);
   const color = palette === 'dark'
     ? 'black'
     : 'white';
   const createLink = useAppSelector(selectCreateLink);
 
-  const idToChildIdToTrue = useAppSelector(selectIdToChildIdToTrue(props.space));
-
-  const posReady = useAppSelector(state => selectPosReady(state, props.space, props.twig.id));
+  const pos = useAppSelector(state => selectPos(state, props.space, props.twig.id));
 
   const beginDrag = () => {
     if (!props.twig.parent) return;
@@ -113,7 +108,7 @@ function TwigBar(props: TwigBarProps) {
       targetTwigId: '',
     });
 
-    cachePersistor.pause();
+    persistor.pause();
   }
 
   const dontDrag = (event: React.MouseEvent) => {
@@ -193,13 +188,12 @@ function TwigBar(props: TwigBarProps) {
           }}>
             {props.twig.id}
             <br/>
-            {props.twig.x}, {props.twig.y}
+            {pos.x}, {pos.y}
             <br/>
             {props.twig.i}...
             {props.twig.degree}:{props.twig.rank}...
-            {props.twig.tabId || props.twig.groupId || props.twig.windowId}...
             {props.twig.displayMode}...
-            {posReady ? 1 : 0}
+            {props.twig.tabId || props.twig.groupId || props.twig.windowId}
           </Typography>
         </Box>
         </Box>

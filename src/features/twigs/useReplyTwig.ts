@@ -119,7 +119,7 @@ export default function useReplyTwig(user: User | null, space: SpaceType, abstra
     });
 
     const post = createArrow(user, postId, draft, null, null, abstract, null, null);
-    const twig = createTwig(user, twigId, abstract, post, null, parentTwig, x, y, null, false, null, null, null, DisplayMode.SCATTERED);
+    const twig = createTwig(user, twigId, abstract, post, parentTwig, x, y, null, false, null, null, null, DisplayMode.SCATTERED);
     
     client.cache.writeQuery({
       query: gql`

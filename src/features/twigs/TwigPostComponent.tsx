@@ -8,7 +8,7 @@ import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
-import { selectChildIdToTrue, selectHeight, selectPosReady, selectShouldReloadTwigTree, selectTwigIdToPosReady, setHeight, setPosReady } from './twigSlice';
+import { selectChildIdToTrue, selectHeight, selectPos, selectPosReady, selectShouldReloadTwigTree, selectTwigIdToPosReady, setHeight, setPos, setPosReady } from './twigSlice';
 import type { Arrow } from '../arrow/arrow';
 import { getTwigColor } from '~utils';
 import { FULL_TWIG_FIELDS, TWIG_FIELDS } from './twigFragments';
@@ -16,10 +16,8 @@ import { selectCreateLink, setCreateLink } from '~features/arrow/arrowSlice';
 import ArrowComponent from '~features/arrow/ArrowComponent';
 import TwigControls from './TwigControls';
 import TwigBar from './TwigBar';
-import ArrowVoter from '../arrow/ArrowVoter';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import useSelectTwig from './useSelectTwig';
-import useMoveTwig from './useMoveTwig';
 import { AppContext } from '~newtab/App';
 import useLinkTwigs from './useLinkTwig';
 
@@ -85,85 +83,112 @@ function TwigPostComponent(props: TwigPostComponentProps) {
 
   const height = useAppSelector(state => selectHeight(state, props.space, props.twig.id));
 
-  const twigIdToPosReady = useAppSelector(selectTwigIdToPosReady(props.space));
+  // const twigIdToPosReady = useAppSelector(selectTwigIdToPosReady(props.space));
 
-  const posReady = twigIdToPosReady[props.twig.id];
-  const parentPosReady = twigIdToPosReady[props.twig.parent?.id] ?? true;
-  const sibsPosReady = shouldReloadTwigTree
-    ? false
-    : posReady
-      ? true
-      : !Object.keys(childIdToTrue[props.twig.parent?.id] || {}).some(sibId => {
-          if (sibId === props.twig.id) return false;
+  // const posReady = twigIdToPosReady[props.twig.id];
+  // const parentPosReady = twigIdToPosReady[props.twig.parent?.id] ?? true;
+  // const sibsPosReady = shouldReloadTwigTree
+  //   ? false
+  //   : posReady
+  //     ? true
+  //     : !Object.keys(childIdToTrue[props.twig.parent?.id] || {}).some(sibId => {
+  //         if (sibId === props.twig.id) return false;
 
-          const sib = client.cache.readFragment({
-            id: client.cache.identify({
-              id: sibId,
-              __typename: 'Twig',
-            }),
-            fragment: TWIG_FIELDS,
-          }) as Twig;
+  //         const sib = client.cache.readFragment({
+  //           id: client.cache.identify({
+  //             id: sibId,
+  //             __typename: 'Twig',
+  //           }),
+  //           fragment: TWIG_FIELDS,
+  //         }) as Twig;
 
-          if (sib.rank > props.twig.rank) return false;
+  //         if (sib.rank > props.twig.rank) return false;
 
-          return !twigIdToPosReady[sibId];
-        });
-      
-  if (!posReady && props.twig.displayMode === DisplayMode.SCATTERED) {
-    dispatch(setPosReady({
-      space: props.space,
-      twigId: props.twig.id,
-      posReady: true,
-    }));
-  }
+  //         return !twigIdToPosReady[sibId];
+  //       });
+    
+  // useEffect(() => {
+  //   if (!posReady && props.twig.displayMode === DisplayMode.SCATTERED) {
+  //     dispatch(setPosReady({
+  //       space: props.space,
+  //       twigId: props.twig.id,
+  //       posReady: true,
+  //     }));
+  //   }
+  // }, [])
 
+ 
   const [isLoading, setIsLoading] = useState(false);
   const twigEl = useRef<HTMLElement>();
   const cardEl = useRef<HTMLElement>();
 
-  const { moveTwig } = useMoveTwig(props.space);
+  const pos = useAppSelector(state => selectPos(state, props.space, props.twig.id));
+  const parentPos = useAppSelector(state => selectPos(state, props.space, props.twig.parent?.id));
 
   useEffect(() => {
-    if (posReady) return;
-    if (!parentPosReady) return;
-    if (!sibsPosReady) return;
     if (!twigEl.current) return;
+    if (!parentPos) return;
+    if (!pos) return;
+    if (props.twig.displayMode === DisplayMode.SCATTERED) return;
+    const { offsetLeft, offsetTop } = twigEl.current;
 
-    if (parentTwig && props.twig.displayMode !== DisplayMode.SCATTERED) {
-      const { offsetLeft, offsetTop } = twigEl.current;
+    const x = Math.round(parentPos.x + offsetLeft);
+    const y = Math.round(parentPos.y + offsetTop);
 
-      const x = parentTwig.x + offsetLeft;
-      const y = parentTwig.y + offsetTop;
-  
-      if (x !== props.twig.x || y !== props.twig.y) {
-        client.cache.modify({
-          id: client.cache.identify(props.twig),
-          fields: {
-            x: () => x,
-            y: () => y,
-          },
-        });
-    
-        moveTwig(props.twig.id, props.twig.displayMode);  
-      }
+    if (x !== pos.x || y !== pos.y) {
+      dispatch(setPos({
+        space: props.space,
+        twigId: props.twig.id,
+        pos: {
+          x,
+          y,
+        }
+      }))
     }
+  }, [parentPos, pos, props.twig.displayMode, twigEl.current?.offsetLeft, twigEl.current?.offsetTop]);
 
-    dispatch(setPosReady({
-      space: props.space,
-      twigId: props.twig.id,
-      posReady: true,
-    }));
-    console.log(props.twig.id);
-  }, [
-    parentPosReady,
-    sibsPosReady,
-    posReady,
-    props.twig.displayMode, 
-    parentTwig?.x, 
-    parentTwig?.y, 
-    twigEl.current?.offsetLeft, 
-    twigEl.current?.offsetTop
-  ]);
+  // useEffect(() => {
+  //   console.log(props.twig.id, posReady);
+  //   if (posReady) return;
+  //   if (!parentPosReady) return;
+  //   if (!sibsPosReady) return;
+  //   if (!twigEl.current) return;
+
+  //   if (parentTwig && props.twig.displayMode !== DisplayMode.SCATTERED) {
+  //     const { offsetLeft, offsetTop } = twigEl.current;
+
+  //     const x = parentTwig.x + offsetLeft;
+  //     const y = parentTwig.y + offsetTop;
+
+  //     console.log(x, y, offsetLeft, offsetTop);
+  
+  //     if (x !== props.twig.x || y !== props.twig.y) {
+  //       client.cache.modify({
+  //         id: client.cache.identify(props.twig),
+  //         fields: {
+  //           x: () => x,
+  //           y: () => y,
+  //         },
+  //       });
+  //       //moveTwig(props.twig.id, props.twig.displayMode);  
+  //     }
+  //   }
+
+  //   dispatch(setPosReady({
+  //     space: props.space,
+  //     twigId: props.twig.id,
+  //     posReady: true,
+  //   }));
+  // }, [
+  //   parentPosReady,
+  //   sibsPosReady,
+  //   posReady,
+  //   props.twig.displayMode, 
+  //   parentTwig?.x, 
+  //   parentTwig?.y, 
+  //   twigEl.current?.offsetLeft, 
+  //   twigEl.current?.offsetTop
+  // ]);
 
   if (cardEl.current?.clientHeight && cardEl.current.clientHeight !== height) {
     dispatch(setHeight({

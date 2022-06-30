@@ -1,14 +1,12 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
-import type { Persistor } from "@plasmohq/redux-persist/lib/types";
 import type { CachePersistor } from "apollo3-cache-persist";
-import type { Store } from "redux";
 import { v4 } from "uuid";
 import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { addTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
 import { addTwigUsers } from "~features/user/userSlice";
-import { persistor, store } from "~store";
+import { store } from "~store";
 import { getTwigByWindowId, GroupEntry } from "./tab";
 
 const CREATE_GROUP = gql`
@@ -80,18 +78,13 @@ export const createGroup = (client: ApolloClient<NormalizedCacheObject>, cachePe
         space: SpaceType.FRAME,
         twigs: [data.createGroup.twig],
       }));
-      await persistor.flush();
 
       store.dispatch(addTwigUsers({
         space: SpaceType.FRAME,
         twigs: [data.createGroup.twig],
       }));
-      await persistor.flush();
 
       store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
-      await persistor.flush();
-      
-      console.log('createGroup', store.getState());
     } catch (err) {
       console.error(err);
     }

@@ -16,12 +16,7 @@ export const maintainSubtree = (client: ApolloClient<NormalizedCacheObject>) =>
     const twig = getTwigByTabId(client)(tabId);
 
     if (!twig) {
-      const name = AlarmType.MAINTAIN_SUBTREE +
-        ALARM_DELIMITER + 
-        tabId
-      chrome.alarms.create(name,{
-        when: Date.now() + 100,
-      })
+      throw new Error('Missing twig with tabId ' + tabId)
     }
 
     const idToDescIdToTrue = selectIdToDescIdToTrue(SpaceType.FRAME)(state);

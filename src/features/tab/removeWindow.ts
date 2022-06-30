@@ -1,7 +1,7 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import { SpaceType } from "~features/space/space";
-import { removeTwigs, setAllPosReadyFalse, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
-import { persistor, store } from "~store";
+import { removeTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
+import { store } from "~store";
 
 
 const REMOVE_WINDOW_TWIG = gql`
@@ -36,11 +36,8 @@ async (windowId: number) => {
       twigs: [data.removeWindowTwig.twig],
     }));
 
-    await persistor.flush();
-
     store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
 
-    await persistor.flush();
   } catch (err) {
     console.error(err);
   }

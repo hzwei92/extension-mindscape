@@ -11,10 +11,8 @@ export type Twig = {
   user: User;
   abstractId: string;
   abstract: Arrow;
-  detailId: string | null;
-  detail: Arrow | null
-  sheafId: string | null;
-  sheaf: Sheaf | null;
+  detailId: string;
+  detail: Arrow;
   parent: Twig;
   children: Twig[];
   i: number;
@@ -42,7 +40,6 @@ export const createTwig = (
   id: string,
   abstract: Arrow, 
   detail: Arrow | null, 
-  sheaf: Sheaf | null,
   parent: Twig, 
   x: number,
   y: number,
@@ -62,10 +59,8 @@ export const createTwig = (
     user,
     abstractId: abstract.id,
     abstract,
-    detailId: detail?.id,
+    detailId: detail.id,
     detail,
-    sheafId: sheaf?.id,
-    sheaf,
     parent,
     children: [],
     isRoot: false,
@@ -87,4 +82,9 @@ export const createTwig = (
     __typename: 'Twig'
   };
   return twig;
+}
+
+export type PosType = {
+  x: number;
+  y: number
 }

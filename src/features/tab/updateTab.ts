@@ -4,7 +4,7 @@ import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { FULL_ARROW_FIELDS } from "~features/arrow/arrowFragments";
 import { SpaceType } from "~features/space/space";
 import { setAllPosReadyFalse, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
-import { persistor, store } from "~store";
+import { store } from "~store";
 import { getTwigByTabId } from "./tab";
 
 const UPDATE_TAB = gql`
@@ -57,12 +57,8 @@ export const updateTab = (client: ApolloClient<NormalizedCacheObject>, cachePers
         space: SpaceType.FRAME,
         shouldReloadTwigTree: true,
       }));
-
-      await persistor.flush();
       
       store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
-
-      await persistor.flush();
     } catch (err) {
       console.error(err);
     }

@@ -1,14 +1,16 @@
 import { createSelector, createSlice, PayloadAction, Slice } from '@reduxjs/toolkit';
+import { dirxml } from 'console';
 import type { RootState } from '~store';
 import type { IdToType } from '~types';
 import { SpaceType } from '../space/space';
-import type { Twig } from './twig';
+import type { PosType, Twig } from './twig';
 
 export interface TwigState {
   [SpaceType.FRAME]: {
     newTwigId: string;
 
     twigIdToTrue: IdToType<true>;
+    twigIdToPos: IdToType<PosType>;
     twigIdToHeight: IdToType<number>;
     twigIdToPosReady: IdToType<boolean>;
 
@@ -24,6 +26,7 @@ export interface TwigState {
     newTwigId: string;
 
     twigIdToTrue: IdToType<true>;
+    twigIdToPos: IdToType<PosType>;
     twigIdToHeight: IdToType<number>;
     twigIdToPosReady: IdToType<boolean>;
 
@@ -42,6 +45,7 @@ const initialState: TwigState = {
     newTwigId: '',
 
     twigIdToTrue: {},
+    twigIdToPos: {},
     twigIdToHeight: {},
     twigIdToPosReady: {},
 
@@ -57,6 +61,7 @@ const initialState: TwigState = {
     newTwigId: '',
 
     twigIdToTrue: {},
+    twigIdToPos: {},
     twigIdToHeight: {},
     twigIdToPosReady: {},
 
@@ -80,6 +85,10 @@ export const twigSlice: Slice<TwigState> = createSlice({
         ...state[action.payload.space].twigIdToTrue,
       };
 
+      const twigIdToPos: IdToType<PosType> = {
+        ...state[action.payload.space].twigIdToPos,
+      };
+
       const twigIdToHeight: IdToType<number> = {
         ...state[action.payload.space].twigIdToHeight,
       };
@@ -99,6 +108,10 @@ export const twigSlice: Slice<TwigState> = createSlice({
       };
       action.payload.twigs.forEach(twig => {
         twigIdToTrue[twig.id] = true;
+        twigIdToPos[twig.id] = {
+          x: twig.x,
+          y: twig.y,
+        };
         twigIdToHeight[twig.id] = 0;
         twigIdToPosReady[twig.id] = false;
 
@@ -126,6 +139,7 @@ export const twigSlice: Slice<TwigState> = createSlice({
         [action.payload.space]: {
           ...state[action.payload.space],
           twigIdToTrue,
+          twigIdToPos,
           twigIdToHeight,
           twigIdToPosReady,
           windowIdToTwigIdToTrue,
@@ -139,6 +153,10 @@ export const twigSlice: Slice<TwigState> = createSlice({
       console.log(action);
       const twigIdToTrue: IdToType<true> = {
         ...state[action.payload.space].twigIdToTrue,
+      };
+
+      const twigIdToPos: IdToType<PosType> = {
+        ...state[action.payload.space].twigIdToPos,
       };
 
       const twigIdToHeight: IdToType<number> = {
@@ -160,27 +178,28 @@ export const twigSlice: Slice<TwigState> = createSlice({
         }, {});
         
       const groupIdToTwigIdToTrue: IdToType<IdToType<true>> = Object.keys(state[action.payload.space].groupIdToTwigIdToTrue)
-      .reduce((acc, groupId) => {
-        acc[groupId] = Object.keys(state[action.payload.space].groupIdToTwigIdToTrue[groupId] || {})
-          .reduce((acc, twigId) => {
-            acc[twigId] = true
-            return acc;
-          }, {});
-        return acc;
-      }, {});
-      
+        .reduce((acc, groupId) => {
+          acc[groupId] = Object.keys(state[action.payload.space].groupIdToTwigIdToTrue[groupId] || {})
+            .reduce((acc, twigId) => {
+              acc[twigId] = true
+              return acc;
+            }, {});
+          return acc;
+        }, {});
+        
       const tabIdToTwigIdToTrue: IdToType<IdToType<true>> = Object.keys(state[action.payload.space].tabIdToTwigIdToTrue)
-      .reduce((acc, tabId) => {
-        acc[tabId] = Object.keys(state[action.payload.space].tabIdToTwigIdToTrue[tabId] || {})
-          .reduce((acc, twigId) => {
-            acc[twigId] = true
-            return acc;
-          }, {});
-        return acc;
-      }, {});
+        .reduce((acc, tabId) => {
+          acc[tabId] = Object.keys(state[action.payload.space].tabIdToTwigIdToTrue[tabId] || {})
+            .reduce((acc, twigId) => {
+              acc[twigId] = true
+              return acc;
+            }, {});
+          return acc;
+        }, {});
       
       action.payload.twigs.forEach(twig => {
         delete twigIdToTrue[twig.id];
+        delete twigIdToPos[twig.id];
         delete twigIdToHeight[twig.id];
         delete twigIdToPosReady[twig.id];
 
@@ -212,6 +231,37 @@ export const twigSlice: Slice<TwigState> = createSlice({
           shouldReloadTwigTree: true,
         }
       }
+    },
+    setPos: (state, action: PayloadAction<{space: SpaceType, twigId: string, pos: PosType}>) => {
+      const twigIdToPos: IdToType<PosType> = {
+        ...state[action.payload.space].twigIdToPos,
+        [action.payload.twigId]: action.payload.pos,
+      };
+      return {
+        ...state,
+        [action.payload.space]: {
+          ...state[action.payload.space],
+          twigIdToPos,
+        },
+      };
+    },
+    movePos: (state, action: PayloadAction<{space: SpaceType, twigIds: string[], dx: number, dy: number}>) => {
+      const twigIdToPos: IdToType<PosType> = action.payload.twigIds.reduce((acc, twigId) => {
+        acc[twigId] = {
+          x: acc[twigId].x + action.payload.dx,
+          y: acc[twigId].y + action.payload.dy,
+        };
+        return acc;
+      }, {
+        ...state[action.payload.space].twigIdToPos,
+      })
+      return {
+        ...state,
+        [action.payload.space]: {
+          ...state[action.payload.space], 
+          twigIdToPos,
+        },
+      };
     },
     setHeight: (state, action: PayloadAction<{space: SpaceType, twigId: string, height: number}>) => {
       const twigIdToHeight: IdToType<number> = {
@@ -291,6 +341,7 @@ export const twigSlice: Slice<TwigState> = createSlice({
           newTwigId: '',
 
           twigIdToTrue: {},
+          twigIdToPos: {},
           twigIdToHeight: {},
           twigIdToPosReady: {},
 
@@ -326,6 +377,8 @@ export const {
   removeTwigs,
   setTwigTree,
   resetTwigs,
+  setPos,
+  movePos,
   setHeight,
   setPosReady,
   setAllPosReadyFalse,
@@ -335,6 +388,7 @@ export const {
 export const selectNewTwigId = (space: SpaceType) => (state: RootState) => state.twig[space].newTwigId;
 
 export const selectTwigIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].twigIdToTrue;
+export const selectTwigIdToPos = (space: SpaceType) => (state: RootState) => state.twig[space].twigIdToPos;
 export const selectTwigIdToHeight = (space: SpaceType) => (state: RootState) => state.twig[space].twigIdToHeight;
 export const selectTwigIdToPosReady = (space: SpaceType) => (state: RootState) => state.twig[space].twigIdToPosReady;
 
@@ -364,16 +418,22 @@ export const selectHeight: any = createSelector(
   },
 )
 
+export const selectPos: any = createSelector(
+  [
+    (state, space, twigId) => selectTwigIdToPos(space)(state),
+    (state, space, twigId) => twigId,
+  ],
+  (twigIdToPos, twigId) => {
+    return twigIdToPos[twigId];
+  }
+)
 export const selectPosReady: any = createSelector(
   [
     (state, space, twigId) => selectTwigIdToPosReady(space)(state),
     (state, space, twigId) => twigId,
   ],
   (twigIdToPosReady, twigId) => {
-    if (twigIdToPosReady) {
-      return twigIdToPosReady[twigId]
-    }
-    return false;
+    return twigIdToPosReady[twigId];
   },
 )
 

@@ -7,7 +7,7 @@ import type { SpaceType } from '../space/space';
 import { selectSessionId } from '../auth/authSlice';
 import type { Twig } from './twig';
 import { TWIG_WITH_XY } from './twigFragments';
-import { setAllPosReadyFalse } from './twigSlice';
+import { addTwigs, selectTwigIdToPos, setAllPosReadyFalse } from './twigSlice';
 
 const MOVE_TWIG = gql`
   mutation MoveTwig($sessionId: String!, $twigId: String!, $x: Int!, $y: Int!, $displayMode: String!) {
@@ -26,11 +26,9 @@ const MOVE_TWIG = gql`
 `;
 
 export default function useMoveTwig(space: SpaceType) {
-  const client = useApolloClient();
   const dispatch = useAppDispatch();
 
   const sessionId = useAppSelector(selectSessionId);
-
   const { enqueueSnackbar } = useSnackbar();
   
   const [move] = useMutation(MOVE_TWIG, {
@@ -43,23 +41,20 @@ export default function useMoveTwig(space: SpaceType) {
     },
     onCompleted: data => {
       console.log(data);
+      dispatch(addTwigs({
+        space,
+        twigs: data.moveTwig.twigs
+      }))
     },
   });
 
-  const moveTwig = (twigId: string, displayMode: string) => {
-    const twig = client.cache.readFragment({
-      id: client.cache.identify({
-        id: twigId,
-        __typename: 'Twig',
-      }),
-      fragment: TWIG_WITH_XY,
-    }) as Twig;
+  const moveTwig = (twigId: string, x: number, y: number, displayMode: string) => {
     move({
       variables: {
         sessionId: sessionId,
-        twigId: twig.id,
-        x: Math.round(twig.x),
-        y: Math.round(twig.y),
+        twigId,
+        x,
+        y,
         displayMode,
       },
     });

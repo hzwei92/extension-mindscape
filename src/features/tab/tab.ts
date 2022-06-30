@@ -44,6 +44,8 @@ export const getTwigByTabId = (client: ApolloClient<NormalizedCacheObject>) =>
     const userId = selectUserId(state);
     const tabIdToTwigIdToTrue = selectTabIdToTwigIdToTrue(SpaceType.FRAME)(state);
 
+    console.log('tabIdToTwigIdToTrue', tabIdToTwigIdToTrue);
+    
     const twigs = [];
     Object.keys(tabIdToTwigIdToTrue[tabId] || {}).forEach(twigId => {
       const twig = client.cache.readFragment({

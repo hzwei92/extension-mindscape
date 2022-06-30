@@ -7,14 +7,14 @@ import type { Twig } from "~features/twigs/twig";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { addTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
 import { addTwigUsers } from "~features/user/userSlice";
-import { persistor, store } from "~store";
+import { store } from "~store";
 import { getTwigByGroupId, getTwigByTabId, TabEntry } from "./tab";
 
 
 const CREATE_TAB = gql`
   mutation CreateTab($tabEntry: TabEntry!) {
     createTab(tabEntry: $tabEntry) {
-      twig {
+      twigs {
         ...FullTwigFields
       }
       sibs {
@@ -29,7 +29,6 @@ const CREATE_TAB = gql`
 
 export const createTab = (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) => 
   async (tab: chrome.tabs.Tab) => {
-    console.log('tab created', tab);
     let groupId = tab.groupId;
 
     if (tab.groupId === -1) {
@@ -102,18 +101,16 @@ export const createTab = (client: ApolloClient<NormalizedCacheObject>, cachePers
 
       store.dispatch(addTwigs({
         space: SpaceType.FRAME,
-        twigs: [data.createTab.twig],
+        twigs: data.createTab.twigs,
       }));
 
       store.dispatch(addTwigUsers({
         space: SpaceType.FRAME,
-        twigs: [data.createTab.twig],
+        twigs: data.createTab.twigs,
       }));
 
-      await persistor.flush();
       store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
 
-      await persistor.flush();
     } catch (err) {
       console.error(err);
     } 

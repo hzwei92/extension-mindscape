@@ -4,16 +4,18 @@ import type { CachePersistor } from "apollo3-cache-persist";
 import type { Store } from "redux";
 import { AlarmType, ALARM_DELIMITER, ErrMessage } from "~constants";
 import { refreshToken } from "~features/auth/auth";
-import { createGroup } from "./createGroup";
-import { createTab } from "./createTab";
-import { moveTab } from "./moveTab";
-import { orderAndGroupTabs } from "./orderAndGroupTabs";
-import { updateTab } from "./updateTab";
+import { getClient } from "~graphql";
+import { createGroup } from "../features/tab/createGroup";
+import { createTab } from "../features/tab/createTab";
+import { moveTab } from "../features/tab/moveTab";
+import { orderAndGroupTabs } from "../features/tab/orderAndGroupTabs";
+import { updateTab } from "../features/tab/updateTab";
 
 export const handleAlarm = (store: Store, persistor: Persistor) => 
   (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) => 
   async alarm => {
     console.log('alarm', alarm)
+    await cachePersistor.restore();
 
     if (alarm.name === AlarmType.REFRESH_TOKEN) {
       refreshToken(client);
@@ -32,21 +34,23 @@ export const handleAlarm = (store: Store, persistor: Persistor) =>
     if (name[0] === AlarmType.CREATE_TAB) {
       const tabId = parseInt(name[1]);
       const tab = await chrome.tabs.get(tabId);
-      await createTab(client)(tab);
+      await createTab(client, cachePersistor)(tab);
       return;
     }
 
     if (name[0] === AlarmType.UPDATE_TAB) {
+      const { client, persistor } = await getClient();
       const tabId =  parseInt(name[1]);
       const tab = await chrome.tabs.get(tabId);
-      await updateTab(client)(tab);
+      await updateTab(client, persistor)(tab);
       return;
     }
 
     if (name[0] === AlarmType.MOVE_TAB) {
+      const { client, persistor } = await getClient();
       const tabId =  parseInt(name[1]);
       const tab = await chrome.tabs.get(tabId);
-      await moveTab(client, cachePersistor)(tab);
+      await moveTab(client, persistor)(tab);
       return;
     }
 

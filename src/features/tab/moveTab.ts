@@ -1,7 +1,5 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
-import type { Persistor } from "@plasmohq/redux-persist/lib/types";
 import type { CachePersistor } from "apollo3-cache-persist";
-import type { Store } from "redux";
 import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { SpaceType } from "~features/space/space";
 import { selectIdToDescIdToTrue, setAllPosReadyFalse, setShouldReloadTwigTree } from "~features/twigs/twigSlice";

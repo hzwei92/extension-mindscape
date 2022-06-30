@@ -1,16 +1,10 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import { v4 } from "uuid";
-import { DisplayMode } from "~constants";
-import { createArrow } from "~features/arrow/arrow";
 import { SpaceType } from "~features/space/space";
-import { createTwig, Twig } from "~features/twigs/twig";
-import { FULL_TWIG_FIELDS, TWIG_FIELDS } from "~features/twigs/twigFragments";
+import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { addTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
-import type { User } from "~features/user/user";
-import { FULL_USER_FIELDS } from "~features/user/userFragments";
-import { addTwigUsers, selectUserId } from "~features/user/userSlice";
+import { addTwigUsers } from "~features/user/userSlice";
 import { store } from "~store";
-import { getEmptyDraft } from "~utils";
 import type { WindowEntry } from "./tab";
 
 const CREATE_WINDOW = gql`

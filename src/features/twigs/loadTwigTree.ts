@@ -7,9 +7,7 @@ import { FULL_TWIG_FIELDS, TWIG_WITH_PARENT } from "./twigFragments";
 import { selectTwigIdToTrue, setTwigTree } from "./twigSlice";
 
 export const loadTwigTree = (client: ApolloClient<NormalizedCacheObject>) => {
-  console.log('loadTwigTree 0');
   const state = store.getState();
-  console.log('loadTwigTree 1', state)
   const twigIdToTrue = selectTwigIdToTrue(SpaceType.FRAME)(state);
 
   const twigs = [];

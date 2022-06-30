@@ -9,7 +9,7 @@ import { getTwigByTabId } from "~features/tab/tab"
 import { createGroup } from "~features/tab/createGroup"
 import { createTab } from "~features/tab/createTab"
 import { createWindow } from "~features/tab/createWindow"
-import { handleAlarm } from "~features/tab/handleAlarm"
+import { handleAlarm } from "~background/handleAlarm"
 import { maintainSubtree } from "~features/tab/maintainSubtree"
 import { moveTab } from "~features/tab/moveTab"
 import { orderAndGroupTabs } from "~features/tab/orderAndGroupTabs"
@@ -54,7 +54,6 @@ chrome.runtime.onInstalled.addListener(async details => {
     if (port.name === PORT_NAME) {
       port.onMessage.addListener(message => {
         if (message.name === MessageName.RESTORE_CACHE) {
-          console.log('persist cache');
           cachePersistor.restore();
         }
       })

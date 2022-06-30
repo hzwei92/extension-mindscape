@@ -43,7 +43,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   const dispatch = useAppDispatch();
 
   //useAppSelector(state => selectInstanceById(state, props.twigId)); // rerender on instance change
-  const PosReady = useAppSelector(state => selectPosReady(state, props.space, props.twig.id));
+  const posReady = useAppSelector(state => selectPosReady(state, props.space, props.twig.id));
 
   useAppSelector(state => selectPosReady(state, props.space, props.twig.sourceId));
   useAppSelector(state => selectPosReady(state, props.space, props.twig.targetId));
@@ -81,15 +81,15 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   const [isLoading, setIsLoading] = useState(false);
   const twigEl = useRef<HTMLDivElement | undefined>();
 
-  useEffect(() => {
-    if (PosReady) {
-      dispatch(setPosReady({
-        space: props.space,
-        twigId: props.twig.id,
-        posReady: false,
-      }))
-    }
-  }, [PosReady]);
+  // useEffect(() => {
+  //   if (posReady) {
+  //     dispatch(setPosReady({
+  //       space: props.space,
+  //       twigId: props.twig.id,
+  //       posReady: false,
+  //     }))
+  //   }
+  // }, [posReady]);
 
   const { openTwig } = useOpenTwig();
   const { selectTwig } = useSelectTwig(props.space, props.canEdit);
@@ -149,7 +149,6 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
     createLink.sourceId === props.twig.detailId || 
     createLink.targetId === props.twig.detailId
   );
-  console.log(props.twig.sheaf)
 
   if (!props.twig.isOpen) {
     return (
@@ -173,7 +172,7 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
             flexDirection: 'column',
             justifyContent: 'center',
           }}>
-              {props.twig.sheaf.weight}
+              {props.twig.detail.weight}
           </Box>
         </Card>
       </Box>

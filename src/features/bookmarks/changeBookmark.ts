@@ -3,7 +3,7 @@ import type { CachePersistor } from "apollo3-cache-persist";
 import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { setAllPosReadyFalse } from "~features/twigs/twigSlice";
-import { persistor, store } from "~store";
+import { store } from "~store";
 
 const CHANGE_BOOKMARK = gql`
   mutation ChangeBookmark($bookmarkId: String!, $title: String!, $url: String) {
@@ -28,7 +28,6 @@ export const changeBookmark = (client: ApolloClient<NormalizedCacheObject>, cach
       console.log(data);
 
       store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
-      await persistor.flush();
       
     } catch (err) {
       console.error(err);

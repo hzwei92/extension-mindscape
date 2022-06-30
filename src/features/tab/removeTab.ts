@@ -1,8 +1,7 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
-import type { ChildProcessWithoutNullStreams } from "child_process";
 import { SpaceType } from "~features/space/space";
-import { removeTwigs, setAllPosReadyFalse, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
-import { persistor, store } from "~store";
+import { removeTwigs, setAllPosReadyFalse } from "~features/twigs/twigSlice";
+import { store } from "~store";
 
 const REMOVE_TAB_TWIG = gql`
   mutation RemoveTabTwig($tabId: Int!) {
@@ -58,11 +57,8 @@ export const removeTab = (client: ApolloClient<NormalizedCacheObject>) =>
         twigs: [data.removeTabTwig.twig, ...data.removeTabTwig.sheafs],
       }));
 
-      await persistor.flush();
-
       store.dispatch(setAllPosReadyFalse(SpaceType.FRAME));
 
-      await persistor.flush();
     } catch (err) {
       console.error(err);
     }

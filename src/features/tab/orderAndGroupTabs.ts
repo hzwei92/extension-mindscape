@@ -1,4 +1,3 @@
-import { tableFooterClasses } from "@mui/material";
 import type { IdToType } from "~types";
 
 export const orderAndGroupTabs = async () => {
