@@ -18,10 +18,8 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { FULL_USER_FIELDS } from '../user/userFragments';
 import { gql, useApolloClient, useMutation } from '@apollo/client';
 import { useAppDispatch } from '~store';
-import { setUserId } from '../user/userSlice';
+import { addUsers, setCurrentUser } from '../user/userSlice';
 import { SpaceType } from '../space/space';
-import { AppContext } from '~newtab/App';
-import { MessageName } from '~constants';
 import { resetSpace } from '~features/space/spaceSlice';
 
 const LOGIN_USER = gql`
@@ -63,8 +61,7 @@ export default function Login(props: LoginProps) {
         data: data.loginUser,
       });
 
-      dispatch(setUserId(data.loginUser.id));
-
+      dispatch(setCurrentUser(data.loginUser));
       props.setIsLogin(false);
     }
   });

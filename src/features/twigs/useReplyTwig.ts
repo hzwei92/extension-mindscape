@@ -10,7 +10,6 @@ import { getEmptyDraft } from '~utils';
 import { FULL_TWIG_FIELDS, TWIG_FIELDS } from './twigFragments';
 import { FULL_ROLE_FIELDS } from '../role/roleFragments';
 import { applyRole } from '../role/useApplyRole';
-import { FULL_ARROW_FIELDS } from '../arrow/arrowFragments';
 import { Arrow, createArrow } from '../arrow/arrow';
 import { selectSessionId } from '../auth/authSlice';
 import useSelectTwig from './useSelectTwig';
@@ -54,7 +53,6 @@ const REPLY_TWIG = gql`
     }
   }
   ${FULL_TWIG_FIELDS}
-  ${FULL_ARROW_FIELDS}
   ${FULL_ROLE_FIELDS}
 `;
 

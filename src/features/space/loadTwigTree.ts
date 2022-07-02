@@ -1,30 +1,17 @@
 import type { ApolloClient, NormalizedCacheObject } from "@apollo/client";
 import { SpaceType } from "~features/space/space";
+import { setTwigTree } from "~features/space/spaceSlice";
 import { store } from "~store";
 import type { IdToType } from "~types";
-import type { Twig } from "./twig";
-import { FULL_TWIG_FIELDS, TWIG_WITH_PARENT } from "./twigFragments";
-import { selectTwigIdToTrue, setTwigTree } from "./twigSlice";
+import type { Twig } from "../twigs/twig";
+import { selectIdToTwig } from "../twigs/twigSlice";
 
 export const loadTwigTree = (client: ApolloClient<NormalizedCacheObject>) => {
   const state = store.getState();
-  const twigIdToTrue = selectTwigIdToTrue(SpaceType.FRAME)(state);
+  const idToTwig = selectIdToTwig(SpaceType.FRAME)(state);
 
-  const twigs = [];
-  Object.keys(twigIdToTrue).forEach(twigId => {
-    const twig = client.cache.readFragment({
-      id: client.cache.identify({
-        id: twigId,
-        __typename: 'Twig',
-      }),
-      fragment: FULL_TWIG_FIELDS,
-      fragmentName: 'FullTwigFields',
-    }) as Twig;
-    //console.log(twigId, twig)
-    if (twig && !twig.deleteDate) {
-      twigs.push(twig);
-    }
-  });
+  const twigs = Object.keys(idToTwig).map(id => idToTwig[id])
+    .filter(twig => !twig.deleteDate)
 
   const idToChildIdToTrue: IdToType<IdToType<true>> = {};
   const idToDescIdToTrue: IdToType<IdToType<true>> = {};
@@ -50,15 +37,12 @@ export const loadTwigTree = (client: ApolloClient<NormalizedCacheObject>) => {
             [twig.id]: true,
           };
         }
-        twig1 = client.cache.readFragment({
-          id: client.cache.identify(twig1.parent),
-          fragment: TWIG_WITH_PARENT,
-        }) as Twig;
+        twig1 = idToTwig[twig1.parent.id]
       }
     }
   });
 
-  console.log('setTwigTree', idToDescIdToTrue)
+  //console.log('setTwigTree', idToDescIdToTrue)
   store.dispatch(setTwigTree({
     space: SpaceType.FRAME,
     idToChildIdToTrue,

@@ -12,8 +12,8 @@ import { PersistGate } from '@plasmohq/redux-persist/integration/react';
 import { useEffect, useState } from 'react';
 import { ErrMessage, MessageName, PORT_NAME } from '~constants';
 import type { CachePersistor } from 'apollo3-cache-persist';
-import { setShouldReloadTwigTree } from '~features/twigs/twigSlice';
 import { SpaceType } from '~features/space/space';
+import { setShouldReloadTwigTree } from '~features/space/spaceSlice';
 
 function IndexNewtab() {
   const [client, setClient] = useState(null as ApolloClient<NormalizedCacheObject> | null);
@@ -28,7 +28,8 @@ function IndexNewtab() {
     store.dispatch(setShouldReloadTwigTree({
       space: SpaceType.FRAME,
       shouldReloadTwigTree: true,
-    }))
+    }));
+    
     try {
       chrome.runtime.sendMessage({
         name: MessageName.GET_TAB_ID

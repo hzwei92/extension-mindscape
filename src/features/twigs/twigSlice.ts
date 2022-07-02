@@ -9,13 +9,9 @@ export interface TwigState {
   [SpaceType.FRAME]: {
     newTwigId: string;
 
-    twigIdToTrue: IdToType<true>;
+    idToTwig: IdToType<Twig>;
     twigIdToPos: IdToType<PosType>;
     twigIdToHeight: IdToType<number>;
-
-    shouldReloadTwigTree: boolean;
-    idToChildIdToTrue: IdToType<IdToType<true>>;
-    idToDescIdToTrue: IdToType<IdToType<true>>;
 
     windowIdToTwigIdToTrue: IdToType<IdToType<true>>;
     groupIdToTwigIdToTrue: IdToType<IdToType<true>>;
@@ -24,13 +20,9 @@ export interface TwigState {
   [SpaceType.FOCUS]: {
     newTwigId: string;
 
-    twigIdToTrue: IdToType<true>;
+    idToTwig: IdToType<Twig>;
     twigIdToPos: IdToType<PosType>;
     twigIdToHeight: IdToType<number>;
-
-    shouldReloadTwigTree: boolean;
-    idToChildIdToTrue: IdToType<IdToType<true>>;
-    idToDescIdToTrue: IdToType<IdToType<true>>;
 
     windowIdToTwigIdToTrue: IdToType<IdToType<true>>;
     groupIdToTwigIdToTrue: IdToType<IdToType<true>>;
@@ -42,13 +34,9 @@ const initialState: TwigState = {
   [SpaceType.FRAME]: {
     newTwigId: '',
 
-    twigIdToTrue: {},
+    idToTwig: {},
     twigIdToPos: {},
     twigIdToHeight: {},
-
-    shouldReloadTwigTree: false,
-    idToChildIdToTrue: {},
-    idToDescIdToTrue: {},
 
     windowIdToTwigIdToTrue: {},
     groupIdToTwigIdToTrue: {},
@@ -57,13 +45,9 @@ const initialState: TwigState = {
   [SpaceType.FOCUS]: {
     newTwigId: '',
 
-    twigIdToTrue: {},
+    idToTwig: {},
     twigIdToPos: {},
     twigIdToHeight: {},
-
-    shouldReloadTwigTree: false,
-    idToChildIdToTrue: {},
-    idToDescIdToTrue: {},
 
     windowIdToTwigIdToTrue: {},
     groupIdToTwigIdToTrue: {},
@@ -77,8 +61,8 @@ export const twigSlice: Slice<TwigState> = createSlice({
   reducers: {
     addTwigs: (state, action: PayloadAction<{space: SpaceType, twigs: Twig[]}>) => {
       console.log(action);
-      const twigIdToTrue: IdToType<true> = {
-        ...state[action.payload.space].twigIdToTrue,
+      const idToTwig: IdToType<Twig> = {
+        ...state[action.payload.space].idToTwig,
       };
 
       const twigIdToPos: IdToType<PosType> = {
@@ -99,7 +83,7 @@ export const twigSlice: Slice<TwigState> = createSlice({
         ...state[action.payload.space].tabIdToTwigIdToTrue,
       };
       action.payload.twigs.forEach(twig => {
-        twigIdToTrue[twig.id] = true;
+        idToTwig[twig.id] = twig;
         twigIdToPos[twig.id] = {
           x: twig.x,
           y: twig.y,
@@ -129,20 +113,19 @@ export const twigSlice: Slice<TwigState> = createSlice({
         ...state,
         [action.payload.space]: {
           ...state[action.payload.space],
-          twigIdToTrue,
+          idToTwig,
           twigIdToPos,
           twigIdToHeight,
           windowIdToTwigIdToTrue,
           groupIdToTwigIdToTrue,
           tabIdToTwigIdToTrue,
-          shouldReloadTwigTree: true,
         }
       };
     },
     removeTwigs: (state, action: PayloadAction<{space: SpaceType, twigs: Twig[]}>) => {
       console.log(action);
-      const twigIdToTrue: IdToType<true> = {
-        ...state[action.payload.space].twigIdToTrue,
+      const idToTwig: IdToType<Twig> = {
+        ...state[action.payload.space].idToTwig,
       };
 
       const twigIdToPos: IdToType<PosType> = {
@@ -185,7 +168,7 @@ export const twigSlice: Slice<TwigState> = createSlice({
         }, {});
       
       action.payload.twigs.forEach(twig => {
-        delete twigIdToTrue[twig.id];
+        delete idToTwig[twig.id];
         delete twigIdToPos[twig.id];
         delete twigIdToHeight[twig.id];
 
@@ -208,46 +191,46 @@ export const twigSlice: Slice<TwigState> = createSlice({
         ...state, 
         [action.payload.space]: {
           ...state[action.payload.space],
-          twigIdToTrue,
+          idToTwig,
+          twigIdToPos,
           twigIdToHeight,
           windowIdToTwigIdToTrue,
           groupIdToTwigIdToTrue,
           tabIdToTwigIdToTrue,
-          shouldReloadTwigTree: true,
         }
       }
     },
-    setPos: (state, action: PayloadAction<{space: SpaceType, twigId: string, pos: PosType}>) => {
-      const twigIdToPos: IdToType<PosType> = {
-        ...state[action.payload.space].twigIdToPos,
-        [action.payload.twigId]: action.payload.pos,
-      };
-      return {
-        ...state,
-        [action.payload.space]: {
-          ...state[action.payload.space],
-          twigIdToPos,
-        },
-      };
-    },
-    movePos: (state, action: PayloadAction<{space: SpaceType, twigIds: string[], dx: number, dy: number}>) => {
-      const twigIdToPos: IdToType<PosType> = action.payload.twigIds.reduce((acc, twigId) => {
-        acc[twigId] = {
-          x: acc[twigId].x + action.payload.dx,
-          y: acc[twigId].y + action.payload.dy,
-        };
-        return acc;
-      }, {
-        ...state[action.payload.space].twigIdToPos,
-      })
-      return {
-        ...state,
-        [action.payload.space]: {
-          ...state[action.payload.space], 
-          twigIdToPos,
-        },
-      };
-    },
+    // setPos: (state, action: PayloadAction<{space: SpaceType, twigId: string, pos: PosType}>) => {
+    //   const twigIdToPos: IdToType<PosType> = {
+    //     ...state[action.payload.space].twigIdToPos,
+    //     [action.payload.twigId]: action.payload.pos,
+    //   };
+    //   return {
+    //     ...state,
+    //     [action.payload.space]: {
+    //       ...state[action.payload.space],
+    //       twigIdToPos,
+    //     },
+    //   };
+    // },
+    // movePos: (state, action: PayloadAction<{space: SpaceType, twigIds: string[], dx: number, dy: number}>) => {
+    //   const twigIdToPos: IdToType<PosType> = action.payload.twigIds.reduce((acc, twigId) => {
+    //     acc[twigId] = {
+    //       x: acc[twigId].x + action.payload.dx,
+    //       y: acc[twigId].y + action.payload.dy,
+    //     };
+    //     return acc;
+    //   }, {
+    //     ...state[action.payload.space].twigIdToPos,
+    //   })
+    //   return {
+    //     ...state,
+    //     [action.payload.space]: {
+    //       ...state[action.payload.space], 
+    //       twigIdToPos,
+    //     },
+    //   };
+    // },
     setHeight: (state, action: PayloadAction<{space: SpaceType, twigId: string, height: number}>) => {
       const twigIdToHeight: IdToType<number> = {
         ...state[action.payload.space].twigIdToHeight,
@@ -259,17 +242,6 @@ export const twigSlice: Slice<TwigState> = createSlice({
           ...state[action.payload.space],
           twigIdToHeight,
         },
-      };
-    },
-    setTwigTree: (state, action: PayloadAction<{space: SpaceType, idToChildIdToTrue: IdToType<IdToType<true>>, idToDescIdToTrue: IdToType<IdToType<true>>}>) => {
-      return {
-        ...state,
-        [action.payload.space]: {
-          ...state[action.payload.space],
-          idToChildIdToTrue: action.payload.idToChildIdToTrue,
-          idToDescIdToTrue: action.payload.idToDescIdToTrue,
-          shouldReloadTwigTree: false,
-        }
       };
     },
     startNewTwig: (state, action: PayloadAction<{space: SpaceType, newTwigId: string}>) => {
@@ -297,11 +269,10 @@ export const twigSlice: Slice<TwigState> = createSlice({
           twigId: '',
           newTwigId: '',
 
-          twigIdToTrue: {},
+          idToTwig: {},
           twigIdToPos: {},
           twigIdToHeight: {},
 
-          shouldReloadTwigTree: false,
           idToDescIdToTrue: {},
           idToChildIdToTrue: {},
           
@@ -311,18 +282,6 @@ export const twigSlice: Slice<TwigState> = createSlice({
         },
       };
     },
-    setShouldReloadTwigTree: (state, action: PayloadAction<{space: SpaceType, shouldReloadTwigTree: boolean}>) => {
-      return {
-        ...state,
-        [action.payload.space]: {
-          ...state[action.payload.space],
-          shouldReloadTwigTree: action.payload.shouldReloadTwigTree,
-        },
-      };
-    },
-  },
-  extraReducers: (builder) => {
-    builder.addDefaultCase(state => state)
   },
 });
 
@@ -331,35 +290,19 @@ export const {
   finishNewTwig,
   addTwigs,
   removeTwigs,
-  setTwigTree,
   resetTwigs,
-  setPos,
-  movePos,
   setHeight,
-  setShouldReloadTwigTree,
 } = twigSlice.actions;
 
 export const selectNewTwigId = (space: SpaceType) => (state: RootState) => state.twig[space].newTwigId;
 
-export const selectTwigIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].twigIdToTrue;
+export const selectIdToTwig = (space: SpaceType) => (state: RootState) => state.twig[space].idToTwig;
 export const selectTwigIdToPos = (space: SpaceType) => (state: RootState) => state.twig[space].twigIdToPos;
 export const selectTwigIdToHeight = (space: SpaceType) => (state: RootState) => state.twig[space].twigIdToHeight;
-
-export const selectShouldReloadTwigTree = (space: SpaceType) => (state: RootState) => state.twig[space].shouldReloadTwigTree;
-export const selectIdToChildIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].idToChildIdToTrue;
-export const selectIdToDescIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].idToDescIdToTrue;
 
 export const selectWindowIdToTwigIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].windowIdToTwigIdToTrue;
 export const selectGroupIdToTwigIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].groupIdToTwigIdToTrue;
 export const selectTabIdToTwigIdToTrue = (space: SpaceType) => (state: RootState) => state.twig[space].tabIdToTwigIdToTrue;
-
-export const selectChildIdToTrue: any = createSelector(
-  [
-    (state, space, twigId) => selectIdToChildIdToTrue(space)(state),
-    (state, space, twigId) => twigId,
-  ],
-  (idToChildToTrue, twigId) => (idToChildToTrue || {})[twigId] || {},
-);
 
 export const selectHeight: any = createSelector(
   [
@@ -371,15 +314,15 @@ export const selectHeight: any = createSelector(
   },
 );
 
-export const selectPos: any = createSelector(
-  [
-    (state, space, twigId) => selectTwigIdToPos(space)(state),
-    (state, space, twigId) => twigId,
-  ],
-  (twigIdToPos, twigId) => {
-    return twigIdToPos[twigId];
-  }
-);
+// export const selectPos: any = createSelector(
+//   [
+//     (state, space, twigId) => selectTwigIdToPos(space)(state),
+//     (state, space, twigId) => twigId,
+//   ],
+//   (twigIdToPos, twigId) => {
+//     return twigIdToPos[twigId];
+//   }
+// );
 
 
 export default twigSlice.reducer

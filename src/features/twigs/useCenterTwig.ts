@@ -1,9 +1,6 @@
-import { useApolloClient } from '@apollo/client';
 import { VIEW_RADIUS } from '~constants';
 import type { SpaceType } from '../space/space';
 import type { User } from '../user/user';
-import type { Twig } from './twig';
-import { TWIG_WITH_XY } from './twigFragments';
 import { useContext } from 'react';
 import { AppContext } from '~newtab/App';
 import { SpaceContext } from '~features/space/SpaceComponent';

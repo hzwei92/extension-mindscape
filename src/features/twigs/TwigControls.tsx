@@ -19,9 +19,8 @@ import { selectColor } from '../window/windowSlice';
 import type { User } from '../user/user';
 import UserTag from '../user/UserTag';
 import useReplyTwig from './useReplyTwig';
-import { selectCreateLink, setCommitArrowId, setCreateLink, setRemoveArrowId } from '../arrow/arrowSlice';
+import { selectArrow, selectCreateLink, setCommitArrowId, setCreateLink, setRemoveArrowId } from '../arrow/arrowSlice';
 import { useApolloClient } from '@apollo/client';
-import { FULL_ARROW_FIELDS } from '~features/arrow/arrowFragments';
 //import useCenterTwig from './useCenterTwig';
 
 interface TwigControlsProps {
@@ -41,14 +40,7 @@ function TwigControls(props: TwigControlsProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const arrow = client.cache.readFragment({
-    id: client.cache.identify({
-      id: props.twig.detailId,
-      __typename: 'Arrow',
-    }),
-    fragment: FULL_ARROW_FIELDS,
-    fragmentName: 'FullArrowFields',
-  }) as Arrow;
+  const arrow = useAppSelector(state => selectArrow(state, props.twig.detailId));
 
   const color = useAppSelector(selectColor(true))
 

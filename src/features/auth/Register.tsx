@@ -7,6 +7,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import GoogleButton from './GoogleButton';
 import { USER_FIELDS } from '../user/userFragments';
 import { useAppDispatch } from '~store';
+import { SpaceType } from '~features/space/space';
+import { addUsers } from '~features/user/userSlice';
 
 const GET_USER_BY_EMAIL = gql`
   query GetUserByEmail($email: String!) {
@@ -28,6 +30,8 @@ const REGISTER_USER = gql`
 interface RegisterProps {
 }
 export default function Register(props: RegisterProps) {
+  const dispatch = useAppDispatch();
+
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [emailTimeout, setEmailTimeout] = useState(null as any);
@@ -50,6 +54,10 @@ export default function Register(props: RegisterProps) {
     },
     onCompleted: data => {
       console.log(data);
+      dispatch(addUsers({
+        space: SpaceType.FRAME,
+        users: [data.registerUser],
+      }))
     }
   })
 

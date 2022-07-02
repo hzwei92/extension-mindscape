@@ -1,20 +1,19 @@
 import { useApolloClient } from '@apollo/client';
-import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Box, Fab } from '@mui/material';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import FastRewindIcon from '@mui/icons-material/FastRewind';
 import FastForwardIcon from '@mui/icons-material/FastForward';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import CenterFocusStrongIcon from '@mui/icons-material/CenterFocusStrong';
-import { DragState, SpaceType } from './space';
+import { SpaceType } from './space';
 import { useAppDispatch, useAppSelector } from '~store';
-import { MAX_Z_INDEX, MOBILE_WIDTH, NOT_FOUND } from '~constants';
+import { MAX_Z_INDEX, MOBILE_WIDTH } from '~constants';
 import { selectIsOpen, selectSpace, setSpace } from './spaceSlice';
 import { selectMenuMode } from '../menu/menuSlice';
 import type { Arrow } from '../arrow/arrow';
 import type { User } from '../user/user';
-import { selectTwigIdToTrue } from '~features/twigs/twigSlice';
-import { FULL_TWIG_FIELDS } from '~features/twigs/twigFragments';
+import { selectIdToTwig } from '~features/twigs/twigSlice';
 import type { Twig } from '~features/twigs/twig';
 import useCenterTwig from '~features/twigs/useCenterTwig';
 import useSelectTwig from '~features/twigs/useSelectTwig';
@@ -42,7 +41,7 @@ export default function SpaceNav(props: SpaceNavProps) {
   const frameIsOpen = useAppSelector(selectIsOpen(SpaceType.FRAME));
   const focusIsOpen = useAppSelector(selectIsOpen(SpaceType.FOCUS));
 
-  const twigIdToTrue = useAppSelector(selectTwigIdToTrue(props.space))
+  const idToTwig = useAppSelector(selectIdToTwig(props.space))
 
   const [twigs, setTwigs] = useState([] as Twig[]);
   const [index, setIndex] = useState(0);
@@ -54,22 +53,12 @@ export default function SpaceNav(props: SpaceNavProps) {
   const { selectTwig } = useSelectTwig(props.space, props.canEdit)
 
   useEffect(() => {
-    const sortedTwigs = Object.keys(twigIdToTrue)
-      .map(twigId => {
-        return client.cache.readFragment({
-          id: client.cache.identify({
-            id: twigId,
-            __typename: 'Twig'
-          }),
-          fragment: FULL_TWIG_FIELDS,
-          fragmentName: 'FullTwigFields'
-        }) as Twig;
-      })
+    const sortedTwigs = Object.keys(idToTwig).map(id => idToTwig[id])
       .filter(twig => twig && !twig.deleteDate)
       .sort((a, b) => a.i < b.i ? -1 : 1);
       
     setTwigs(sortedTwigs);
-  }, [twigIdToTrue]);
+  }, [idToTwig]);
 
   useEffect(() => {
     if (!selectedTwigId) return;

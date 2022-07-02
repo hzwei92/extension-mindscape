@@ -9,7 +9,7 @@ import type { Arrow } from './arrow';
 import type { PosType, Twig } from '~features/twigs/twig';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import useSelectTwig from '~features/twigs/useSelectTwig';
-import { FULL_ARROW_FIELDS } from './arrowFragments';
+import { selectArrow } from './arrowSlice';
 
 interface LinkMarkerComponentProps {
   user: User;
@@ -44,11 +44,7 @@ export default function LinkMarkerComponent(props: LinkMarkerComponentProps) {
   //   }
   // }, [links.length]);
 
-  const link = client.cache.readFragment({
-    id: client.cache.identify(props.twig.detail),
-    fragment: FULL_ARROW_FIELDS,
-    fragmentName: 'FullArrowFields',
-  }) as Arrow;
+  const link = useAppSelector(state => selectArrow(state, props.twig.detailId))
   
   const handleMouseDown = (event: React.MouseEvent) => {
     event.stopPropagation();

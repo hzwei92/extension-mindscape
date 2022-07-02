@@ -86,8 +86,8 @@ export enum MessageName {
 };
 
 export enum ErrMessage {
-  NOT_READY = 'NOT_READY',
   CANNOT_EDIT_TABS = 'Tabs cannot be edited right now (user may be dragging a tab).',
   NO_RECEIVER = 'Could not establish connection. Receiving end does not exist.',
+  NO_TAB = 'No tab with id: '
 }
 export const ALARM_DELIMITER = '@';

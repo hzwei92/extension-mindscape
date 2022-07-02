@@ -3,7 +3,6 @@ import type { CachePersistor } from "apollo3-cache-persist";
 import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { addTwigs, removeTwigs } from "~features/twigs/twigSlice";
-import { addTwigUsers } from "~features/user/userSlice";
 import { persistor, store } from "~store";
 import type { BookmarkEntry } from "./bookmark";
 
@@ -82,23 +81,17 @@ export const syncBookmarks = (client: ApolloClient<NormalizedCacheObject>, cache
         bookmarks,
         deleted,
       } = data.syncBookmarks;
-        
-      store.dispatch(removeTwigs({
-        space: SpaceType.FRAME,
-        twigs: deleted,
-      }));
 
       store.dispatch(addTwigs({
         space: SpaceType.FRAME,
-        twigs: bookmarks,
+        twigs: [...bookmarks, ...deleted],
       }));
+    
+      // store.dispatch(removeTwigs({
+      //   space: SpaceType.FRAME,
+      //   twigs: deleted,
+      // }));
 
-      store.dispatch(addTwigUsers({
-        space: SpaceType.FRAME,
-        twigs: bookmarks,
-      }));
-
-      await persistor.flush();
     } catch (err) {
       console.error(err);
     }

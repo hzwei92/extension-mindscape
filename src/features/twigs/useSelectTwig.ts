@@ -2,16 +2,16 @@
 import { gql, useApolloClient, useMutation } from '@apollo/client';
 import { useCallback, useContext } from 'react';
 import { useAppDispatch, useAppSelector } from '~store';
-import { TWIG_WITH_Z } from './twigFragments';
 import type { SpaceType } from '../space/space';
-import { setSpace } from '../space/spaceSlice';
+import { selectIdToDescIdToTrue, setSpace } from '../space/spaceSlice';
 import type { Twig } from './twig';
 import { useSnackbar } from 'notistack';
 import { FULL_ROLE_FIELDS } from '../role/roleFragments';
-import { selectIdToDescIdToTrue } from './twigSlice';
+import { selectIdToTwig } from './twigSlice';
 import type { Arrow } from '../arrow/arrow';
 import { selectSessionId } from '~features/auth/authSlice';
 import { SpaceContext } from '~features/space/SpaceComponent';
+import type { IdToType } from '~types';
 
 const SELECT_TWIG = gql`
   mutation Select_Twig($sessionId: String!, $twigId: String!) {
@@ -41,6 +41,7 @@ export default function useSelectTwig(space: SpaceType, canEdit: boolean) {
 
   const sessionId = useAppSelector(selectSessionId);
 
+  const idToTwig: IdToType<Twig> = useAppSelector(selectIdToTwig(space));
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(space));
   
   const { enqueueSnackbar } = useSnackbar();
@@ -77,46 +78,25 @@ export default function useSelectTwig(space: SpaceType, canEdit: boolean) {
 
     dispatch(setSpace(space));
 
-    const idToCoords: any = {};
+    const twigs = [];
     Object.keys(idToDescIdToTrue[twigId] || {})
-      .map(descId => {
-        return client.cache.readFragment({
-          id: client.cache.identify({
-            id: descId,
-            __typename: 'Twig',
-          }),
-          fragment: TWIG_WITH_Z
-        }) as Twig;
-      })
+      .map(descId => idToTwig[descId])
       .sort((a, b) => a.z < b.z ? -1 : 1)
       .forEach((t, i) => {
-        client.cache.modify({
-          id: client.cache.identify({
-            id: t.id,
-            __typename: 'Twig',
-          }),
-          fields: {
-            z: () => abstract.twigZ + i,
-          }
-        })
+        t.z = abstract.twigZ + i;
+        twigs.push(t);
       });
 
-    client.cache.modify({
-      id: client.cache.identify({
-        id: twigId,
-        __typename: 'Twig'
-      }),
-      fields: {
-        z: () => abstract.twigZ + Object.keys(idToDescIdToTrue[twigId] || {}).length + 1,
-      }
-    });
+    const twig = idToTwig[twigId];
+    twig.z = abstract.twigZ + Object.keys(idToDescIdToTrue[twigId] || {}).length + 1,
+    twigs.push(twig);
     
     client.cache.modify({
       id: client.cache.identify(abstract),
       fields: {
         twigZ: cachedVal => cachedVal + Object.keys(idToDescIdToTrue[twigId] || {}).length + 1,
       },
-    })
+    });
   }, [space, canEdit, select, setSelectedTwigId])
 
   return { selectTwig };

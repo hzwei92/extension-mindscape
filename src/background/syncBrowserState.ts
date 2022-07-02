@@ -5,7 +5,6 @@ import { SpaceType } from "~features/space/space";
 import { getGroupEntries, getTabEntries, getWindowEntries } from "~features/tab/syncTabState";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { addTwigs, removeTwigs } from "~features/twigs/twigSlice";
-import { addTwigUsers } from "~features/user/userSlice";
 import { store } from "~store";
 
 const SYNC_BROWSER_STATE = gql`
@@ -78,18 +77,14 @@ export const syncBrowserState = (client: ApolloClient<NormalizedCacheObject>, ca
       deleted,
     } = data.syncBrowserState;
 
-    store.dispatch(removeTwigs({
-      space: SpaceType.FRAME,
-      twigs: deleted,
-    }));
-    
     store.dispatch(addTwigs({
       space: SpaceType.FRAME,
-      twigs: [...bookmarks, ...windows, ...groups, ...tabs],
+      twigs: [...bookmarks, ...windows, ...groups, ...tabs, ...deleted],
     }));
 
-    store.dispatch(addTwigUsers({
-      space: SpaceType.FRAME,
-      twigs: [...bookmarks, ...windows, ...groups, ...tabs],
-    }));
+    // store.dispatch(removeTwigs({
+    //   space: SpaceType.FRAME,
+    //   twigs: deleted,
+    // }));
+    
   }

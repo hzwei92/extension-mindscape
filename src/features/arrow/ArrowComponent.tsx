@@ -5,14 +5,13 @@ import type { SpaceType } from '../space/space';
 import type { Arrow } from './arrow';
 import { getTimeString } from '~utils';
 import { useAppDispatch, useAppSelector } from '~store';
-import { selectSpace } from '../space/spaceSlice';
 import UserTag from '../user/UserTag';
 import { selectColor } from '../window/windowSlice';
 import type { User } from '../user/user';
 import ArrowEditor from './ArrowEditor';
 import { TWIG_WIDTH } from '~constants';
-import { FULL_ARROW_FIELDS } from './arrowFragments';
 import ArrowVoter from './ArrowVoter';
+import { selectArrow } from './arrowSlice';
 
 interface ArrowProps {
   user: User | null;
@@ -26,19 +25,9 @@ interface ArrowProps {
 }
 
 export default function ArrowComponent(props: ArrowProps) {
-  const client = useApolloClient();
-
-  const arrow = client.cache.readFragment({
-    id: client.cache.identify({
-      id: props.arrowId,
-      __typename: 'Arrow',
-    }),
-    fragment: FULL_ARROW_FIELDS,
-    fragmentName: 'FullArrowFields',
-  }) as Arrow;
+  const arrow = useAppSelector(state => selectArrow(state, props.arrowId));
 
   const color = useAppSelector(selectColor(true));
-  const space = useAppSelector(selectSpace);
   
   //useAppSelector(state => selectInstanceById(state, props.instanceId)); // rerender on instance change
   const dispatch = useAppDispatch();
@@ -64,7 +53,7 @@ export default function ArrowComponent(props: ArrowProps) {
   }
 
   if (!arrow) return null;
-  
+
   const time = new Date(arrow.removeDate || arrow.commitDate || arrow.saveDate || Date.now()).getTime();
   const timeString = getTimeString(time);
 
@@ -76,7 +65,7 @@ export default function ArrowComponent(props: ArrowProps) {
       <Box sx={{
         position: 'absolute',
         left: -35,
-        top: -18,
+        top: -10,
       }}>
         <ArrowVoter 
           user={props.user}
@@ -129,21 +118,27 @@ export default function ArrowComponent(props: ArrowProps) {
                 isReadonly={false}
                 instanceId={props.instanceId}
               />
-            : <Box>
+            : <Box sx={{
+                paddingTop: '5px',
+              }}>
                 <Typography fontWeight='bold' fontSize={20}>
                   {arrow.title}
                 </Typography>
-                <Box>
-                  <Link component='button' sx={{
-                    cursor: 'pointer',
-                    whiteSpace: 'pre-wrap',
-                    width: '100%',
-                    wordWrap: 'break-word',
-                    textAlign: 'left',
-                  }}>
-                    {arrow.url}
-                  </Link>
-                </Box>
+                {
+                  arrow.url
+                    ? <Box>
+                        <Link component='button' sx={{
+                          cursor: 'pointer',
+                          whiteSpace: 'pre-wrap',
+                          width: '100%',
+                          wordWrap: 'break-word',
+                          textAlign: 'left',
+                        }}>
+                          {arrow.url}
+                        </Link>
+                      </Box>
+                    : null
+                }
               </Box>
         }
 

@@ -1,11 +1,10 @@
 import { Box, Button } from '@mui/material';
 import { gql, useApolloClient, useMutation } from '@apollo/client';
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { FULL_USER_FIELDS, USER_FIELDS } from '../user/userFragments';
 import { useAppDispatch } from '~store';
 import { SpaceType } from '../space/space';
-import { setUserId } from '../user/userSlice';
-import { AppContext } from '~newtab/App';
+import { addUsers, setCurrentUser } from '../user/userSlice';
 import { resetSpace } from '~features/space/spaceSlice';
 
 const REGISTER_USER = gql`
@@ -43,6 +42,10 @@ export default function GoogleButton(props: GoogleButtonProps) {
     },
     onCompleted: data => {
       console.log(data);
+      dispatch(addUsers({
+        space: SpaceType.FRAME,
+        users: [data.GoogleUser],
+      }));
       props.onCompleted && props.onCompleted();
     },
   });
@@ -68,7 +71,7 @@ export default function GoogleButton(props: GoogleButtonProps) {
         data: data.loginUser,
       });
 
-      dispatch(setUserId(data.loginGoogleUser.id));
+      dispatch(setCurrentUser(data.loginGoogleUser));
 
       props.onCompleted && props.onCompleted();
     },

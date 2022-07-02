@@ -4,14 +4,12 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
-import type { Twig } from '../twigs/twig';
 import type { SpaceType } from '../space/space';
 import { useAppSelector } from '~store';
 import type { Vote } from '../vote/vote';
 import type { User } from '../user/user';
 import { selectColor } from '../window/windowSlice';
 import { useApolloClient } from '@apollo/client';
-import { FULL_ARROW_FIELDS } from './arrowFragments';
 import type { Arrow } from './arrow';
 
 interface ArrowVoterProps {

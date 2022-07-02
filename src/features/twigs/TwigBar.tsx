@@ -1,6 +1,6 @@
 import { Box, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import React, { Dispatch, DragEventHandler, SetStateAction, useContext } from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import type { Twig } from './twig';
 import type { DragState, SpaceType } from '../space/space';
 import { persistor, useAppDispatch, useAppSelector } from '~store';
@@ -12,7 +12,7 @@ import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArro
 import { getTwigColor } from '~utils';
 import { useApolloClient } from '@apollo/client';
 import { DisplayMode } from '~constants';
-import { selectPos } from './twigSlice';
+import { addTwigs } from './twigSlice';
 
 interface TwigBarProps {
   space: SpaceType;
@@ -35,17 +35,18 @@ function TwigBar(props: TwigBarProps) {
     : 'white';
   const createLink = useAppSelector(selectCreateLink);
 
-  const pos = useAppSelector(state => selectPos(state, props.space, props.twig.id));
-
   const beginDrag = () => {
     if (!props.twig.parent) return;
     if (props.twig.displayMode !== DisplayMode.SCATTERED) {
-      client.cache.modify({
-        id: client.cache.identify(props.twig),
-        fields: {
-          displayMode: () => DisplayMode.SCATTERED
-        }
+
+      const twig = Object.assign({}, props.twig, {
+        displayMode: DisplayMode.SCATTERED,
       });
+
+      dispatch(addTwigs({
+        space: props.space,
+        twigs: [twig]
+      }));
     }
     props.setDrag({
       isScreen: false,
@@ -54,8 +55,6 @@ function TwigBar(props: TwigBarProps) {
       dy: 0,
       targetTwigId: '',
     });
-
-    persistor.pause();
   }
 
   const dontDrag = (event: React.MouseEvent) => {
@@ -134,8 +133,6 @@ function TwigBar(props: TwigBarProps) {
             color,
           }}>
             {props.twig.id}
-            <br/>
-            {pos.x}, {pos.y}
             <br/>
             {props.twig.i}...
             {props.twig.degree}:{props.twig.rank}...

@@ -1,9 +1,9 @@
-import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
-import type { CachePersistor } from "apollo3-cache-persist";
+import { gql } from "@apollo/client";
 import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { FULL_ARROW_FIELDS } from "~features/arrow/arrowFragments";
 import { SpaceType } from "~features/space/space";
-import { setShouldReloadTwigTree } from "~features/twigs/twigSlice";
+import { setShouldReloadTwigTree } from "~features/space/spaceSlice";
+import { getClient } from "~graphql";
 import { store } from "~store";
 import { getTwigByTabId } from "./tab";
 
@@ -26,14 +26,29 @@ const UPDATE_TAB = gql`
   ${FULL_ARROW_FIELDS}
 `;
 
-export const updateTab = (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) =>
-  async (tab: chrome.tabs.Tab) => {
-    const twig = await getTwigByTabId(tab.id);
+export const updateTab = async (tab: chrome.tabs.Tab, count = 0) => {
+    const createTabAlarmName = AlarmType.CREATE_TAB +
+      ALARM_DELIMITER +
+      tab.id;
+      
+    const alarms = await chrome.alarms.getAll();
+
+    if (alarms.some(alarm => {
+      const name = alarm.name.split(ALARM_DELIMITER);
+      return name[0] === AlarmType.CREATE_TAB && name[1] === tab.id.toString();
+    })) return;
+  
+
+    const { client, persistor } = await getClient();
+
+    const twig = await getTwigByTabId(store)(tab.id);
 
     if (!twig?.id) {
       const name = AlarmType.UPDATE_TAB +
         ALARM_DELIMITER +
-        tab.id;
+        tab.id +
+        ALARM_DELIMITER +
+        count;
 
       chrome.alarms.create(name, {
         when: Date.now() + 100,
@@ -50,7 +65,7 @@ export const updateTab = (client: ApolloClient<NormalizedCacheObject>, cachePers
           url: tab.url,
         }
       });
-      await cachePersistor.persist();
+      await persistor.persist();
       console.log(data);
 
       store.dispatch(setShouldReloadTwigTree({

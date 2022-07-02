@@ -3,11 +3,11 @@ import { useContext } from 'react';
 import { MessageName } from '~constants';
 import { setAuthIsDone, setLogout, setTokenIsValid } from '~features/auth/authSlice';
 import { resetSpace } from '~features/space/spaceSlice';
+import { setCurrentUser } from '~features/user/userSlice';
 import { getClient } from '~graphql';
 import { AppContext } from '~newtab/App';
-import { useAppDispatch } from '~store';
+import { persistor, useAppDispatch } from '~store';
 import { SpaceType } from '../space/space';
-import { setUserId } from '../user/userSlice';
 
 const LOGOUT_USER = gql`
   mutation LogoutUser {
@@ -40,7 +40,7 @@ export default function useLogout() {
     resetSpace(SpaceType.FRAME);
     resetSpace(SpaceType.FOCUS);
     dispatch(setLogout(null));
-    dispatch(setUserId(''));
+    dispatch(setCurrentUser(null));
     console.log('hello')
   }
 

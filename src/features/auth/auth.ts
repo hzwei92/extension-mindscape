@@ -3,7 +3,7 @@ import type { ApolloClient } from "@apollo/client";
 import { gql } from "@apollo/client";
 import { AlarmType } from "~constants";
 import { FULL_USER_FIELDS } from "~features/user/userFragments";
-import { setUserId } from "~features/user/userSlice";
+import { setCurrentUser } from "~features/user/userSlice";
 import { store } from "~store";
 import { setTokenIsInit, setTokenIsValid } from "./authSlice";
 
@@ -71,7 +71,7 @@ export const initUser = async (client: ApolloClient<NormalizedCacheObject>) => {
     });
     console.log(data);
   
-    store.dispatch(setUserId(data.initUser.id));
+    store.dispatch(setCurrentUser(data.initUser));
     store.dispatch(setTokenIsValid(true));
 
     chrome.alarms.create(AlarmType.REFRESH_TOKEN, {
@@ -91,9 +91,8 @@ export const getCurrentUser = async (client: ApolloClient<NormalizedCacheObject>
     });
     console.log(data);
 
-    store.dispatch(setUserId(data.getCurrentUser.id));
+    store.dispatch(setCurrentUser(data.getCurrentUser));
 
-    
     chrome.alarms.create(AlarmType.REFRESH_TOKEN, {
       periodInMinutes: 5,
     });

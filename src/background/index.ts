@@ -16,17 +16,14 @@ import { orderAndGroupTabs } from "~features/tab/orderAndGroupTabs"
 import { removeGroup } from "~features/tab/removeGroup"
 import { removeTab } from "~features/tab/removeTab"
 import { removeWindow } from "~features/tab/removeWindow"
-import { syncTabState } from "~features/tab/syncTabState"
 import { updateTab } from "~features/tab/updateTab"
 import { SpaceType } from "~features/space/space"
 import { getTwigs } from "~features/twigs/getTwigs"
-import { loadTwigTree } from "~features/twigs/loadTwigTree"
-import { selectShouldReloadTwigTree } from "~features/twigs/twigSlice"
+import { loadTwigTree } from "~features/space/loadTwigTree"
+import { addTwigs, selectIdToTwig } from "~features/twigs/twigSlice"
 import type { User } from "~features/user/user"
-import { FULL_USER_FIELDS } from "~features/user/userFragments"
-import { selectUserId, setUserId } from "~features/user/userSlice"
 import { getClient } from "~graphql"
-import { persistor, RootState, store } from "~store"
+import { persistor, store } from "~store"
 import type { IdToType } from "~types"
 import { syncBookmarks } from "~features/bookmarks/syncBookmarks"
 import { createBookmark } from "~features/bookmarks/createBookmark"
@@ -34,13 +31,14 @@ import { removeBookmark } from "~features/bookmarks/removeBookmark"
 import { moveBookmark } from "~features/bookmarks/moveBookmark"
 import { changeBookmark } from "~features/bookmarks/changeBookmark"
 import { syncBrowserState } from "./syncBrowserState"
+import { selectCurrentUser, setCurrentUser } from "~features/user/userSlice"
+import { selectShouldReloadTwigTree } from "~features/space/spaceSlice"
 
 let client: ApolloClient<NormalizedCacheObject>;
 let cachePersistor: CachePersistor<NormalizedCacheObject>;
-let shouldSyncTabs = false;
-let shouldSyncBookmarks
+let shouldSync = false;
 const tabIdToMoveBlocked: IdToType<number> = {};
-let prevState: RootState;
+let newIdToTwig = {};
 
 chrome.runtime.onInstalled.addListener(async details => {
   console.log('installed', details);
@@ -69,15 +67,16 @@ chrome.runtime.onInstalled.addListener(async details => {
     }
   });
 
-  chrome.alarms.onAlarm.addListener(handleAlarm(store, persistor)(client, cachePersistor));
+  chrome.alarms.onAlarm.addListener(handleAlarm(store, persistor)(client, cachePersistor)(tabIdToMoveBlocked, newIdToTwig));
 
   // manage tabs
   chrome.tabs.onCreated.addListener(async tab => {
-    console.log('tab created', tab);
-    createTab(client, cachePersistor)(tab)
+    console.log('tab created', tab.id);
+    await createTab(store, persistor)(client, cachePersistor)(tab, newIdToTwig)
   });
-  chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    console.log('tab updated', tabId, changeInfo, tab)
+
+  chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+    console.log('tab updated', tabId, changeInfo)
 
     if (changeInfo.groupId) {
       if (changeInfo.groupId === -1) {
@@ -98,17 +97,19 @@ chrome.runtime.onInstalled.addListener(async details => {
       }
     }
     else if (changeInfo.url || changeInfo.title) {
-      updateTab(client, cachePersistor)(tab)
+      updateTab(tab)
     }
   });
   chrome.tabs.onMoved.addListener(async (tabId, moveInfo) => {
     console.log('tab moved', tabId, moveInfo);
+
     if (tabIdToMoveBlocked[tabId]) {
       delete tabIdToMoveBlocked[tabId];
       return;
     }
     const tab = await chrome.tabs.get(tabId);
-    const tabTwig = await getTwigByTabId(tabId);
+    const tabTwig = await getTwigByTabId(store)(tabId);
+
     if (tabTwig?.groupId && tabTwig.groupId === tab.groupId) {
       maintainSubtree(client)(tabIdToMoveBlocked)(tabId);
       moveTab(client, cachePersistor)(tab);
@@ -120,11 +121,11 @@ chrome.runtime.onInstalled.addListener(async details => {
   chrome.tabs.onRemoved.addListener(removeTab(client));
 
   chrome.tabGroups.onCreated.addListener((group) => {
-    console.log('group created', group)
-    createGroup(client, cachePersistor)(group);
+    console.log('group created', group.id)
+    createGroup(store, persistor)(client, cachePersistor)(group, newIdToTwig);
   });
   chrome.tabGroups.onUpdated.addListener(group => {
-    console.log('group updated', group);
+    //console.log('group updated', group);
   });
   chrome.tabGroups.onRemoved.addListener(removeGroup(client));
 
@@ -132,18 +133,9 @@ chrome.runtime.onInstalled.addListener(async details => {
     console.log('window created', window);
     const state = store.getState();
 
-    const userId = selectUserId(state);
-    
-    const user = client.cache.readFragment({
-      id: client.cache.identify({
-        id: userId,
-        __typename: 'User',
-      }),
-      fragment: FULL_USER_FIELDS,
-      fragmentName: 'FullUserFields'
-    }) as User;
+    const user: User = selectCurrentUser(state);
 
-    createWindow(client, cachePersistor)(window, user.frame.rootTwigId);
+    createWindow(client, cachePersistor)(window, user.frame.rootTwigId, newIdToTwig);
   });
   chrome.windows.onRemoved.addListener(removeWindow(client));
 
@@ -155,16 +147,7 @@ chrome.runtime.onInstalled.addListener(async details => {
   chrome.bookmarks.onImportEnded.addListener(() => {
     const state = store.getState();
 
-    const userId = selectUserId(state);
-    
-    const user = client.cache.readFragment({
-      id: client.cache.identify({
-        id: userId,
-        __typename: 'User',
-      }),
-      fragment: FULL_USER_FIELDS,
-      fragmentName: 'FullUserFields'
-    }) as User;
+    const user = selectCurrentUser(state);
 
     syncBookmarks(client, cachePersistor)(user.frame.rootTwigId)
   })
@@ -177,18 +160,10 @@ chrome.runtime.onInstalled.addListener(async details => {
   
     const authIsDone = selectAuthIsDone(state);
     if (authIsDone) {
-      if (shouldSyncTabs) {
-        shouldSyncTabs = false;
-        const userId = selectUserId(state);
+      if (shouldSync) {
+        shouldSync = false;
 
-        const user = client.cache.readFragment({
-          id: client.cache.identify({
-            id: userId,
-            __typename: 'User',
-          }),
-          fragment: FULL_USER_FIELDS,
-          fragmentName: 'FullUserFields'
-        }) as User;
+        const user = selectCurrentUser(state);
 
         const tabTrees = await orderAndGroupTabs();
 
@@ -198,11 +173,27 @@ chrome.runtime.onInstalled.addListener(async details => {
       if (shouldReloadTwigTree) {
         loadTwigTree(client);
       }
+      if (Object.keys(newIdToTwig).length) {
+        const idToTwig = selectIdToTwig(SpaceType.FRAME)(state);
+        const twigs = Object.keys(newIdToTwig).reduce((acc, twigId) => {
+          if (!idToTwig[twigId]) {
+            acc.push(newIdToTwig[twigId]);
+          }
+          return acc;
+        }, []);
+        if (twigs.length) {
+          store.dispatch(addTwigs({
+            space: SpaceType.FRAME,
+            twigs,
+          }));
+        }
+        newIdToTwig = {};
+      }
     }
     else {
-      const userId = selectUserId(state);
-      if (userId) {
-        await getTwigs(client)(userId);
+      const user: User = selectCurrentUser(state);
+      if (user) {
+        await getTwigs(client)(user);
         await cachePersistor.persist();
         store.dispatch(setAuthIsDone(true));
       }
@@ -217,19 +208,16 @@ chrome.runtime.onInstalled.addListener(async details => {
           else {
             await initUser(client);
             await cachePersistor.persist();
-            shouldSyncTabs = true;
-            shouldSyncBookmarks = true;
+            shouldSync = true;
           }
         }
       }
     }
-  
-    prevState = state;
   })
 
   store.dispatch(setTokenIsInit(false))
   store.dispatch(setAuthIsDone(false));
-  store.dispatch(setUserId(''));
+  store.dispatch(setCurrentUser(null));
 
   refreshToken(client);
 })

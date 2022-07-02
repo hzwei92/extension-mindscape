@@ -1,6 +1,6 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import { SpaceType } from "~features/space/space";
-import { removeTwigs } from "~features/twigs/twigSlice";
+import { addTwigs, removeTwigs } from "~features/twigs/twigSlice";
 import { store } from "~store";
 
 
@@ -31,10 +31,14 @@ async (windowId: number) => {
     });
     console.log(data);
     
-    store.dispatch(removeTwigs({
+    store.dispatch(addTwigs({
       space: SpaceType.FRAME,
       twigs: [data.removeWindowTwig.twig],
     }));
+    // store.dispatch(removeTwigs({
+    //   space: SpaceType.FRAME,
+    //   twigs: [data.removeWindowTwig.twig],
+    // }));
 
   } catch (err) {
     console.error(err);

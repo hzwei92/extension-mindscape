@@ -18,7 +18,6 @@ import tlds from 'tlds';
 import moveSelectionToEnd from '../editor/moveSelectionToEnd';
 import createIframelyPlugin from '../editor/createIframelyPlugin';
 //import useSaveArrow from './useSaveArrow';
-import { TWIG_WIDTH } from '~constants';
 
 const iframelyPlugin = createIframelyPlugin();
 

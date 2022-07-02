@@ -1,8 +1,6 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import type { CachePersistor } from "apollo3-cache-persist";
-import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
-import { store } from "~store";
 
 const CHANGE_BOOKMARK = gql`
   mutation ChangeBookmark($bookmarkId: String!, $title: String!, $url: String) {

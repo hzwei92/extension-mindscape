@@ -36,7 +36,7 @@ interface UserSettingsProps {
 export default function UserSettings(props: UserSettingsProps) {
 
   const [isEditingName, setIsEditingName] = useState(false);
-  const [name, setName] = useState(props.user.name);
+  const [name, setName] = useState(props.user.name || '');
   const [nameError, setNameError] = useState('');
   const [nameTimeout, setNameTimeout] = useState(null as ReturnType<typeof setTimeout> | null);
 

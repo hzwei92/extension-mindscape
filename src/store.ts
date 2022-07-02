@@ -7,10 +7,11 @@ import {
   REHYDRATE,
   RESYNC,
   persistStore,
-  persistCombineReducers,
+  persistReducer,
 } from "@plasmohq/redux-persist";
+import autoMergeLevel2 from '@plasmohq/redux-persist/lib/stateReconciler/autoMergeLevel2' 
 import { Storage } from "@plasmohq/storage";
-import { Action, configureStore, Store, ThunkAction } from "@reduxjs/toolkit";
+import { Action, combineReducers, configureStore, Store, ThunkAction } from "@reduxjs/toolkit";
 import { localStorage } from "redux-persist-webextension-storage";
 import counterSlice from "~features/counter/counterSlice";
 import authSlice from "~features/auth/authSlice";
@@ -22,16 +23,69 @@ import menuSlice from "~features/menu/menuSlice";
 import spaceSlice from "~features/space/spaceSlice";
 import twigSlice from "~features/twigs/twigSlice";
 import { ErrMessage, MessageName, PORT_NAME } from "~constants";
+import type { StateReconciler } from "@plasmohq/redux-persist/lib/types";
+import { SpaceType } from "~features/space/space";
 
+const isPlainEnoughObject = (o) => {
+  return o !== null && !Array.isArray(o) && typeof o === 'object';
+}
+
+const merge: StateReconciler<any> = (inboundState, originalState, reducedState, { debug }) => {
+  const newState = Object.assign({}, reducedState);
+  // only rehydrate if inboundState exists and is an object
+  if (inboundState && typeof inboundState === 'object') {
+      const keys = Object.keys(inboundState);
+      keys.forEach(key => {
+          // ignore _persist data
+          if (key === '_persist')
+              return;
+          // if reducer modifies substate, skip auto rehydration
+          if (originalState[key] !== reducedState[key]) {
+              if (process.env.NODE_ENV !== 'production' && debug)
+                  console.log('redux-persist/stateReconciler: sub state for key `%s` modified, skipping.', key);
+              return;
+          }
+          if (isPlainEnoughObject(reducedState[key])) {
+              if (
+                (
+                  inboundState?.auth?.isDone && 
+                  (key === 'arrow' || 
+                  key === 'twig' || 
+                  key === 'user')
+                ) ||
+                key === 'FRAME' || 
+                key === 'FOCUS'
+              ) {
+                newState[key] = merge(inboundState[key], originalState[key], reducedState[key], persistConfig)
+              }
+              else {
+                // if object is plain enough shallow merge the new values (hence "Level2")  
+                newState[key] = Object.assign(Object.assign({}, newState[key]), inboundState[key]);
+              }
+
+              return;
+          }
+          // otherwise hard set
+          newState[key] = inboundState[key];
+      });
+  }
+  if (process.env.NODE_ENV !== 'production' &&
+      debug &&
+      inboundState &&
+      typeof inboundState === 'object')
+      console.log(`redux-persist/stateReconciler: rehydrated keys '${Object.keys(inboundState).join(', ')}'`);
+  return newState;
+}
 export const persistConfig = {
   key: 'redux',
   version: 1,
   storage: localStorage,
-  debug: true,
+  debug: false,
   throttle: 0,
+  stateReconciler: merge,
 };
 
-const persistedReducer = persistCombineReducers(persistConfig, {
+const rootReducer = combineReducers({
   arrow: arrowSlice,
   auth: authSlice,
   counter: counterSlice,
@@ -41,6 +95,8 @@ const persistedReducer = persistCombineReducers(persistConfig, {
   user: userSlice,
   window: windowSlice,
 });
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store: Store = configureStore({
   reducer: persistedReducer,
@@ -78,9 +134,10 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
 new Storage('local').watch({
   [`persist:${persistConfig.key}`]: (changes) => {
-    //console.log('watch redux', changes)
-    //console.log(JSON.parse(changes.newValue.twig))
-    persistor.resync()
+    // console.log('watch redux', changes)
+    // console.log(JSON.parse(changes.newValue.twig));
+    // console.log(JSON.parse(changes.oldValue.twig));
+    persistor.resync();
   },
   ['apollo-cache-persist']: (changes) => {
     //console.log('watch apollo', changes.newValue)

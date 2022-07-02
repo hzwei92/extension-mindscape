@@ -1,8 +1,7 @@
-import { NormalizedCacheObject, useApolloClient } from "@apollo/client";
+import type { NormalizedCacheObject } from "@apollo/client";
 import React, { Dispatch, MutableRefObject, SetStateAction, useEffect, useState } from "react";
 import { MAX_Z_INDEX } from "~constants";
-import type { User } from "~features/user/user";
-import { selectUserId } from "~features/user/userSlice";
+import { selectCurrentUser } from "~features/user/userSlice";
 import { persistor, useAppDispatch, useAppSelector } from "~store";
 import { createTheme, Paper, ThemeProvider } from "@mui/material";
 import { selectPalette, setPalette } from "~features/window/windowSlice";
@@ -10,9 +9,9 @@ import { SnackbarProvider } from 'notistack';
 import AppBar from "./AppBar";
 import MenuComponent from "~features/menu/MenuComponent";
 import FrameComponent from "~features/frame/FrameComponent";
-import { FULL_USER_FIELDS } from "~features/user/userFragments";
 import type { CachePersistor } from "apollo3-cache-persist";
 import { selectAuthIsDone } from "~features/auth/authSlice";
+import type { User } from "~features/user/user";
 
 export const AppContext = React.createContext({} as {
   tabId: number,
@@ -30,23 +29,12 @@ interface AppProps {
   tabId: number;
 }
 export default function App(props: AppProps) {
-  //console.log('app')
-  const client = useApolloClient();
+  console.log('app')
   const dispatch = useAppDispatch();
 
   const authIsDone = useAppSelector(selectAuthIsDone);
 
-  const userId = useAppSelector(selectUserId);
-  const user = client.cache.readFragment({
-    id: client.cache.identify({
-      id: userId,
-      __typename: 'User',
-    }),
-    fragment: FULL_USER_FIELDS,
-    fragmentName: 'FullUserFields',
-  }) as User;
-
-  console.log('app', userId, user);
+  const user: User | null = useAppSelector(selectCurrentUser);
 
   const palette = useAppSelector(selectPalette);
 
@@ -97,12 +85,12 @@ export default function App(props: AppProps) {
 
 
   useEffect(() => {
-    console.log('herewego', authIsDone, userId)
-    if (authIsDone && !userId) {
+    console.log('herewego', authIsDone, user)
+    if (authIsDone && !user) {
       persistor.resync();
       props.cachePersistor.restore();
     }
-  }, [userId, authIsDone])
+  }, [user, authIsDone])
 
 
   useEffect(() => {

@@ -2,7 +2,8 @@ import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import type { CachePersistor } from "apollo3-cache-persist";
 import { AlarmType, ALARM_DELIMITER } from "~constants";
 import { SpaceType } from "~features/space/space";
-import { selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, setShouldReloadTwigTree } from "~features/twigs/twigSlice";
+import { selectIdToDescIdToTrue, setShouldReloadTwigTree } from "~features/space/spaceSlice";
+import { selectTabIdToTwigIdToTrue } from "~features/twigs/twigSlice";
 import { store } from "~store";
 import { getTwigByGroupId, getTwigByTabId } from "./tab";
 
@@ -38,15 +39,29 @@ const MOVE_TAB = gql`
 `;
 
 export const moveTab = (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) =>
-  async (tab: chrome.tabs.Tab) => {
-    const twig = await getTwigByTabId(tab.id);
-    const groupTwig = await getTwigByGroupId(tab.groupId);
+  async (tab: chrome.tabs.Tab, count = 0) => {
+    const createTabAlarmName = AlarmType.CREATE_TAB +
+      ALARM_DELIMITER +
+      tab.id;
+
+    const alarms = await chrome.alarms.getAll();
+
+    if (alarms.some(alarm => {
+      const name = alarm.name.split(ALARM_DELIMITER);
+      return name[0] === AlarmType.CREATE_TAB && name[1] === tab.id.toString();
+    })) return;
+
+    console.log('trying to move tab', tab.id)
+
+    const twig = await getTwigByTabId(store)(tab.id);
+    const groupTwig = await getTwigByGroupId(store)(tab.groupId);
 
     if (!twig?.id || !groupTwig?.id) {
-      console.log('moveTab', tab, twig, groupTwig)
       const name = AlarmType.MOVE_TAB +
         ALARM_DELIMITER +
-        tab.id;
+        tab.id +
+        ALARM_DELIMITER +
+        count;
 
       chrome.alarms.create(name, {
         when: Date.now() + 100,
@@ -82,7 +97,7 @@ export const moveTab = (client: ApolloClient<NormalizedCacheObject>, cachePersis
       })
     
     if (parentTab) {
-      parentTwig = getTwigByTabId(parentTab.id);
+      parentTwig = await getTwigByTabId(parentTab.id);
       console.log('moveTwig parent', parentTwig, parentTab, idToDescIdToTrue)
       if (!parentTwig) {
         throw new Error('Missing twig for tabId ' + parentTab.id);

@@ -8,18 +8,18 @@ import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
-import { selectChildIdToTrue } from './twigSlice';
+import { selectIdToTwig } from './twigSlice';
 import { selectCreateLink, setCreateLink } from '../arrow/arrowSlice';
 import type { Arrow } from '../arrow/arrow';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { getTwigColor } from '~utils';
-import { FULL_TWIG_FIELDS } from './twigFragments';
 import TwigPostComponent from './TwigPostComponent';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import useOpenTwig from './useOpenTwig';
 import useSelectTwig from './useSelectTwig';
 import useLinkTwigs from './useLinkTwig';
 import ArrowComponent from '~features/arrow/ArrowComponent';
+import { selectChildIdToTrue } from '~features/space/spaceSlice';
 
 interface TwigLinkComponentProps {
   user: User | null;
@@ -38,7 +38,6 @@ interface TwigLinkComponentProps {
 function TwigLinkComponent(props: TwigLinkComponentProps) {
   //console.log('twig link', props.twig.id);
 
-  const client = useApolloClient();
   const dispatch = useAppDispatch();
 
   //useAppSelector(state => selectInstanceById(state, props.twigId)); // rerender on instance change
@@ -49,19 +48,14 @@ function TwigLinkComponent(props: TwigLinkComponentProps) {
   const { selectedTwigId } = useContext(SpaceContext);
   const isSelected = props.twig.id === selectedTwigId;
   
+  const idToTwig = useAppSelector(selectIdToTwig(props.space));
   const childIdToTrue = useAppSelector(state => selectChildIdToTrue(state, props.space, props.twig.id));
   const verticalChildren = [];
   const horizontalChildren = [];
 
   Object.keys(childIdToTrue || {}).forEach(id => {
-    const twig = client.cache.readFragment({
-      id: client.cache.identify({
-        id,
-        __typename: 'Twig',
-      }),
-      fragment: FULL_TWIG_FIELDS,
-      fragmentName: 'FullTwigFields'
-    }) as Twig;
+    const twig = idToTwig[id];
+
     if (twig && !twig.deleteDate) {
       if (twig.displayMode === DisplayMode.VERTICAL) {
         verticalChildren.push(twig);

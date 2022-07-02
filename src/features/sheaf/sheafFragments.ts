@@ -1,5 +1,4 @@
 import { gql } from "@apollo/client";
-import { FULL_ARROW_FIELDS } from "~features/arrow/arrowFragments";
 
 export const SHEAF_FIELDS = gql`
   fragment SheafFields on Sheaf {

@@ -51,8 +51,7 @@ export const authSlice: Slice<AuthState> = createSlice({
         sessionId: action.payload,
       };
     },
-    setLogout: (state, action) => {
-      console.log('omgomg')
+    setLogout: (state) => {
       return {
         ...state,
         isDone: false,

@@ -39,10 +39,6 @@ export default function useMoveTwig(space: SpaceType) {
     },
     onCompleted: data => {
       console.log(data);
-      dispatch(addTwigs({
-        space,
-        twigs: data.moveTwig.twigs
-      }))
     },
   });
 

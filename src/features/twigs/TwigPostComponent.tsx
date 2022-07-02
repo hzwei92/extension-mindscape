@@ -8,18 +8,17 @@ import type { DragState, SpaceType } from '../space/space';
 import type { User } from '../user/user';
 import { selectPalette } from '../window/windowSlice';
 import type { Twig } from './twig';
-import { selectChildIdToTrue, selectHeight, selectPos, selectShouldReloadTwigTree, setHeight, setPos } from './twigSlice';
+import { selectHeight, selectIdToTwig, setHeight } from './twigSlice';
 import type { Arrow } from '../arrow/arrow';
 import { getTwigColor } from '~utils';
-import { FULL_TWIG_FIELDS } from './twigFragments';
 import { selectCreateLink, setCreateLink } from '~features/arrow/arrowSlice';
 import ArrowComponent from '~features/arrow/ArrowComponent';
 import TwigControls from './TwigControls';
 import TwigBar from './TwigBar';
 import { SpaceContext } from '~features/space/SpaceComponent';
 import useSelectTwig from './useSelectTwig';
-import { AppContext } from '~newtab/App';
 import useLinkTwigs from './useLinkTwig';
+import { selectChildIdToTrue } from '~features/space/spaceSlice';
 
 interface TwigPostComponentProps {
   user: User | null;
@@ -39,16 +38,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   const client = useApolloClient();
   const dispatch = useAppDispatch();
 
-  const parentTwig = props.twig.parent 
-    ? client.cache.readFragment({
-        id: client.cache.identify(props.twig.parent),
-        fragment: FULL_TWIG_FIELDS,
-        fragmentName: 'FullTwigFields'
-      }) as Twig
-    : null;
-
-  const { cachePersistor } = useContext(AppContext);
-
+  const {posState, posDispatch} = useContext(SpaceContext);
   //useAppSelector(state => selectInstanceById(state, props.twigId)); // rerender on instance change
 
   const palette = useAppSelector(selectPalette);
@@ -57,19 +47,14 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   const { selectedTwigId } = useContext(SpaceContext);
   const isSelected = props.twig.id === selectedTwigId;
 
+  const idToTwig = useAppSelector(selectIdToTwig(props.space));
   const childIdToTrue = useAppSelector(state => selectChildIdToTrue(state, props.space, props.twig.id));
   const verticalChildren = [];
   const horizontalChildren = [];
 
   Object.keys(childIdToTrue || {}).forEach(id => {
-    const twig = client.cache.readFragment({
-      id: client.cache.identify({
-        id,
-        __typename: 'Twig',
-      }),
-      fragment: FULL_TWIG_FIELDS,
-      fragmentName: 'FullTwigFields'
-    }) as Twig;
+    const twig =  idToTwig[id];
+
     if (twig && !twig.deleteDate) {
       if (twig.displayMode === DisplayMode.VERTICAL) {
         verticalChildren.push(twig);
@@ -86,8 +71,8 @@ function TwigPostComponent(props: TwigPostComponentProps) {
   const twigEl = useRef<HTMLElement>();
   const cardEl = useRef<HTMLElement>();
 
-  const pos = useAppSelector(state => selectPos(state, props.space, props.twig.id));
-  const parentPos = useAppSelector(state => selectPos(state, props.space, props.twig.parent?.id));
+  const pos = posState[props.twig.id];
+  const parentPos = posState[props.twig.parent?.id];
 
   useEffect(() => {
     if (!twigEl.current) return;
@@ -100,14 +85,14 @@ function TwigPostComponent(props: TwigPostComponentProps) {
     const y = Math.round(parentPos.y + offsetTop);
 
     if (x !== pos.x || y !== pos.y) {
-      dispatch(setPos({
-        space: props.space,
+      posDispatch({
+        type: 'setPos',
         twigId: props.twig.id,
         pos: {
           x,
           y,
         }
-      }))
+      });
     }
   }, [parentPos, pos, props.twig.displayMode, twigEl.current?.offsetLeft, twigEl.current?.offsetTop]);
 
@@ -262,7 +247,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
               return (
                 <Box key={`twig-${twig.id}`} sx={{
                   marginTop: 3,
-                  marginLeft: 5,
+                  marginLeft: 3,
                 }}>
                   <TwigPostComponent 
                     user={props.user}
@@ -288,7 +273,7 @@ function TwigPostComponent(props: TwigPostComponentProps) {
           .map(twig => {
             return (
               <Box key={`twig-${twig.id}`} sx={{
-                marginTop: 5,
+                marginTop: 3,
                 marginLeft: 3,
               }}>
                 <TwigPostComponent 

@@ -1,11 +1,11 @@
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
 import type { CachePersistor } from "apollo3-cache-persist";
-import { v4 } from "uuid";
 import { SpaceType } from "~features/space/space";
+import type { Twig } from "~features/twigs/twig";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { addTwigs } from "~features/twigs/twigSlice";
-import { addTwigUsers } from "~features/user/userSlice";
 import { store } from "~store";
+import type { IdToType } from "~types";
 import type { WindowEntry } from "./tab";
 
 const CREATE_WINDOW = gql`
@@ -24,7 +24,7 @@ const CREATE_WINDOW = gql`
 `;
 
 export const createWindow = (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) =>
-  async (window: chrome.windows.Window, parentTwigId: string) => {
+  async (window: chrome.windows.Window, parentTwigId: string, newIdToTwig: IdToType<Twig>) => {
     const windowEntry: WindowEntry = {
       windowId: window.id,
       rank: 1,
@@ -37,14 +37,9 @@ export const createWindow = (client: ApolloClient<NormalizedCacheObject>, cacheP
         windowEntry,
       },
     }).then(async ({data}) => {
-      await cachePersistor.persist();
+      newIdToTwig[data.createWindow.twig.id] = data.createWindow.twig;
 
       store.dispatch(addTwigs({
-        space: SpaceType.FRAME,
-        twigs: [data.createWindow.twig],
-      }));
-
-      store.dispatch(addTwigUsers({
         space: SpaceType.FRAME,
         twigs: [data.createWindow.twig],
       }));

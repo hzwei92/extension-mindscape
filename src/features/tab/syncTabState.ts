@@ -4,7 +4,6 @@ import { v4 } from "uuid";
 import { SpaceType } from "~features/space/space";
 import { FULL_TWIG_FIELDS } from "~features/twigs/twigFragments";
 import { addTwigs, removeTwigs } from "~features/twigs/twigSlice";
-import { addTwigUsers } from "~features/user/userSlice";
 import { store } from "~store";
 import type { IdToType } from "~types";
 import type { GroupEntry, TabEntry, WindowEntry } from "./tab";
@@ -158,6 +157,7 @@ export const getTabEntries = async (tabTrees: any[], groupEntries: GroupEntry[])
 
 export const syncTabState = (client: ApolloClient<NormalizedCacheObject>, cachePersistor: CachePersistor<NormalizedCacheObject>) => 
   async (twigId: string, tabTrees: any[]) => {
+    console.log('syncing tab state', twigId, tabTrees);
     const windowEntries = await getWindowEntries();
     
     const groupEntries = await getGroupEntries(windowEntries);
@@ -182,20 +182,16 @@ export const syncTabState = (client: ApolloClient<NormalizedCacheObject>, cacheP
       tabs,
       deleted,
     } = data.syncTabState;
-
-    store.dispatch(removeTwigs({
-      space: SpaceType.FRAME,
-      twigs: deleted,
-    }));
     
     store.dispatch(addTwigs({
       space: SpaceType.FRAME,
-      twigs: [...windows, ...groups, ...tabs],
+      twigs: [...windows, ...groups, ...tabs, ...deleted],
     }));
 
-    store.dispatch(addTwigUsers({
-      space: SpaceType.FRAME,
-      twigs: [...windows, ...groups, ...tabs],
-    }));
+    // store.dispatch(removeTwigs({
+    //   space: SpaceType.FRAME,
+    //   twigs: deleted,
+    // }));
+    
 
   }

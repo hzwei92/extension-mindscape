@@ -1,29 +1,28 @@
 import { gql, useApolloClient } from "@apollo/client";
 import { Box } from "@mui/material";
-import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from "react";
-import { persistor, useAppDispatch, useAppSelector } from "~store";
+import React, { Dispatch, SetStateAction, useContext, useEffect, useReducer, useRef, useState } from "react";
+import { useAppDispatch, useAppSelector } from "~store";
 import { VIEW_RADIUS, SPACE_BAR_HEIGHT, DisplayMode, TWIG_WIDTH } from "~constants";
 import { checkPermit, getAppBarWidth, getTwigColor } from "~utils";
 import { selectActualMenuWidth } from "../menu/menuSlice";
 import type { User } from "../user/user";
 import { DragState, ScrollState, SpaceType } from "./space";
-import { selectIsOpen } from "./spaceSlice";
-import { ABSTRACT_ARROW_FIELDS } from "../arrow/arrowFragments";
-import type { Arrow } from "../arrow/arrow";
+import { selectIdToDescIdToTrue, selectIsOpen } from "./spaceSlice";
 import type { Role } from "../role/role";
 import LinkMarkerComponent from "../arrow/LinkMarkerComponent";
 import { AppContext } from "~newtab/App";
-import { movePos, selectIdToDescIdToTrue, selectTabIdToTwigIdToTrue, selectTwigIdToHeight, selectTwigIdToPos, setPos } from "~features/twigs/twigSlice";
-import { FULL_TWIG_FIELDS, TWIG_FIELDS, TWIG_WITH_XY } from "~features/twigs/twigFragments";
-import type { Twig } from "~features/twigs/twig";
+import { selectIdToTwig, selectTabIdToTwigIdToTrue, selectTwigIdToHeight } from "~features/twigs/twigSlice";
 import TwigLinkComponent from "~features/twigs/TwigLinkComponent";
 import TwigPostComponent from "~features/twigs/TwigPostComponent";
 import SpaceControls from "./SpaceControls";
 import SpaceNav from "./SpaceNav";
 import useCenterTwig from "~features/twigs/useCenterTwig";
 import TwigLine from "~features/twigs/TwigLine";
-import { selectUserIdToTrue } from "~features/user/userSlice";
 import useMoveTwig from "~features/twigs/useMoveTwig";
+import { selectArrow } from "~features/arrow/arrowSlice";
+import { selectIdToUser } from "~features/user/userSlice";
+import type { IdToType } from "~types";
+import type { PosType } from "~features/twigs/twig";
 //import useAdjustTwigs from "../twig/useAdjustTwigs";
 
 
@@ -32,6 +31,8 @@ export const SpaceContext = React.createContext({} as {
   setSelectedTwigId: Dispatch<SetStateAction<string>>;
   scale: number;
   setScale: Dispatch<SetStateAction<number>>;
+  posState: IdToType<PosType>;
+  posDispatch: Dispatch<any>;
 });
 
 interface SpaceComponentProps {
@@ -73,9 +74,9 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   } as DragState);
   
 
-  const userIdToTrue = useAppSelector(selectUserIdToTrue(props.space));
+  const idToUser = useAppSelector(selectIdToUser(props.space));
 
-  const twigIdToPos = useAppSelector(selectTwigIdToPos(props.space));
+  const idToTwig = useAppSelector(selectIdToTwig(props.space));
   const twigIdToHeight = useAppSelector(selectTwigIdToHeight(props.space));
   const idToDescIdToTrue = useAppSelector(selectIdToDescIdToTrue(props.space));
 
@@ -83,29 +84,18 @@ export default function SpaceComponent(props: SpaceComponentProps) {
 
   const tabTwigs = [];
   Object.keys(tabIdToTwigIdToTrue[tabId] || {}).forEach(twigId => {
-    const twig = client.cache.readFragment({
-      id: client.cache.identify({
-        id: twigId,
-        __typename: 'Twig',
-      }),
-      fragment: TWIG_FIELDS,
-    }) as Twig;
+    const twig = idToTwig[twigId];
     if (twig?.userId === props.user?.id) {
       tabTwigs.push(twig);
     }
   })
   const tabTwig = tabTwigs[0];
 
-  const abstract = client.cache.readFragment({
-    id: client.cache.identify({
-      id: props.space === 'FRAME'
-        ? props.user?.frameId
-        : props.user?.focusId,
-      __typename: 'Arrow',
-    }),
-    fragment: ABSTRACT_ARROW_FIELDS,
-    fragmentName: 'AbstractArrowFields',
-  }) as Arrow;
+  const abstractId = props.space === SpaceType.FRAME
+    ? props.user?.frameId
+    : props.user?.focusId;
+
+  const abstract = useAppSelector(state => selectArrow(state, abstractId));
 
   const [selectedTwigId, setSelectedTwigId] = useState(abstract?.rootTwigId);
 
@@ -133,6 +123,29 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const [scaleScroll, setScaleScroll] = useState(null as any);
   const [canScale, setCanScale] = useState(true);
 
+
+
+  const posReducer = (state, action) => {
+    switch (action.type) {
+      case 'setPos':
+        return {
+          ...state,
+          [action.twigId]: action.pos,
+        };
+      case 'setIdToPos': {
+        console.log(action);
+        return {
+          ...state,
+          ...action.idToPos,
+        }
+      }
+      default: 
+        throw new Error('Unsupported action type')
+    }
+  }
+  const posInitState: IdToType<PosType> = {};
+  const [posState, posDispatch] = useReducer(posReducer, posInitState);
+
   const [moveEvent, setMoveEvent] = useState(null as React.MouseEvent | null);
   const [showSettings, setShowSettings] = useState(false);
   const [showRoles, setShowRoles] = useState(false);
@@ -147,6 +160,26 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   //const { adjustTwigs } = useAdjustTwigs(abstract)
 
   const { centerTwig } = useCenterTwig(props.user, props.space, scale);
+
+  useEffect(() => {
+    const idToPos: IdToType<PosType> = Object.keys(idToTwig).reduce((acc, twigId) => {
+      const pos = posState[twigId];
+
+      if (!pos) {
+        const twig = idToTwig[twigId];
+        acc[twigId] = {
+          x: twig.x,
+          y: twig.y,
+        };
+      }
+      return acc;
+    }, {});
+
+    posDispatch({
+      type: 'setIdToPos',
+      idToPos,
+    });
+  }, [idToTwig]);
 
   useEffect(() => {
     if (!tabTwig || drag.twigId) return;
@@ -282,12 +315,19 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       dy: drag.dy + dy1,
     });
 
-    dispatch(movePos({
-      space: props.space,
-      twigIds: [drag.twigId, ...Object.keys(idToDescIdToTrue[drag.twigId] || {})],
-      dx: dx1,
-      dy: dy1,
-    }));
+    const idToPos = [drag.twigId, ...Object.keys(idToDescIdToTrue[drag.twigId] || {})].reduce((acc, twigId) => {
+      acc[twigId] = {
+        x: posState[twigId].x + dx1,
+        y: posState[twigId].y + dy1,
+      };
+      return acc;
+    }, {});
+
+    console.log('idToPos', idToPos)
+    posDispatch({
+      type: 'setIdToPos',
+      idToPos,
+    });
 
     if (canEdit) {
       //dragTwig(drag.twigId, dx1, dy1);
@@ -304,17 +344,13 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     });
 
     if (!drag.twigId || (drag.dx === 0 && drag.dy === 0)) return;
-
-    persistor.persist();
-    persistor.flush();
     
     if (canEdit) {
       if (drag.targetTwigId) {
         //graftTwig(drag.twigId, drag.targetTwigId);
       }
       else {
-        const pos = twigIdToPos[drag.twigId]
-        console.log(pos);
+        const pos = posState[drag.twigId]
         moveTwig(drag.twigId, pos.x, pos.y, DisplayMode.SCATTERED);
       }
     }
@@ -400,19 +436,12 @@ export default function SpaceComponent(props: SpaceComponentProps) {
   const sheafs: JSX.Element[] = [];
   const twigs: JSX.Element[] = [];
   const dropTargets: JSX.Element[] = [];
-  Object.keys(twigIdToPos).forEach(twigId => {
-    const twig = client.cache.readFragment({
-      id: client.cache.identify({
-        id: twigId,
-        __typename: 'Twig',
-      }),
-      fragment: FULL_TWIG_FIELDS,
-      fragmentName: 'FullTwigFields'
-    }) as Twig;
-
+  const idToPos: IdToType<PosType> = {};
+  Object.keys(posState).forEach(twigId => {
+    const twig = idToTwig[twigId];
     //console.log(twigId, twig);
 
-    const pos = twigIdToPos[twigId];
+    const pos = posState[twigId];
 
     if (!twig || twig.deleteDate || !pos) {
       return;
@@ -431,7 +460,7 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           zIndex: twig.z + 1,
           width: TWIG_WIDTH,
           height: 100,
-          backgroundColor: getTwigColor(twig.color || twig.user.color),
+          backgroundColor: getTwigColor(twig.color || twig.user?.color),
           opacity: 0.4
         }} />
       );
@@ -442,26 +471,14 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     }
 
     if (twig.sourceId !== twig.targetId) {
-      const sourceTwig = client.cache.readFragment({
-        id: client.cache.identify({
-          id: twig.sourceId,
-          __typename: 'Twig',
-        }),
-        fragment: TWIG_WITH_XY,
-      }) as Twig;
-      const targetTwig = client.cache.readFragment({
-        id: client.cache.identify({
-          id: twig.targetId,
-          __typename: 'Twig',
-        }),
-        fragment: TWIG_WITH_XY,
-      }) as Twig;
+      const sourceTwig = idToTwig[twig.sourceId];
+      const targetTwig = idToTwig[twig.targetId]
 
       if (!sourceTwig || sourceTwig.deleteDate || !targetTwig || targetTwig.deleteDate) {
         return;
       }
-      const sourcePos = twigIdToPos[twig.sourceId];
-      const targetPos = twigIdToPos[twig.targetId]
+      const sourcePos = posState[twig.sourceId];
+      const targetPos = posState[twig.targetId]
       const x = Math.round((sourcePos.x + targetPos.x) / 2);
       const y = Math.round((sourcePos.y + targetPos.y) / 2);
 
@@ -469,16 +486,12 @@ export default function SpaceComponent(props: SpaceComponentProps) {
         const dx = x - pos.x;
         const dy = y - pos.y;
         [twigId, ...Object.keys(idToDescIdToTrue[twigId] || {})].forEach(descId => {
-          const descPos = twigIdToPos[descId];
+          const descPos = posState[descId];
 
-          dispatch(setPos({
-            space: props.space,
-            twigId: descId,
-            pos: {
-              x: descPos.x + dx,
-              y: descPos.y + dy,
-            }
-          }));
+          idToPos[descId] = {
+            x: descPos.x + dx,
+            y: descPos.y + dy,
+          }
         })
       }
       twigs.push(
@@ -544,6 +557,13 @@ export default function SpaceComponent(props: SpaceComponentProps) {
     }
   });
 
+  if (Object.keys(idToPos).length) {
+    posDispatch({
+      type: 'setIdToPos',
+      idToPos,
+    });
+  }
+
   const w = 2 * VIEW_RADIUS;
   const h = 2 * VIEW_RADIUS;
   return (
@@ -552,6 +572,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
       setSelectedTwigId,
       scale,
       setScale,
+      posState,
+      posDispatch,
     }}>
       <Box 
         ref={spaceEl}
@@ -587,19 +609,8 @@ export default function SpaceComponent(props: SpaceComponentProps) {
           }}>
             <defs>
               {
-                Object.keys(userIdToTrue).map(userId => {
-                  const user = client.cache.readFragment({
-                    id: client.cache.identify({
-                      id: userId,
-                      __typename: 'User',
-                    }),
-                    fragment: gql`
-                      fragment UserWithColor on User {
-                        id
-                        color
-                      }
-                    `,
-                  }) as User;
+                Object.keys(idToUser).map(userId => {
+                  const user = idToUser[userId];
                   return (
                     <marker 
                       key={`marker-${userId}`}
@@ -621,20 +632,22 @@ export default function SpaceComponent(props: SpaceComponentProps) {
               }
             </defs>
             {
-              Object.keys(twigIdToPos).map(twigId => {
-                const twig = client.cache.readFragment({
-                  id: client.cache.identify({
-                    id: twigId,
-                    __typename: 'Twig',
-                  }),
-                  fragment: FULL_TWIG_FIELDS,
-                  fragmentName: 'FullTwigFields',
-                }) as Twig;
-              
-                if (!twig || !twig.parent?.id) return null;
+              Object.keys(posState).map(twigId => {
+                const twig = idToTwig[twigId];
+                if (!twig || twig.deleteDate) return null;
+                  
+                const parentTwig = idToTwig[twig.parent?.id];
+                if (!twig.parent?.id || parentTwig.deleteDate) return null;
 
-                const pos = twigIdToPos[twigId];
-                const parentPos = twigIdToPos[twig.parent.id];
+                const pos = posState[twigId];
+                const parentPos = posState[twig.parent.id];
+
+                if (
+                  !pos || 
+                  !parentPos || 
+                  (twig.displayMode !== DisplayMode.SCATTERED && pos.x === 0 && pos.y === 0)
+                ) return null;
+
                 return (
                   <TwigLine 
                     key={`twig-line-${twigId}`}

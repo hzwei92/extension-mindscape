@@ -1,27 +1,29 @@
-import { createSlice, PayloadAction, Slice } from '@reduxjs/toolkit';
+import { createAction, createSelector, createSlice, PayloadAction, Slice } from '@reduxjs/toolkit';
 import type { Twig } from '~features/twigs/twig';
 import type { RootState } from '~store';
 import type { IdToType } from '~types';
-import type { SpaceType } from '../space/space';
+import { SpaceType } from '../space/space';
+import type { User } from './user';
 
+const addTwigs = createAction<{space: SpaceType, twigs: Twig[]}>('twig/addTwigs')
 
 export interface UserState {
-  userId: string;
-  FRAME: {
-    userIdToTrue: IdToType<true>;
+  currentUser: User;
+  [SpaceType.FRAME]: {
+    idToUser: IdToType<User>;
   };
-  FOCUS: {
-    userIdToTrue: IdToType<true>;
+  [SpaceType.FOCUS]: {
+    idToUser: IdToType<User>;
   };
 }
 
 const initialState: UserState = {
-  userId: '',
-  FRAME: {
-    userIdToTrue: {},
+  currentUser: null,
+  [SpaceType.FRAME]: {
+    idToUser: {},
   },
-  FOCUS: {
-    userIdToTrue: {},
+  [SpaceType.FOCUS]: {
+    idToUser: {},
   },
 };
 
@@ -29,51 +31,66 @@ export const userSlice: Slice<UserState> = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setUserId: (state, action: PayloadAction<string>) => {
+    setCurrentUser: (state, action: PayloadAction<User | null>) => {
       return {
         ...state,
-        userId: action.payload,
-      };
-    },
-    addTwigUsers: (state, action: PayloadAction<{space: SpaceType, twigs: Twig[]}>) => {
-      return {
-        ...state,
-        [action.payload.space]: {
-          ...state[action.payload.space],
-          userIdToTrue: action.payload.twigs.reduce((acc, twig) => {
-            acc[twig.userId] = true;
-            if (twig.detail) {
-              acc[twig.detail.userId] = true;
-            }
-            else if (twig.sheaf) {
-              twig.sheaf.links.forEach(link => {
-                acc[link.userId] = true;
-              })
-            }
-            return acc;
-          }, { ...state[action.payload.space].userIdToTrue })
-        }
+        currentUser: action.payload,
       }
     },
     resetUsers: (state, action: PayloadAction<SpaceType>) => {
       return {
         ...state,
-        [action.payload]: initialState[action.payload]
+        [action.payload]: {
+          idToUser: {},
+        }
       };
     },
+    addUsers: (state, action) => {
+      const idToUser: IdToType<User> = action.payload.users.reduce((acc, user) => {
+        acc[user.id] = user;
+        return acc;
+      }, { ...state[action.payload.space].idToUser });
+
+      return {
+        ...state,
+        [action.payload.space]: {
+          ...state[action.payload.space],
+          idToUser,
+        }
+      }
+    }
   },
   extraReducers: (builder) => {
-    builder.addDefaultCase(state => state)
+    builder
+      .addCase(addTwigs, (state, action) => {
+        console.log(action);
+        const idToUser: IdToType<User> = action.payload.twigs.reduce((acc, twig) => {
+          acc[twig.userId] = twig.user;
+          if (twig.detail) {
+            acc[twig.detail.userId] = twig.detail.user;
+          }
+          return acc;
+        }, { ...state[action.payload.space].idToUser });
+
+        return {
+          ...state,
+          [action.payload.space]: {
+            ...state[action.payload.space],
+            idToUser,
+          }
+        };
+      })
+      .addDefaultCase(state => state)
   },
 });
 
 export const {
-  setUserId,
-  addTwigUsers,
+  setCurrentUser,
+  addUsers,
   resetUsers,
 } = userSlice.actions;
 
-export const selectUserId = (state: RootState) => state.user.userId;
-export const selectUserIdToTrue = (space: SpaceType) => (state: RootState) => state.user[space].userIdToTrue;
+export const selectCurrentUser = (state: RootState) => state.user.currentUser;
+export const selectIdToUser = (space: SpaceType) => (state: RootState) => state.user[space].idToUser;
 
 export default userSlice.reducer
